@@ -1,0 +1,19 @@
+Q: Why cannot access ref in created hook?
+A: https://forum.vuejs.org/t/solved-this-refs-key-returns-undefined-when-it-really-is/1226/2
+"adding a breakpoint" to debug
+
+1/ tại sao bỏ đoạn code này vào showPopover(fullNumber) ở Cart.vue lại chạy ko đc (mà phải bỏ ở niceselect.js).
+var first = true;
+$('.product-des').on( "click", ".variation", function( e ) {
+	  		//let first = true;
+	  		if(first){console.log(first)
+	  			$(this).next().removeClass('d-none');
+	  			$(this).parent().parent().find('i.fa').replaceWith(  '<i class="fa fa-sort-down ml-1"></i>' );
+	  			first = false;
+	  		}
+	  		else if( !first ){
+	  			$(this).next().addClass('d-none');
+	  			$(this).parent().parent().find('i.fa').replaceWith(  '<i class="fa fa-sort-up ml-1"></i>' );
+	  			first = true;
+	  		}
+		});
