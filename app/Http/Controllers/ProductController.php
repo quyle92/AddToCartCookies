@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Product;
+use App\Style;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -12,24 +13,23 @@ class ProductController extends Controller
 
     public function getAllProducts()
     {   
-
-    	$products = 
-  		// Product::with(['prices' => function ($query) {     
-    // 		$query->select('id', 'product_id', 'price', 'size')->where('size', 'M'); 
-    // 	}])->select('id', 'productName', 'picture')->get();//(1)
-        DB::getProducts()->limit(10)->get();
-
+    	$products = Style::with([
+            'colorsForOneStyleOnly' => function ($query) {     
+                $query->select('colors.id', 'color', 'picture')->where('colors.id', 1); 
+        },
+            'sizesForOneStyleOnly' => function ($query) {     
+                $query->select('sizes.id', 'size', 'price')->where('sizes.id', 1); 
+        }
+        ])->get();
+  	 
+       // dd($products);
     	return view('home')->with( compact('products') );
     }
 
     public function getselectedProduct($id)
     {   
 
-    	$product = 
-    	// Product::where('id', $id)->with(['prices' => function ($query) {     
-    	// 	$query->select('id', 'product_id', 'price', 'size'); 
-    	// }])->select('id', 'productName', 'picture', 'fullNumber')->first();//(1)
-        DB::getProducts()->where('products.id', $id)->first();
+    	$product;
 
     	return view('product')->with( compact('product') );
     }
@@ -79,6 +79,9 @@ class ProductController extends Controller
 /*
 Note
  */
+        // Product::with(['prices' => function ($query) {     
+    //      $query->select('id', 'product_id', 'price', 'size')->where('size', 'M'); 
+    //  }])->select('id', 'productName', 'picture')->get();//(1)
 //(1) eager load: you must specify owner key + foreign key when eager loading specific columns of relation tables (but this requirement is not neccessary in case of pivot table)
 //Ref: https://stackoverflow.com/a/53515281/11297747
 //https://stackoverflow.com/a/47238258/11297747

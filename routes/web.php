@@ -16,9 +16,7 @@ use Illuminate\Support\Str;
 |
 */
 
-Route::get('/', function(){
-	dd( ( $_COOKIE['shopping_cart'] ) );
-});
+Route::get('/','ProductController@getAllProducts');
 Route::get('/home', 'ProductController@getAllProducts');
 Route::get('/product/{id}', 'ProductController@getselectedProduct');
 Route::post('/addToCart', 'ProductController@addToCart');

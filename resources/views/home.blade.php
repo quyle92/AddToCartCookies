@@ -30,8 +30,8 @@
 										<div class="single-product">
 											<div class="product-img">
 												<a href="/product/{{$item->id}}">
-													<img class="default-img" src="{{$item->picture}}" alt="#">
-													<img class="hover-img" src="{{$item->picture}}" alt="#">
+													<img class="default-img" src="{{$item->colorsForOneStyleOnly[0]->picture}}" alt="#">
+													<img class="hover-img" src="{{$item->colorsForOneStyleOnly[0]->picture}}" alt="#">
 												</a>
 												<div class="button-head">
 													<div class="product-action">
@@ -45,9 +45,9 @@
 												</div>
 											</div>
 											<div class="product-content">
-												<h3><a href="/product/{{$item->id}}">{{$item->productName}}</a></h3>
+												<h3><a href="/product/{{$item->id}}">{{$item->style}}</a></h3>
 												<div class="product-price">
-													<span>${{$item->price}}</span>
+													<span>${{$item->sizesForOneStyleOnly[0]->price}}</span>
 												</div>
 											</div>
 										</div>

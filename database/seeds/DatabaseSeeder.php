@@ -12,10 +12,10 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
          $this->call([
-         	// SeriesTableSeeder::class,
-          //   ColorTableSeeder::class,
-          //   SizeTableSeeder::class,
-          //   StyleTableSeeder::class,
+         	SeriesTableSeeder::class,
+            ColorTableSeeder::class,
+            SizeTableSeeder::class,
+            StyleTableSeeder::class,
             ProductTableSeeder::class,
          ]);
         

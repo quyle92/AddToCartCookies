@@ -12,7 +12,7 @@ class MyDatabaseManager extends DatabaseManager {
             ->join('colors', 'colors.id', '=', 'color_id')
             ->join('sizes', 'sizes.id', '=', 'size_id')
             ->join('styles', 'styles.id', '=', 'style_id')
-            ->select('products.id','products.fullNumber','products.productName','products.picture','products.quantity','products.price', 'colors.color', 'sizes.size', 'styles.style');
+            ->select('products.id','products.fullNumber','styles.style', 'sizes.size', 'colors.color','colors.picture',  'products.quantity','sizes.price');
            
     }
 
