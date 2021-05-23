@@ -4,27 +4,32 @@ namespace App\Http\Controllers;
 
 use App\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {	
 	private $cookie_name = 'shopping_cart';
 
     public function getAllProducts()
-    {
+    {   
+
     	$products = 
-  		Product::with(['prices' => function ($query) {     
-    		$query->select('id', 'product_id', 'price', 'size')->where('size', 'M'); 
-    	}])->select('id', 'productName', 'picture')->get();//(1)
+  		// Product::with(['prices' => function ($query) {     
+    // 		$query->select('id', 'product_id', 'price', 'size')->where('size', 'M'); 
+    // 	}])->select('id', 'productName', 'picture')->get();//(1)
+        DB::getProducts()->limit(10)->get();
 
     	return view('home')->with( compact('products') );
     }
 
     public function getselectedProduct($id)
-    {
+    {   
+
     	$product = 
-    	Product::where('id', $id)->with(['prices' => function ($query) {     
-    		$query->select('id', 'product_id', 'price', 'size'); 
-    	}])->select('id', 'productName', 'picture', 'fullNumber')->first();//(1)
+    	// Product::where('id', $id)->with(['prices' => function ($query) {     
+    	// 	$query->select('id', 'product_id', 'price', 'size'); 
+    	// }])->select('id', 'productName', 'picture', 'fullNumber')->first();//(1)
+        DB::getProducts()->where('products.id', $id)->first();
 
     	return view('product')->with( compact('product') );
     }

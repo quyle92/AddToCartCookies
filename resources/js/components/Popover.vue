@@ -30,7 +30,7 @@ export default {
   props:[ 'selectedItem' ],
   data: function() {
     return {
-    	selectedSize:'',
+    selectedSize:'',
  		sizeList:['S', 'M', 'L']
  	  }
   },

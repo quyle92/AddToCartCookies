@@ -31,11 +31,11 @@
 									<th class="text-center">UNIT PRICE</th>
 									<th class="text-center">QUANTITY</th>
 									<th class="text-center">TOTAL</th> 
-									<th class="text-center"><i class="ti-trash remove-icon"></i></th>
+									<th class="text-center"><i class="ti-trash remove-icon" ></i></th>
 								</tr>
 							</thead>
 							<tbody>
-								<tr v-for="item in productsOnCart">
+								<tr v-for="(item, index) in productsOnCart" :key='index'  >
 									<td class="image" data-title="No"><img src="https://via.placeholder.com/100x100" alt="#"></td>
 									<td class="product-des" data-title="Description" 					
 									>
@@ -58,13 +58,21 @@
 									<td class="qty" data-title="Qty"><!-- Input Order -->
 										<div class="input-group">
 											<div class="button minus">
-												<button type="button" class="btn btn-primary btn-number"  data-type="minus" data-field="quant[1]">
+												<button type="button" class="btn btn-primary btn-number"  data-type="minus" data-field="quant[1]" 
+												@click="substract(item)" >
 													<i class="ti-minus"></i>
 												</button>
 											</div>
-											<input type="text" name="quant[1]" class="input-number"  data-min="1" data-max="100" :value="item.quantity">
+											<input type="text" name="quant[1]" class="input-number"  :data-min='min' 
+											:data-max="max" 
+											:value="item.quantity" 
+											@change="checkInput($event, item)"
+											:id="item.fullNumber"
+											
+											>
 											<div class="button plus">
-												<button type="button" class="btn btn-primary btn-number" data-type="plus" data-field="quant[1]">
+												<button type="button" class="btn btn-primary btn-number" data-type="plus" data-field="quant[1]" 
+												@click="add(item)">
 													<i class="ti-plus"></i>
 												</button>
 											</div>
@@ -72,7 +80,15 @@
 										<!--/ End Input Order -->
 									</td>
 									<td class="total-amount" data-title="Total"><span>${{item.quantity * item.price}}</span></td>
-									<td class="action" data-title="Remove"><a href="#"><i class="ti-trash remove-icon"></i></a></td>
+									<td class="action" data-title="Remove"><a href="#" @click.prevent="removeItem(item, index)"><i class="ti-trash remove-icon"></i></a></td>
+								</tr>
+								<tr v-if="productsOnCart.length < 1">
+									<td></td>
+									<td></td>
+									<td><h3 class="text-center">Your cart is empty</h3></td>
+									<td></td>
+									<td></td>
+									<td></td>
 								</tr>
 							</tbody>
 						</table>
@@ -100,10 +116,8 @@
 								<div class="col-lg-4 col-md-7 col-12">
 									<div class="right">
 										<ul>
-											<li>Cart Subtotal<span>$330.00</span></li>
-											<li>Shipping<span>Free</span></li>
-											<li>You Save<span>$20.00</span></li>
-											<li class="last">You Pay<span>$310.00</span></li>
+											<li>Total Quantity<span>{{totalQty}}</span></li>
+											<li class="last">You Pay<span>${{totalAmount}}</span></li>
 										</ul>
 										<div class="button5">
 											<a href="#" class="btn">Checkout</a>
@@ -126,7 +140,7 @@
 import { mapState } from 'vuex'
 import { mapGetters } from 'vuex'
 //import clickOutside from '../directive';
-// var first = true;
+
 export default {
   props: [
      'products'
@@ -136,6 +150,9 @@ export default {
  		productsOnCart:[],
  		//popover: false,
  		show:false,
+ 		count: 0,
+ 		max: 10,
+ 		min:1
  	  }
   },
   methods:{
@@ -152,6 +169,35 @@ export default {
 
   		this.$store.state.selectedFullNumber = fullNumber;
 
+  	},
+  	removeItem(item, index){
+  		this.productsOnCart.splice( index, 1 )	;
+  	},
+  	add(item){
+  		if(item.quantity < this.max ){
+          item.quantity++;
+        }
+        else
+        {
+          alert('stop: max reache')
+        }
+        console.log(item.quantity)
+  	},
+  	substract(item){
+  		if(item.quantity > this.min ){
+          item.quantity--;
+        }
+        else
+        {
+          alert('stop: min reache')
+        }
+        console.log(item.quantity)
+  	},
+  	checkInput(e, item){
+
+        if( isNaN(e.data) || e.data < min || e.data > max){
+          alert('stop: invalid')
+        }
   	}
   },
   computed: {
@@ -160,7 +206,25 @@ export default {
   		]),
   	...mapGetters([
       'getSelectedSize'
-      ])
+      ]),
+  	totalQty(){
+  		let result = 0;
+  		this.productsOnCart.forEach( (item) => {
+  			 result += item.quantity
+  		})
+  		return result;
+  	},
+  	totalAmount(){
+  		let result = 0;
+
+  		this.productsOnCart.forEach( item => {
+  			let subTotal = item.quantity * item.price;
+  			result += subTotal;
+  		});
+
+  		return result;
+  	}
+
   },
   watch:{
   	getSelectedSize(selectedSize) {
@@ -169,7 +233,13 @@ export default {
   				item.size = selectedSize;
   			}
   		})
-  	}
+  	},
+  	productsOnCart: {
+  		deep: true,
+  		handler: function (newObj, oldObj) {
+      		//console.log('hi',newObj);
+  		}
+    }
   },
   created(){
 	  	Object.entries( this.products).forEach( (item) => {
@@ -179,7 +249,7 @@ export default {
 
   },
   mounted(){
-  	//console.log(this.$refs.popover[0].$refs.insidePopover)
+  	
 
   }
 }

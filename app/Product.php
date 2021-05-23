@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Series;
+use App\Size;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -27,10 +28,6 @@ class Product extends Model
 	}
 
 
-    public function prices()
-    {
-    	return $this->hasMany(Price::class, 'product_id','id');
-    }
 }
 
 /*

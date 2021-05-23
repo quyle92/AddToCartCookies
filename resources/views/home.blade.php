@@ -47,7 +47,7 @@
 											<div class="product-content">
 												<h3><a href="/product/{{$item->id}}">{{$item->productName}}</a></h3>
 												<div class="product-price">
-													<span>${{$item->prices[0]->price}}</span>
+													<span>${{$item->price}}</span>
 												</div>
 											</div>
 										</div>

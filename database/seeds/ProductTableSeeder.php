@@ -1,6 +1,10 @@
 <?php
 
+use App\Product;
+use Faker\Generator as Faker;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ProductTableSeeder extends Seeder
 {
@@ -9,12 +13,38 @@ class ProductTableSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
-    {
-        DB::table('products')->insert([
-            [ 'productName' => 'jeans', 'number' => 1, "picture" => 'https://media3.scdn.vn/img2/2018/9_14/qAuye8_simg_de2fe0_500x500_maxb.jpg', 'created_at' => new DateTime( date('Y-m-d H:i:s'), new DateTimeZone('Asia/Ho_Chi_Minh') ), 'fullNumber' => 'JEAN-001', 'series_id' => 1],
-            ['productName' => 'Jacket', 'number' => 1, "picture" => 'https://media3.scdn.vn/img2/2018/1_6/zHhuRX_simg_de2fe0_500x500_maxb.jpg', 'created_at' => new DateTime( date('Y-m-d H:i:s'), new DateTimeZone('Asia/Ho_Chi_Minh') ),'fullNumber' => 'JACKET-001', 'series_id' => 2 ],
-			['productName' => 'sunglasses', 'number' => 1, "picture" => 'https://media3.scdn.vn/img3/2019/7_31/6Kg1XO_simg_de2fe0_500x500_maxb.jpg','created_at' => new DateTime( date('Y-m-d H:i:s'), new DateTimeZone('Asia/Ho_Chi_Minh') ),'fullNumber' => 'SUNGLASSES-001', 'series_id' => 3 ]
-        ]);
+    public function run(Faker $faker)
+    {   
+        Product::truncate();
+
+
+        $styles = App\Style::all();
+        $styles->each( function($style) use($faker) {
+            $sizes = App\Size::all();
+            $sizes->each( function($size) use($faker, $style) {
+                $colors = App\Color::all();
+                $colors->each( function($color) use($faker, $style, $size) {
+                    $series = App\Series::all();
+                    $series_id =  Str::substr($style->style, 0, 1) === 'U' ? $series[0]->id : (Str::substr($style->style, 0, 1) === 'W' ? $series[1]->id : $series[2]->id );
+
+                    App\Product::create([
+                       // 'series_id' => App\Series::inRandomOrder()->first()->id,
+                        'series_id' =>  $series_id,
+                        'color_id' => $color->id,
+                        'size_id' => $size->id,
+                        'style_id' => $style->id,
+                        'quantity' => $faker->numberBetween($min = 5, $max = 20),
+                    ]);
+                    
+                });
+            });
+
+        });
+
     }
+
+   
 }
+
+
+

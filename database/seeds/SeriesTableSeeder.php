@@ -11,11 +11,13 @@ class SeriesTableSeeder extends Seeder
      */
     public function run()
     {
-        DB::table('series')->insert([
-            ['prefix' => 'JEAN' ],
-            ['prefix' => 'JACKET ' ],
-			['prefix' => 'SUNGLASSES' ]
-        ]);
+        $prefixes = [
+            ['prefix' => 'UNISEX'],
+            ['prefix' => 'WOMEN'],
+            ['prefix' => 'MEN'],
+        ];
+
+        DB::table('series')->insert($prefixes);
     }
 
 }

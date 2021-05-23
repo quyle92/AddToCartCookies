@@ -103,38 +103,39 @@ YTPlayer.opt.autoPlay){var YTPStart=jQuery.Event("YTPStart");YTPStart.time=YTPla
 
 //------------- DETAIL ADD - MINUS COUNT ORDER -------------//
 //$('.btn-number').click(function(e){
-$('.shopping-summery').on( "click", ".btn-number", function( e ) {
-    e.preventDefault();
+// $('.shopping-summery').on( "click", ".btn-number", function( e ) {
+//     e.preventDefault();
     
-    fieldName = $(this).attr('data-field');
-    type      = $(this).attr('data-type');
-    //var input = $("input[name='"+fieldName+"']");
-    var input = $(this).parent().parent().find('input');
-    var currentVal = parseInt(input.val());
-    if (!isNaN(currentVal)) {
-        if(type == 'minus') {
+//     fieldName = $(this).attr('data-field');
+//     type      = $(this).attr('data-type');
+//     //var input = $("input[name='"+fieldName+"']");
+//     var input = $(this).parent().parent().find('input');
+//     var currentVal = parseInt(input.val());
+//     if (!isNaN(currentVal)) {
+//         if(type == 'minus') {
             
-            if(currentVal > input.attr('data-min')) {
-                input.val(currentVal - 1).change();
-            } 
-            if(parseInt(input.val()) == input.attr('data-min')) {
-                $(this).attr('disabled', true);
-            }
+//             if(currentVal > input.attr('data-min')) {
+//                 input.val(currentVal - 1).change();
+//             } 
+//             if(parseInt(input.val()) == input.attr('data-min')) {
+//                 $(this).attr('disabled', true);
+//             }
 
-        } else if(type == 'plus') {
+//         } else if(type == 'plus') {
 
-            if(currentVal < input.attr('data-max')) {
-                input.val(currentVal + 1).change();
-            }
-            if(parseInt(input.val()) == input.attr('data-max')) {
-                $(this).attr('disabled', true);
-            }
+//             if(currentVal < input.attr('data-max')) {
+//                 input.val(currentVal + 1).change();
+//             }
+//             if(parseInt(input.val()) == input.attr('data-max')) {
+//                 $(this).attr('disabled', true);
+//                 alert('stop: from nice_select')
+//             }
 
-        }
-    } else {
-        input.val(0);
-    }
-});
+//         }
+//     } else {
+//         input.val(0);
+//     }
+// });
 $('.input-number').focusin(function(){
    $(this).data('oldValue', $(this).val());
 });
@@ -179,15 +180,16 @@ $(".input-number").keydown(function (e) {
 
 var first = true;
 $('.product-des').on( "click", ".variation", function( e ) {
-	  		//let first = true;
-	  		if(first){console.log(first)
-	  			$(this).next().removeClass('d-none');
-	  			$(this).parent().parent().find('i.fa').replaceWith(  '<i class="fa fa-sort-down ml-1"></i>' );
-	  			first = false;
-	  		}
-	  		else if( !first ){
-	  			$(this).next().addClass('d-none');
-	  			$(this).parent().parent().find('i.fa').replaceWith(  '<i class="fa fa-sort-up ml-1"></i>' );
-	  			first = true;
-	  		}
-		});
+		//let first = true;
+		if(first){console.log(first)
+			$(this).next().removeClass('d-none');
+			$(this).parent().parent().find('i.fa').replaceWith(  '<i class="fa fa-sort-down ml-1"></i>' );
+			first = false;
+		}
+		else if( !first ){
+			$(this).next().addClass('d-none');
+			$(this).parent().parent().find('i.fa').replaceWith(  '<i class="fa fa-sort-up ml-1"></i>' );
+			first = true;
+		}
+});
+

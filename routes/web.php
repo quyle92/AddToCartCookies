@@ -1,5 +1,8 @@
 <?php
-
+// $style = App\Style::first();
+// $series = App\Series::all();
+// $series_id =  Str::substr($style->style, 0, 1) === 'U' ? $series[0]->id : (Str::substr($style->style, 0, 1) === 'W' ? $series[1]->id : $series[2]->id );
+// dd($series_id);
 use Illuminate\Support\Str;
 
 /*
