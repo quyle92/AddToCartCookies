@@ -13,12 +13,12 @@ class SizeTableSeeder extends Seeder
     public function run(Faker $faker)
     {
         $sizes = [
-            ['size' => 'XS', 'price' => $faker->numberBetween($min = 10, $max = 100)],
-            ['size' => 'S', 'price' => $faker->numberBetween($min = 10, $max = 100)],
-            ['size' => 'M', 'price' => $faker->numberBetween($min = 10, $max = 100)],
-            ['size' => 'L', 'price' => $faker->numberBetween($min = 10, $max = 100)],
-            ['size' => 'XL', 'price' => $faker->numberBetween($min = 10, $max = 100)],
-            ['size' => 'XXL', 'price' => $faker->numberBetween($min = 10, $max = 100)]
+            ['size' => 'XS'],
+            ['size' => 'S'],
+            ['size' => 'M'],
+            ['size' => 'L'],
+            ['size' => 'XL'],
+            ['size' => 'XXL']
         ];
 
         DB::table('sizes')->insert($sizes);

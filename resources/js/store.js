@@ -5,9 +5,13 @@ Vue.use(Vuex);
 
 export default  new Vuex.Store({
 	state:
-	{
+	{	
+		selectedProduct: window.product,
+		priceRange:  window.priceRange,
 		selectedFullNumber:'',
-		selectedSize:''
+		selectedSize:'',
+		totalQuantity: window.totalQuantity,
+
 	},
 	getters:
 	{

@@ -15,7 +15,7 @@ class ProductTableSeeder extends Seeder
      */
     public function run(Faker $faker)
     {   
-        Product::truncate();
+       Product::truncate();
 
 
         $styles = App\Style::all();
@@ -33,6 +33,8 @@ class ProductTableSeeder extends Seeder
                         'color_id' => $color->id,
                         'size_id' => $size->id,
                         'style_id' => $style->id,
+                        'picture'  => 'https://via.placeholder.com/350x150',
+                        'price' => $faker->numberBetween($min = 5, $max = 300) ,
                         'quantity' => $faker->numberBetween($min = 5, $max = 20),
                     ]);
                     
@@ -40,6 +42,13 @@ class ProductTableSeeder extends Seeder
             });
 
         });
+        
+        // $count = 0;
+        // $products = Product::where('style_id', 1)->get();dd(count($products));
+        // $styles->each( function($style) use($faker, $j) {
+        //     $products = Product::where('style_id', 1)->get();
+        // });
+        // dd($count);
 
     }
 

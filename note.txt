@@ -17,3 +17,28 @@ $('.product-des').on( "click", ".variation", function( e ) {
 	  			first = true;
 	  		}
 		});
+
+2/ create custom QueryBuilder macro: 
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+
+public function boot()
+{
+    QueryBuilder::macro(
+        'whereNotEmpty',
+        function (string $column) {
+            return $this->whereNotNull($column)
+                ->where($column, '<>', '');
+        }
+    );
+
+    EloquentBuilder::macro(
+        'whereNotEmpty',
+        function (string $column) {
+            return $this->getQuery()
+                ->whereNotEmpty($column);
+        }
+    );
+}
+
+ref: https://stackoverflow.com/a/61538886/11297747

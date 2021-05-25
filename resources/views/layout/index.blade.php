@@ -8,6 +8,8 @@
         <link rel="stylesheet" href="{{ mix('/css/app.css') }}" />
         <script src="dist/js/v-minusplusfield.js" type="text/javascript"></script>
         <link href="dist/css/v-minusplusfield.css" rel="stylesheet" />
+        <script src="{{ asset('/js/my_script.js') }}"></script> 
+        @stack('scripts')
     </head>
     <body>
         <div id="app">

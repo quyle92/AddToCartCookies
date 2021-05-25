@@ -9,23 +9,24 @@ class Style extends Model
 	protected $guarded = [];
 
     public function colors()
-    {
-        return $this->belongsToMany(Color::class, 'products')->withPivot('fullNumber', 'quantity');
+    {   
+       
+        return $this->belongsToMany(Color::class, 'products')->withPivot('fullNumber', 'quantity','picture',  'price');
     }
 
     public function colorsForOneStyleOnly()
-    {
-        return $this->belongsToMany(Color::class, 'products')->withPivot('fullNumber', 'quantity')->wherePivot('color_id', 1)->wherePivot('size_id', '=', 1);
+    {   
+        return $this->belongsToMany(Color::class, 'products')->withPivot('fullNumber', 'quantity','picture','price')->wherePivot('color_id', 1)->wherePivot('size_id', '=', 1);
     }//(1)
 
     public function sizes()
     {
-        return $this->belongsToMany(Size::class, 'products')->withPivot('fullNumber', 'quantity');
+        return $this->belongsToMany(Size::class, 'products')->withPivot('fullNumber', 'quantity','picture',  'price');
     }
 
     public function sizesForOneStyleOnly()
     {
-        return $this->belongsToMany(Size::class, 'products')->withPivot('fullNumber', 'quantity')->wherePivot('color_id', 1)->wherePivot('size_id', '=', 1);
+        return $this->belongsToMany(Size::class, 'products')->withPivot('fullNumber', 'quantity','picture', 'price')->wherePivot('color_id', 1)->wherePivot('size_id', '=', 1);
     }//(1)
 }
 

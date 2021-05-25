@@ -12,13 +12,13 @@ class ColorTableSeeder extends Seeder
     public function run()
     {
         $colors = [
-            ['color' => 'black', 'picture'  => 'https://via.placeholder.com/350x150'],
-            ['color' => 'white', 'picture'  => 'https://via.placeholder.com/350x150'],
-            ['color' => 'gray', 'picture'  => 'https://via.placeholder.com/350x150'],
-            ['color' => 'maroon', 'picture'  => 'https://via.placeholder.com/350x150'],
-            ['color' => 'purple', 'picture'  => 'https://via.placeholder.com/350x150'],
-            ['color' => 'navy', 'picture'  => 'https://via.placeholder.com/350x150'],
-            ['color' => 'teal', 'picture'  => 'https://via.placeholder.com/350x150']
+            ['color' => 'black'],
+            ['color' => 'white'],
+            ['color' => 'gray'],
+            ['color' => 'maroon'],
+            ['color' => 'purple'],
+            ['color' => 'navy'],
+            ['color' => 'teal']
         ];
 
         DB::table('colors')->insert($colors);

@@ -21,3 +21,4 @@ Route::get('/home', 'ProductController@getAllProducts');
 Route::get('/product/{id}', 'ProductController@getselectedProduct');
 Route::post('/addToCart', 'ProductController@addToCart');
 Route::get('/cart', 'ProductController@showCart');
+Route::post('/getPriceQuantity', 'ProductController@getPriceQuantity');

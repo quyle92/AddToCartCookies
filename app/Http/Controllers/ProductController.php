@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Color;
 use App\Product;
+use App\Size;
 use App\Style;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,23 +17,88 @@ class ProductController extends Controller
     {   
     	$products = Style::with([
             'colorsForOneStyleOnly' => function ($query) {     
-                $query->select('colors.id', 'color', 'picture')->where('colors.id', 1); 
+                $query->select('colors.id', 'color')->where('colors.id', 1); 
         },
             'sizesForOneStyleOnly' => function ($query) {     
-                $query->select('sizes.id', 'size', 'price')->where('sizes.id', 1); 
+                $query->select('sizes.id', 'size')->where('sizes.id', 1); 
         }
         ])->get();
   	 
-       // dd($products);
+
     	return view('home')->with( compact('products') );
     }
 
-    public function getselectedProduct($id)
+    public function getSelectedProduct($id)
     {   
 
-    	$product;
+    	$product = Style::with([
+            'colorsForOneStyleOnly' => function ($query) {     
+                $query->select('colors.id', 'color')->where('colors.id', 1); 
+        },
+            'sizesForOneStyleOnly' => function ($query) {     
+                $query->select('sizes.id', 'size')->where('sizes.id', 1); 
+        }
+        ])->where('id', $id)->first();
 
-    	return view('product')->with( compact('product') );
+        $priceRange = json_encode( DB::table('products')
+                     ->select(DB::raw('min(price), max(price)'))
+                     ->where('style_id', $id)->first() );
+
+        $sizes = Size::all();
+
+        $colors = Color::all();
+        $style_id = $product->colorsForOneStyleOnly[0]->pivot->style_id;
+
+        $totalQuantity = intval( 
+            DB::table('products')
+                    ->join('styles', 'styles.id', '=', 'products.style_id')->where('style_id', $style_id )
+                    ->sum('quantity') 
+        );
+       // dd( $totalQuantity );
+    	return view('product')->with( compact('product',  'priceRange', 'sizes', 'colors', 'totalQuantity') );
+    }
+
+    public function getPriceQuantity( Request $request )
+    {
+        $style_id = $request->styleID;
+        $size = $request->size;
+        $color = $request->color;
+
+        if( ! empty( $size ) && ! empty( $color ) ){
+            $priceQuantity = DB::table('products')
+                ->join('sizes', 'products.size_id', '=', 'sizes.id')
+                ->join('colors', 'products.color_id', '=', 'colors.id')
+                ->where('style_id', $style_id )
+                ->where('size', $size )
+                ->where('color', $color )
+                ->get();
+
+            return $priceQuantity;
+        }
+
+        $priceQuantity = DB::table('products')
+                //nếu chỉ có $size ko thì chạy cái này
+                ->when($size, function( $query, $size ){
+                    return $query->join('sizes', 'products.size_id', '=', 'sizes.id')
+                            ->where('size', $size);
+                })
+                //nếu chỉ có $color ko thì chạy cái này
+                ->when($color, function( $query, $color ){
+                    return $query->join('colors', 'products.color_id', '=', 'colors.id')
+                            ->where('color', $color);
+                })
+                //nếu  $size + $color ko có thì chạy cái này thôi
+                ->where('style_id', $style_id)->get();
+
+        $result = [];
+        foreach( $priceQuantity as $item ){
+            $result[] = [
+                'price' => intval( $item->price ),
+                'quantity' => intval( $item->quantity )
+            ];
+        }        
+        return $result;
+        
     }
 
     public function addToCart(Request $request)

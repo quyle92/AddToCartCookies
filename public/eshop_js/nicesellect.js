@@ -136,34 +136,35 @@ YTPlayer.opt.autoPlay){var YTPStart=jQuery.Event("YTPStart");YTPStart.time=YTPla
 //         input.val(0);
 //     }
 // });
-$('.input-number').focusin(function(){
-   $(this).data('oldValue', $(this).val());
-});
-$('.input-number').change(function() {
+
+// $('.input-number').focusin(function(){
+//    $(this).data('oldValue', $(this).val());
+// });
+// $('.input-number').change(function() {
     
-    minValue =  parseInt($(this).attr('data-min'));
-    maxValue =  parseInt($(this).attr('data-max'));
-    valueCurrent = parseInt($(this).val());
+//     minValue =  parseInt($(this).attr('data-min'));
+//     maxValue =  parseInt($(this).attr('data-max'));
+//     valueCurrent = parseInt($(this).val());
     
-    name = $(this).attr('name');
-    if(valueCurrent >= minValue) {
-        $(".btn-number[data-type='minus'][data-field='"+name+"']").removeAttr('disabled')
-    } else {
-        alert('Sorry, the minimum value was reached');
-        $(this).val($(this).data('oldValue'));
-    }
-    if(valueCurrent <= maxValue) {
-        $(".btn-number[data-type='plus'][data-field='"+name+"']").removeAttr('disabled')
-    } else {
-        alert('Sorry, the maximum value was reached');
-        $(this).val($(this).data('oldValue'));
-    }
+//     name = $(this).attr('name');
+//     if(valueCurrent >= minValue) {
+//         $(".btn-number[data-type='minus'][data-field='"+name+"']").removeAttr('disabled')
+//     } else { 
+//         alert('Sorry, the minimum value was reached');
+//         $(this).val($(this).data('oldValue'));
+//     }
+//     if(valueCurrent <= maxValue) {
+//         $(".btn-number[data-type='plus'][data-field='"+name+"']").removeAttr('disabled')
+//     } else {
+//         alert('Sorry, the maximum value was reached');
+//         $(this).val($(this).data('oldValue'));
+//     }
     
     
-});
+// });
 $(".input-number").keydown(function (e) {
-        // Allow: backspace, delete, tab, escape, enter and .
-        if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 190]) !== -1 ||
+        // Allow: backspace, delete, tab, escape, enter
+        if ($.inArray(e.keyCode, [46, 8, 9, 27, 13]) !== -1 ||
              // Allow: Ctrl+A
             (e.keyCode == 65 && e.ctrlKey === true) || 
              // Allow: home, end, left, right

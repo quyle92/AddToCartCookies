@@ -30,7 +30,8 @@ class CreateProductsTable extends Migration
             $table->unsignedBigInteger('color_id');//color_id size_id style_id
             $table->foreign('color_id')->references('id')->on('colors')->onDelete('cascade');
 
-            
+            $table->string('picture');
+            $table->decimal('price')->default(0.00);
 
             $table->integer('quantity')->default(0);
             
