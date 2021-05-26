@@ -38,7 +38,7 @@
                     <h4 
                       class="price"
                       v-if=" ! selectedPrice"
-                      ><span>$ {{this.priceRange['min(price)']}} - $ {{this.priceRange['max(price)']}}</span>
+                      ><span>${{this.priceRange['min(price)']}} - {{this.priceRange['max(price)']}}</span>
                     </h4>
                      <h4 
                       class="price"
@@ -70,7 +70,7 @@
                        <button class="product-variation" data-toggle="tooltip" title="Not In store"
                            v-for="(item, index) in sizeList" :key='item.id'
                             :title="item.size"
-                             @click.prevent="selectSize(item.size)" 
+                             @click.prevent="selectSize(item.size, $event)" 
                             > 
                            {{item.size}}
                         </button>
@@ -80,7 +80,7 @@
                           <button class="product-variation" data-toggle="tooltip" title="Not In store"
                            v-for="(item, index) in colorList" :key='item.id'
                             :title="item.color"
-                             @click.prevent="selectColor(item.color)" 
+                             @click.prevent="selectColor(item.color, $event)" 
                             > 
                            {{item.color}}
                           </button>
@@ -112,7 +112,10 @@
             sizeList: [],
             colorList:[],
             selectedClass: 'font-weight-bold selected',
-            sizeColor:{},
+            sizeColor:{
+              size: '',
+              color: ''
+            },
             minPrice: '',
             maxPrice: '',
             selectedPrice: '',
@@ -121,11 +124,13 @@
         }),
 
         methods: {
-            async selectSize(size){
+            async selectSize(size, e){
                 this.quantity = 1;
+                let button = $(e.target);
+
                 // khi click lại vào chính button đó
                 if( size === this.sizeColor.size ){
-                    $('button[title=' + size + ']').removeClass(this.selectedClass);
+                    button.removeClass(this.selectedClass);
                     this.sizeColor.size = '';
                     let params = this.getParams();
                     
@@ -135,13 +140,16 @@
                 }
 
                 //for css only
+                if( button.hasClass('disabled') ){
+                  return;
+                }
                 let sizeTags = $('h6.sizes button');
-                $( sizeTags ).each(function( i, e ) {
-                   $(e).removeClass( this.selectedClass );
+                $( sizeTags ).each(function( i, el ) {
+                   $(el).removeClass( this.selectedClass );
 
                 }.bind(this));
 
-                $('button[title=' + size + ']').addClass(this.selectedClass);
+                button.addClass(this.selectedClass);
 
                 //send to server
                 this.sizeColor.size = size;
@@ -150,8 +158,10 @@
                 this.getMinMaxQuantity(response);
 
             },
-            async selectColor(color){
+            async selectColor(color, e){
                 this.quantity = 1;
+                let button = $(e.target);
+
                 // khi click lại vào chính button đó
                 if( color === this.sizeColor.color ){
                     $('button[title=' + color + ']').removeClass(this.selectedClass);
@@ -164,13 +174,16 @@
                 }                
 
                  //for css only
+                if( button.hasClass('disabled') ){
+                  return;
+                }
                 let colorTags = $('h6.colors button');
 
-                $( colorTags ).each(function( i, e ) {
-                    //console.log(e);
-                   $(e).removeClass( this.selectedClass );
+                $( colorTags ).each(function( i, el ) {
+                   $(el).removeClass( this.selectedClass );
                 }.bind(this));
-                $('button[title=' + color + ']').addClass(this.selectedClass);
+
+                button.addClass(this.selectedClass);
 
                  //send to server
                 this.sizeColor.color = color;
@@ -216,42 +229,109 @@
                 return $('input#quantity.form-control.input-number').val();
             },
             getMinMaxQuantity(response){
-              let result = response.data;
-                
-               //khi hoặc size hoặc color đc tick
-                if( result.length > 1)
-                {
-                    let totalQuantity = 0;
-                    let priceRange = [];
 
-                    result.forEach( (item) => {
-                        totalQuantity += item.quantity;
-                        priceRange.push( item.price )
-                    });
-                    this.totalQuantity = totalQuantity;
+                  let result = response.data;
+                  let priceRange = [];
+                  let totalQuantity = 0;
 
-                    let minPrice = _.min(priceRange);
-                    let maxPrice = _.max(priceRange);
-                    this.priceRange['min(price)'] = minPrice;
-                    this.priceRange['max(price)'] = maxPrice;
+              //khi size + color cùng đc tick (must put this logic first)
+                  if( this.sizeColor.size.length !== 0 && this.sizeColor.color.length !== 0 )
+                  {   
+
+                      result.forEach( (item) => {
+                          totalQuantity += item.quantity;
+                      });
+                      this.totalQuantity = totalQuantity;
+          
+                      this.selectedPrice = result[0].price;
+
+                      return;
+                  }
+
+                  let sizeTags = $('h6.sizes button');
+                  $( sizeTags ).each(function( i, el ) {
+                     $(el).removeClass( 'disabled' );
+
+                  }.bind(this));
+
+                  let colorTags = $('h6.colors button');
+                  $( colorTags ).each(function( i, el ) {
+                      $(el).removeClass( 'disabled' );
+                  });
+
+              //khi size và color button đc released (ko đc tick)
+                  if( this.sizeColor.size.length === 0 && this.sizeColor.color.length === 0 )
+                  {
+                    //remove item where its quantity is < 0
+                      result = result.filter( e =>  e.quantity > 0 ); 
+
+                      result.forEach( (item) => {
+                          totalQuantity += item.quantity;
+                          priceRange.push( item.price )
+                      });
+                      this.totalQuantity = totalQuantity;
+
+                      
+                      let minPrice = _.min(priceRange);
+                      let maxPrice = _.max(priceRange);
+                      this.priceRange['min(price)'] = minPrice;
+                      this.priceRange['max(price)'] = maxPrice;
 
                     //cho selectedPrice = '' để priceRange đc render trên template
-                    this.selectedPrice = '';
-                   
-                } 
+                      this.selectedPrice = '';
+                  }
 
-                 //khi size + color cùng đc tick
-                if( result.length === 1 )
-                {   
-                    let totalQuantity = 0;
+              //khi hoặc size hoặc color đc tick
+                  if( this.sizeColor.size.length !== 0 || this.sizeColor.color.length !== 0)
+                  {
+                    //get the key of item where its quantity is 0
+                      let outOfStock = [];
+                      for( let item in result)
+                      {
+                        result[item].quantity === 0 ? outOfStock.push(+item) : '';
+                      }
 
-                    result.forEach( (item) => {
-                        totalQuantity += item.quantity;
-                    });
-                    this.totalQuantity = totalQuantity;
-        
-                    this.selectedPrice = result[0].price;
-                }
+
+                    //if size is ticked
+                      if( this.sizeColor.size.length !== 0 )
+                      { console.log(this.sizeColor.size.length)
+                        $( colorTags ).each( function( i, e ) {
+                            $.inArray( i, outOfStock ) !== -1 ?  $(e).addClass( 'disabled' ) : '';
+
+                        }.bind(this));
+                      }
+
+                      
+                    //if color is ticked
+                      if( this.sizeColor.color.length !== 0 )
+                      {console.log(this.sizeColor.color.length)
+                        $( sizeTags ).each( function( i, e ) {
+                           $.inArray( i, outOfStock ) !== -1 ?  $(e).addClass( 'disabled' ) : '';
+
+                        }.bind(this));
+                      }
+
+                    //remove item where its quantity is < 0
+                      result = result.filter( e =>  e.quantity > 0 ); 
+
+                      result.forEach( (item) => {
+                          totalQuantity += item.quantity;
+                          priceRange.push( item.price )
+                      });
+                      this.totalQuantity = totalQuantity;
+
+                      
+                      let minPrice = _.min(priceRange);
+                      let maxPrice = _.max(priceRange);
+                      this.priceRange['min(price)'] = minPrice;
+                      this.priceRange['max(price)'] = maxPrice;
+
+                    //cho selectedPrice = '' để priceRange đc render trên template
+                      this.selectedPrice = '';
+                          
+                  } 
+
+                
             },
           getParams(){
               let styleID = {
@@ -301,9 +381,14 @@
 
 }
 
-#productPage  .product-variation:hover, .selected {
+#productPage  .product-variation:not(.disabled):hover, .selected {
     color: #ee4d2d;
     border-color: #ee4d2d !important;
    
+}
+
+.disabled{
+  color: rgba(0,0,0,.26);
+  cursor: not-allowed;
 }
 </style>
