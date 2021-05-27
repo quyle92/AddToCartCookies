@@ -30,7 +30,6 @@ class ProductController extends Controller
 
     public function getSelectedProduct($id)
     {   
-
     	$product = Style::with([
             'colorsForOneStyleOnly' => function ($query) {     
                 $query->select('colors.id', 'color')->where('colors.id', 1); 
@@ -90,14 +89,21 @@ class ProductController extends Controller
                 //nếu  $size + $color ko có thì chạy cái này thôi
                 ->where('style_id', $style_id)->get();
 
+        $priceQuantity = DB::table('products')
+                ->join('sizes', 'products.size_id', '=', 'sizes.id')
+                ->join('colors', 'products.color_id', '=', 'colors.id')
+                ->where('style_id', 1)->select('color', 'size', 'quantity','price')->get();
+
         $result = [];
         foreach( $priceQuantity as $item ){
             $result[] = [
                 'price' => intval( $item->price ),
                 'quantity' => intval( $item->quantity )
             ];
-        }        
-        return $result;
+        } 
+
+        //dd($priceQuantity);
+        return $priceQuantity;
         
     }
 

@@ -2401,8 +2401,6 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 //
 //
 //
-//
-//
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: ['sizes', 'colors'],
   data: function data() {
@@ -2420,7 +2418,8 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       maxPrice: '',
       selectedPrice: '',
       totalQuantity: '',
-      quantity: 1
+      quantity: 1,
+      productSet: []
     };
   },
   methods: {
@@ -2428,8 +2427,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       var _this = this;
 
       return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee() {
-        var button, _params, _response, sizeTags, params, response;
-
+        var button, sizeTags, variationType;
         return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -2438,49 +2436,38 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
                 button = $(e.target); // khi click lại vào chính button đó
 
                 if (!(size === _this.sizeColor.size)) {
-                  _context.next = 11;
+                  _context.next = 7;
                   break;
                 }
 
                 button.removeClass(_this.selectedClass);
                 _this.sizeColor.size = '';
-                _params = _this.getParams();
-                _context.next = 8;
-                return axios.post('/getPriceQuantity', _params);
 
-              case 8:
-                _response = _context.sent;
-
-                _this.getMinMaxQuantity(_response);
+                _this.getMinMaxQuantity(_this.sizeColor.color);
 
                 return _context.abrupt("return");
 
-              case 11:
+              case 7:
                 if (!button.hasClass('disabled')) {
-                  _context.next = 13;
+                  _context.next = 9;
                   break;
                 }
 
                 return _context.abrupt("return");
 
-              case 13:
+              case 9:
+                _this.sizeColor.size = size;
                 sizeTags = $('h6.sizes button');
                 $(sizeTags).each(function (i, el) {
                   $(el).removeClass(this.selectedClass);
                 }.bind(_this));
                 button.addClass(_this.selectedClass); //send to server
 
-                _this.sizeColor.size = size;
-                params = _this.getParams();
-                _context.next = 20;
-                return axios.post('/getPriceQuantity', params);
+                variationType = 'size';
 
-              case 20:
-                response = _context.sent;
+                _this.getMinMaxQuantity(size);
 
-                _this.getMinMaxQuantity(response);
-
-              case 22:
+              case 15:
               case "end":
                 return _context.stop();
             }
@@ -2492,8 +2479,7 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       var _this2 = this;
 
       return _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee2() {
-        var button, _params2, _response2, colorTags, params, response;
-
+        var button, colorTags, variationType;
         return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
@@ -2502,49 +2488,38 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
                 button = $(e.target); // khi click lại vào chính button đó
 
                 if (!(color === _this2.sizeColor.color)) {
-                  _context2.next = 11;
+                  _context2.next = 7;
                   break;
                 }
 
-                $('button[title=' + color + ']').removeClass(_this2.selectedClass);
+                $(button).removeClass(_this2.selectedClass);
                 _this2.sizeColor.color = '';
-                _params2 = _this2.getParams();
-                _context2.next = 8;
-                return axios.post('/getPriceQuantity', _params2);
 
-              case 8:
-                _response2 = _context2.sent;
-
-                _this2.getMinMaxQuantity(_response2);
+                _this2.getMinMaxQuantity(_this2.sizeColor.size);
 
                 return _context2.abrupt("return");
 
-              case 11:
+              case 7:
                 if (!button.hasClass('disabled')) {
-                  _context2.next = 13;
+                  _context2.next = 9;
                   break;
                 }
 
                 return _context2.abrupt("return");
 
-              case 13:
+              case 9:
+                _this2.sizeColor.color = color;
                 colorTags = $('h6.colors button');
                 $(colorTags).each(function (i, el) {
                   $(el).removeClass(this.selectedClass);
                 }.bind(_this2));
                 button.addClass(_this2.selectedClass); //send to server
 
-                _this2.sizeColor.color = color;
-                params = _this2.getParams();
-                _context2.next = 20;
-                return axios.post('/getPriceQuantity', params);
+                variationType = 'color';
 
-              case 20:
-                response = _context2.sent;
+                _this2.getMinMaxQuantity(color);
 
-                _this2.getMinMaxQuantity(response);
-
-              case 22:
+              case 15:
               case "end":
                 return _context2.stop();
             }
@@ -2586,38 +2561,65 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
     getInputValue: function getInputValue() {
       return $('input#quantity.form-control.input-number').val();
     },
-    getMinMaxQuantity: function getMinMaxQuantity(response) {
-      var result = response.data;
+    getMinMaxQuantity: function getMinMaxQuantity() {
+      var _this3 = this;
+
+      var variation = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+      var variationType = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+      var result = [];
+      this.productSet.forEach(function (item) {
+        item.size === variation || item.color === variation ? result.push(item) : '';
+      });
       var priceRange = [];
-      var totalQuantity = 0; //khi size + color cùng đc tick (must put this logic first)
-
-      if (this.sizeColor.size.length !== 0 && this.sizeColor.color.length !== 0) {
-        result.forEach(function (item) {
-          totalQuantity += item.quantity;
-        });
-        this.totalQuantity = totalQuantity;
-        this.selectedPrice = result[0].price;
-        return;
-      }
-
+      var totalQuantity = 0;
       var sizeTags = $('h6.sizes button');
       $(sizeTags).each(function (i, el) {
         $(el).removeClass('disabled');
-      }.bind(this));
+      });
       var colorTags = $('h6.colors button');
       $(colorTags).each(function (i, el) {
         $(el).removeClass('disabled');
-      }); //khi size và color button đc released (ko đc tick)
+      }); //khi size + color cùng đc tick (logic này phải nằm trên cùng)
+
+      if (this.sizeColor.size.length !== 0 && this.sizeColor.color.length !== 0) {
+        var selectedProduct = {};
+        this.productSet.forEach(function (item) {
+          item.size === _this3.sizeColor.size && item.color === _this3.sizeColor.color ? selectedProduct = item : '';
+        });
+        this.totalQuantity = selectedProduct.quantity;
+        this.selectedPrice = selectedProduct.price; //size: xem colors nào bị 0 quantity thì disabled nó
+
+        var outOfStockColor = [];
+        this.productSet.forEach(function (item) {
+          item.size === _this3.sizeColor.size && item.quantity === 0 ? outOfStockColor.push(item.color) : '';
+        });
+        $(outOfStockColor).each(function (i, el) {
+          $("h6.colors button[title=\"".concat(el, "\"]")).addClass('disabled');
+        }.bind(this)); //color: xem sizes nào bị 0 quantity thì disabled nó
+
+        var outOfStockSize = [];
+        this.productSet.forEach(function (item) {
+          item.color === _this3.sizeColor.color && item.quantity === 0 ? outOfStockSize.push(item.size) : '';
+        });
+        $(outOfStockSize).each(function (i, el) {
+          $("h6.sizes button[title=\"".concat(el, "\"]")).addClass('disabled');
+        }.bind(this));
+        return; //tới đây phải thoát ra
+      } //khi size và color button đc released (đều ko đc tick)
+
 
       if (this.sizeColor.size.length === 0 && this.sizeColor.color.length === 0) {
-        //remove item where its quantity is < 0
-        result = result.filter(function (e) {
+        var _result = this.productSet; //remove item where its quantity is < 0
+
+        _result = _result.filter(function (e) {
           return e.quantity > 0;
         });
-        result.forEach(function (item) {
+
+        _result.forEach(function (item) {
           totalQuantity += item.quantity;
           priceRange.push(item.price);
         });
+
         this.totalQuantity = totalQuantity;
 
         var minPrice = _.min(priceRange);
@@ -2641,7 +2643,6 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
 
         if (this.sizeColor.size.length !== 0) {
-          console.log(this.sizeColor.size.length);
           $(colorTags).each(function (i, e) {
             $.inArray(i, outOfStock) !== -1 ? $(e).addClass('disabled') : '';
           }.bind(this));
@@ -2649,7 +2650,6 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
 
         if (this.sizeColor.color.length !== 0) {
-          console.log(this.sizeColor.color.length);
           $(sizeTags).each(function (i, e) {
             $.inArray(i, outOfStock) !== -1 ? $(e).addClass('disabled') : '';
           }.bind(this));
@@ -2695,12 +2695,19 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
     }
   },
   created: function created() {
-    this.selectedProduct = this.$store.state.selectedProduct;
-    console.log(this.selectedProduct);
+    var _this4 = this;
+
+    this.selectedProduct = this.$store.state.selectedProduct; //console.log(this.selectedProduct)
+
     this.sizeList = this.sizes;
     this.colorList = this.colors;
     this.priceRange = JSON.parse(JSON.stringify(this.$store.state.priceRange));
     this.totalQuantity = this.$store.state.totalQuantity;
+    axios.get('/getPriceQuantity').then(function (response) {
+      _this4.productSet = response.data;
+    })["catch"](function (error) {
+      console.log(error);
+    });
   },
   mounted: function mounted() {}
 });

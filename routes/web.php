@@ -1,9 +1,10 @@
 <?php
-// $style = App\Style::first();
-// $series = App\Series::all();
-// $series_id =  Str::substr($style->style, 0, 1) === 'U' ? $series[0]->id : (Str::substr($style->style, 0, 1) === 'W' ? $series[1]->id : $series[2]->id );
-// dd($series_id);
-use Illuminate\Support\Str;
+ $priceQuantity = DB::table('products')
+ 					->join('sizes', 'products.size_id', '=', 'sizes.id')
+ 					->join('colors', 'products.color_id', '=', 'colors.id')
+ 					->where('style_id', 1)->select('color', 'size', 'quantity','price')->get();
+//dd($priceQuantity);
+
 
 /*
 |--------------------------------------------------------------------------
@@ -21,4 +22,4 @@ Route::get('/home', 'ProductController@getAllProducts');
 Route::get('/product/{id}', 'ProductController@getselectedProduct');
 Route::post('/addToCart', 'ProductController@addToCart');
 Route::get('/cart', 'ProductController@showCart');
-Route::post('/getPriceQuantity', 'ProductController@getPriceQuantity');
+Route::get('/getPriceQuantity', 'ProductController@getPriceQuantity');

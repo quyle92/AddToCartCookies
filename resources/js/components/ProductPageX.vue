@@ -32,7 +32,7 @@
                         <span class="review-no">41 reviews</span>
                     </div>
                     <p class="product-description">Suspendisse quos? Tempus cras iure temporibus? Eu laudantium cubilia sem sem! Repudiandae et! Massa senectus enim minim sociosqu delectus posuere.</p>
-
+                    
                     <h4 
                       class="price"
                       v-if=" ! selectedPrice"
@@ -118,8 +118,7 @@
             maxPrice: '',
             selectedPrice: '',
             totalQuantity: '',
-            quantity: 1,
-            productSet:[]
+            quantity: 1
         }),
 
         methods: {
@@ -131,7 +130,10 @@
                 if( size === this.sizeColor.size ){
                     button.removeClass(this.selectedClass);
                     this.sizeColor.size = '';
-                    this.getMinMaxQuantity( this.sizeColor.color );
+                    let params = this.getParams();
+                    
+                    let response = await axios.post('/getPriceQuantity', params);
+                    this.getMinMaxQuantity(response);
                     return;
                 }
 
@@ -139,7 +141,6 @@
                 if( button.hasClass('disabled') ){
                   return;
                 }
-                 this.sizeColor.size = size;
                 let sizeTags = $('h6.sizes button');
                 $( sizeTags ).each(function( i, el ) {
                    $(el).removeClass( this.selectedClass );
@@ -149,8 +150,10 @@
                 button.addClass(this.selectedClass);
 
                 //send to server
-                let variationType = 'size';
-                this.getMinMaxQuantity( size );
+                this.sizeColor.size = size;
+                let params = this.getParams();
+                let response = await axios.post('/getPriceQuantity', params);
+                this.getMinMaxQuantity(response);
 
             },
             async selectColor(color, e){
@@ -159,9 +162,12 @@
 
                 // khi click lại vào chính button đó
                 if( color === this.sizeColor.color ){
-                    $(button).removeClass(this.selectedClass);
+                    $('button[title=' + color + ']').removeClass(this.selectedClass);
                     this.sizeColor.color = '';
-                    this.getMinMaxQuantity( this.sizeColor.size );
+                    let params = this.getParams();
+                    
+                    let response = await axios.post('/getPriceQuantity', params);
+                    this.getMinMaxQuantity(response);
                     return;
                 }                
 
@@ -169,7 +175,6 @@
                 if( button.hasClass('disabled') ){
                   return;
                 }
-                this.sizeColor.color = color;
                 let colorTags = $('h6.colors button');
 
                 $( colorTags ).each(function( i, el ) {
@@ -179,8 +184,10 @@
                 button.addClass(this.selectedClass);
 
                  //send to server
-                 let variationType = 'color';
-                this.getMinMaxQuantity( color );
+                this.sizeColor.color = color;
+                let params = this.getParams();
+                let response = await axios.post('/getPriceQuantity', params);
+                this.getMinMaxQuantity(response);
             },
             addToCart(){
                 axios.post('/addToCart', {
@@ -219,70 +226,41 @@
             getInputValue(){
                 return $('input#quantity.form-control.input-number').val();
             },
-            getMinMaxQuantity(variation = null, variationType = null)
-            {
-                let result = [];
-                this.productSet.forEach( item => {
-                    item.size === variation || item.color === variation ? result.push(item) : ''
-                });
-                let priceRange = [];
-                let totalQuantity = 0;
+            getMinMaxQuantity(response){
 
-                let sizeTags = $('h6.sizes button');
+                  let result = response.data;
+                  let priceRange = [];
+                  let totalQuantity = 0;
+
+              //khi size + color cùng đc tick 
+                  if( this.sizeColor.size.length !== 0 && this.sizeColor.color.length !== 0 )
+                  {   
+                      result.forEach( (item) => {
+                          totalQuantity += item.quantity;
+                      });
+                      this.totalQuantity = totalQuantity;
+          
+                      this.selectedPrice = result[0].price;
+
+                      return;
+                  }
+
+                  let sizeTags = $('h6.sizes button');
                   $( sizeTags ).each(function( i, el ) {
                      $(el).removeClass( 'disabled' );
-                  });
 
-                let colorTags = $('h6.colors button');
+                  }.bind(this));
+
+                  let colorTags = $('h6.colors button');
                   $( colorTags ).each(function( i, el ) {
                       $(el).removeClass( 'disabled' );
                   });
 
-              //khi size + color cùng đc tick (logic này phải nằm trên cùng)
-                  if( this.sizeColor.size.length !== 0 && this.sizeColor.color.length !== 0 )
-                  {   
-                      let selectedProduct = {};
-                      this.productSet.forEach( item => {
-                          item.size === this.sizeColor.size && item.color === this.sizeColor.color 
-                                ? selectedProduct = item : '';
-                      });
-
-                      this.totalQuantity = selectedProduct.quantity;
-          
-                      this.selectedPrice = selectedProduct.price;
-                    //size: xem colors nào bị 0 quantity thì disabled nó
-                      let outOfStockColor = [];
-                      this.productSet.forEach( item => {
-                          item.size === this.sizeColor.size && item.quantity === 0
-                                ? outOfStockColor.push(item.color) : '';
-                      });
-                      
-                      $( outOfStockColor ).each(function( i, el ) {
-                           $(`h6.colors button[title="${el}"]`).addClass( 'disabled' );
-                       }.bind(this));
-
-                    //color: xem sizes nào bị 0 quantity thì disabled nó
-                      let outOfStockSize = [];
-                      this.productSet.forEach( item => {
-                          item.color === this.sizeColor.color && item.quantity === 0
-                                ? outOfStockSize.push(item.size) : '';
-                      });
-                      
-                      $( outOfStockSize ).each(function( i, el ) {
-                            $(`h6.sizes button[title="${el}"]`).addClass( 'disabled' );
-                       }.bind(this));
-
-                      return ;//tới đây phải thoát ra
-                  }
-
                   
 
-                  
-
-              //khi size và color button đc released (đều ko đc tick)
+              //khi size và color button đc released (ko đc tick)
                   if( this.sizeColor.size.length === 0 && this.sizeColor.color.length === 0 )
-                  {  
-                      let result = this.productSet;   
+                  {
                     //remove item where its quantity is < 0
                       result = result.filter( e =>  e.quantity > 0 ); 
 
@@ -308,11 +286,11 @@
                     //get the key of item where its quantity is 0
                       let outOfStock = [];
                       for( let item in result)
-                      { 
+                      {
                         result[item].quantity === 0 ? outOfStock.push(+item) : '';
-
                       }
-                     
+
+
                     //if size is ticked
                       if( this.sizeColor.size.length !== 0 )
                       { 
@@ -377,21 +355,12 @@
           }
         },
         created() { 
-            this.selectedProduct = this.$store.state.selectedProduct; //console.log(this.selectedProduct)
-            this.sizeList = this.sizes;
-            this.colorList = this.colors;
-            this.priceRange = JSON.parse(JSON.stringify(this.$store.state.priceRange));
-            this.totalQuantity = this.$store.state.totalQuantity;
-        
-            axios.get('/getPriceQuantity')
-              .then( ( response ) => {
-                this.productSet = response.data;
-                
-              })
-              .catch(function (error) {
-                console.log(error);
-              })
-             
+          this.selectedProduct = this.$store.state.selectedProduct; console.log(this.selectedProduct)
+          this.sizeList = this.sizes;
+          this.colorList = this.colors;
+          this.priceRange = JSON.parse(JSON.stringify(this.$store.state.priceRange));
+          this.totalQuantity = this.$store.state.totalQuantity;
+           
         },
         mounted () {
             
