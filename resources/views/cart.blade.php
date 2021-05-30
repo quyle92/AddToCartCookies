@@ -1,5 +1,5 @@
 @extends('layout.index')
 @section('content')
 
-	<cart :products={{json_encode($products)}} ></cart>
+	<cart  ></cart>
 @endsection 

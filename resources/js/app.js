@@ -2,16 +2,24 @@
  * First we will load all of this project's JavaScript dependencies which
  * includes Vue and other libraries. It is a great starting point when
  * building robust, powerful web applications using Vue and Laravel.
+ * eslint-env node
  */
 
 require('./bootstrap');
 
 window.Vue = require('vue');
 
-import store from './store'
-//owl.carousel (1)
-// import 'owl-carousel/owl-carousel/owl.carousel.min.js';
+import store from './store';
+Vue.prototype.$store = store;
 
+//helper.js
+import Helper from './helper';
+Vue.prototype.$Helper = new Helper();
+
+import common from './common';
+Vue.mixin(common)
+
+window.vm = new Vue();
 
 //eshop
 // require  ('./eshop_js/active.js');
@@ -46,6 +54,12 @@ const getCookieValue = (name) => (
 
 window.vm = new Vue();
 
+/*
+  Convert vue object
+*/
+global.getVueObject = obj => {
+  return JSON.parse(JSON.stringify( obj ));
+};
 //ProductPage = require('./components/ProductPage.vue').default;
 
 /**
@@ -56,7 +70,7 @@ window.vm = new Vue();
 
 const app = new Vue({
     el: '#app',
-    store,
+    //store,
    	data: () => ({
    		
         }),

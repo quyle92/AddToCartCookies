@@ -39,19 +39,20 @@
 									<td class="image" data-title="No"><img src="https://via.placeholder.com/100x100" alt="#"></td>
 									<td class="product-des" data-title="Description" 					
 									>
-										<p class="product-name"><a href="#">{{item.productName}}</a></p>
+										<p class="product-name"><a :href="'/product/' + item.style_id">{{item.style}} <small>| UUID: {{item.fullNumber}}</small></a></p>
 										<div class="variation" 
-										:id="item.fullNumber"
-										@click="showPopover(item.fullNumber)"
+										data-fullNumber="item.fullNumber"
+										@click="showPopover(item, index)"
 										>
-											<span>Variation:{{item.size}}</span><i class="fa fa-sort-up ml-1"></i>
+											<span>Variation:{{item.size}} | {{item.color}} </span>
+											<i class="fa fa-sort-up ml-1" v-if="item.isEdit"></i>
+											<i class="fa fa-sort-down ml-1" v-else></i>
 
 										</div>
 										<popover 
-										
-										class="position-absolute bg-white d-none" 
+										class="position-absolute bg-white" 
 										style="z-index:999" 
-										:selectedItem="item"
+										:itemInfo="item"
 										/>
 									</td>
 									<td class="price" data-title="Price" ref="mySecondLevelRefName"><span>${{item.price}} </span></td>
@@ -147,31 +148,133 @@ export default {
    ],
   data: function() {
     return {
- 		productsOnCart:[],
- 		//popover: false,
- 		show:false,
- 		count: 0,
- 		max: 10,
- 		min:1
- 	  }
+		 		productsOnCart:[],
+		 		//popover: false,
+		 		show:false,
+		 		count: 0,
+		 		max: 10,
+		 		min:1,
+		 		selectedItem: {},
+		 		styleSet:[],
+		 		// sizeColor: {}
+ 		}
+  },
+  computed: {
+  	...mapState([
+  		'totalQuantity'  ,
+			'selectedFullNumber'  ,
+			'priceRange' , 
+			'selectedPrice'  ,
+			'productSet' , 
+
+  		]),
+  	totalQty(){
+  		let result = 0;
+  		this.productsOnCart.forEach( (item) => {
+  			 result += item.quantity
+  		})
+  		return result;
+  	},
+  	totalAmount(){
+  		let result = 0;
+
+  		this.productsOnCart.forEach( item => {
+  			let subTotal = item.quantity * item.price;
+  			result += subTotal;
+  		});
+
+  		return result;
+  	}
+
   },
   methods:{
   	onClose(){
 
   	},
-  	showPopover(fullNumber)
+  	showPopover(item, index)
   	{	
+  		//hide popover  nếu click lại lần 2
+  		let selectedProduct= _.find(this.productsOnCart, {'isEdit': true});
+  		if( _.isEqual(selectedProduct, item) ){
+  			item.isEdit = false;
+  			//$on: popover.vue
+  			vm.$emit('cancel')
+  			return;
+  		}
+
   		//hide popover cũ rồi mới show popover mới lên
-  		$('.position-absolute').each( function( i, e ) {
-  			$(e).addClass('d-none');
-  		})
+  		this.productsOnCart.forEach( e => {
+  				e.isEdit === true ? e.isEdit = false : '';
+  			
+  		});
+  		
+  		this.$store.state.selectedProduct  = item;
+  		
+  		this.$store.state.sizeColor = {
+  			size: item.size,
+  			color: item.color
+  		};
 
+  		let style_id = item.style_id;
+  		if( this.styleSet.length > 0  )
+  		{		
+  				//check if selectedStyle is in productSet, if not call to server
+	  			for (var i = 0; i < this.styleSet.length; i++) {
+	  				if( this.styleSet[i][0].style_id === item.style_id ){
+	  						this.$store.state.productSet = this.styleSet[i];
+	  						this.bothSizeColor();
+	  						this.productsOnCart[index].isEdit = true;//(2)
+	  						return;
+	  				}
+	  			}
 
-  		this.$store.state.selectedFullNumber = fullNumber;
+	  			axios.get(`/getPriceQuantity?styleID=${style_id}`)
+						.then( ( response ) => {
+								this.styleSet.push(response.data);
+								this.$store.state.productSet = response.data;
+								this.bothSizeColor();
+								this.productsOnCart[index].isEdit = true;//(2)
+						})
+						.catch(function (error) {
+							console.log(error);
+						})
+
+	  			
+  			 
+			
+  		}
+  		else
+  		{
+  				axios.get(`/getPriceQuantity?styleID=${style_id}`)
+						.then( ( response ) => {
+								this.styleSet.push(response.data);
+
+								let selectedStyle = response.data;
+								
+					  		this.$store.state.productSet = selectedStyle;
+					  		this.bothSizeColor();
+								this.productsOnCart[index].isEdit = true;//(2)
+					  		
+						})
+						.catch(function (error) {
+							console.log(error);
+						})
+  		}
+  		
+
+  		
 
   	},
   	removeItem(item, index){
-  		this.productsOnCart.splice( index, 1 )	;
+  		let storageProducts = JSON.parse(localStorage.getItem('products'));
+  		let products = storageProducts.filter( e => {
+  				return e.fullNumber !== item.fullNumber || e.fullNumber === item.fullNumber && e.size !== item.size && e.color !== item.color
+  				
+  		});
+
+  		localStorage.setItem('products', JSON.stringify(products));
+
+  		this.productsOnCart.splice( index, 1 );
   	},
   	add(item){
   		if(item.quantity < this.max ){
@@ -200,32 +303,7 @@ export default {
         }
   	}
   },
-  computed: {
-  	...mapState([
-  		'selectedFullNumber'	
-  		]),
-  	...mapGetters([
-      'getSelectedSize'
-      ]),
-  	totalQty(){
-  		let result = 0;
-  		this.productsOnCart.forEach( (item) => {
-  			 result += item.quantity
-  		})
-  		return result;
-  	},
-  	totalAmount(){
-  		let result = 0;
-
-  		this.productsOnCart.forEach( item => {
-  			let subTotal = item.quantity * item.price;
-  			result += subTotal;
-  		});
-
-  		return result;
-  	}
-
-  },
+  
   watch:{
   	getSelectedSize(selectedSize) {
   		this.productsOnCart.map( (item) => {
@@ -242,10 +320,15 @@ export default {
     }
   },
   created(){
-	  	Object.entries( this.products).forEach( (item) => {
-	  		let [, value] = item;
-			this.productsOnCart.push( JSON.parse(value) );
-	  	});
+  		if( ! localStorage.getItem('products') ) return;
+
+  		this.productsOnCart =  JSON.parse( localStorage.getItem('products') );
+
+  		this.productsOnCart.forEach( item =>  {
+  				Vue.set(item, 'isEdit', false);
+  		});
+
+  	
 
   },
   mounted(){
@@ -258,6 +341,7 @@ export default {
 <style scoped>
 .variation{
 	cursor: pointer;
+	width: max-content;
 }
 </style>
 
@@ -265,3 +349,7 @@ export default {
 Note:
 //(1):  Data will not update with state changes, so you need to have the state mapped in the selectedFullNumber computed to watch for changes in state, or create a watcher. Ref: https://stackoverflow.com/a/49355300/11297747
 , https://stackoverflow.com/questions/52353370/vuejs-cant-assign-value-from-mapstate-to-data-property-after-reloading-the-pa
+
+//(2): must put here so that disabled class in popover.vue will be attached to the button there first
+must put here so that disabled class in popover.vue will be attached to the button there first
+must put here so that disabled class in popover.vue will be attached to the button there first

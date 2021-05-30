@@ -58,12 +58,13 @@ class ProductController extends Controller
     }
 
     public function getPriceQuantity( Request $request )
-    {
+    {   
         $style_id = $request->styleID;
         $size = $request->size;
         $color = $request->color;
 
-        if( ! empty( $size ) && ! empty( $color ) ){
+        //this query is for learning only
+        if( isset( $size ) && isset( $color ) ){
             $priceQuantity = DB::table('products')
                 ->join('sizes', 'products.size_id', '=', 'sizes.id')
                 ->join('colors', 'products.color_id', '=', 'colors.id')
@@ -75,6 +76,7 @@ class ProductController extends Controller
             return $priceQuantity;
         }
 
+        //this query is for learning only
         $priceQuantity = DB::table('products')
                 //nếu chỉ có $size ko thì chạy cái này
                 ->when($size, function( $query, $size ){
@@ -92,15 +94,8 @@ class ProductController extends Controller
         $priceQuantity = DB::table('products')
                 ->join('sizes', 'products.size_id', '=', 'sizes.id')
                 ->join('colors', 'products.color_id', '=', 'colors.id')
-                ->where('style_id', 1)->select('color', 'size', 'quantity','price')->get();
-
-        $result = [];
-        foreach( $priceQuantity as $item ){
-            $result[] = [
-                'price' => intval( $item->price ),
-                'quantity' => intval( $item->quantity )
-            ];
-        } 
+                ->where('style_id', $style_id)
+                ->where('quantity', '<>', 0)->select('style_id','fullNumber', 'color', 'size', 'quantity', 'price')->get();
 
         //dd($priceQuantity);
         return $priceQuantity;
@@ -142,9 +137,24 @@ class ProductController extends Controller
 
     public function showCart()
     {
-    	$products = $_COOKIE[$this->cookie_name];
+    	//$products = $_COOKIE[$this->cookie_name];
 
-    	return view('cart')->with( compact('products') );
+    	return view('cart');
+    }
+
+    public function getVariationSet( Request $request )
+    {   
+        $style_id = $request->styleID;
+
+        $variationSet = DB::table('products')
+            ->join('sizes', 'products.size_id', '=', 'sizes.id')
+            ->join('colors', 'products.color_id', '=', 'colors.id')
+            ->where('style_id', $style_id)->select('style_id','fullNumber', 'color', 'size', 'quantity', 'price')->get();
+         //   dd($variationSet);
+
+        return response([
+             $style_id => $variationSet
+        ], 200);
     }
 }
 

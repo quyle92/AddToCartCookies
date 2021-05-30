@@ -179,18 +179,18 @@ $(".input-number").keydown(function (e) {
     });
 
 
-var first = true;
-$('.product-des').on( "click", ".variation", function( e ) {
-		//let first = true;
-		if(first){console.log(first)
-			$(this).next().removeClass('d-none');
-			$(this).parent().parent().find('i.fa').replaceWith(  '<i class="fa fa-sort-down ml-1"></i>' );
-			first = false;
-		}
-		else if( !first ){
-			$(this).next().addClass('d-none');
-			$(this).parent().parent().find('i.fa').replaceWith(  '<i class="fa fa-sort-up ml-1"></i>' );
-			first = true;
-		}
-});
+// var first = true;
+// $('.product-des').on( "click", ".variation", function( e ) {
+// 		//let first = true;
+// 		if(first){console.log(first)
+// 			$(this).next().removeClass('d-none');
+// 			$(this).parent().parent().find('i.fa').replaceWith(  '<i class="fa fa-sort-down ml-1"></i>' );
+// 			first = false;
+// 		}
+// 		else if( !first ){
+// 			$(this).next().addClass('d-none');
+// 			$(this).parent().parent().find('i.fa').replaceWith(  '<i class="fa fa-sort-up ml-1"></i>' );
+// 			first = true;
+// 		}
+// });
 

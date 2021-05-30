@@ -20,7 +20,7 @@
                     </ul>
                 </div>
                 <div class="details col-md-6">
-                    <h3 class="product-title"> <small>Code:  {{selectedProduct.colors_for_one_style_only[0].pivot.fullNumber}}</small></h3>
+                    <h3 class="product-title"> {{selectedProduct.style}} </h3>
                     <div class="rating">
                         <div class="stars">
                             <span class="fa fa-star checked"></span>
@@ -32,18 +32,20 @@
                         <span class="review-no">41 reviews</span>
                     </div>
                     <p class="product-description">Suspendisse quos? Tempus cras iure temporibus? Eu laudantium cubilia sem sem! Repudiandae et! Massa senectus enim minim sociosqu delectus posuere.</p>
-                    
+
                     <h4 
                       class="price"
                       v-if=" ! selectedPrice"
-                      ><span>${{this.priceRange['min(price)']}} - {{this.priceRange['max(price)']}}</span>
+                      ><span >${{priceRange['min(price)']}} - {{priceRange['max(price)']}}</span>
+                      <del>{{priceRangeOriginal}}</del>
                     </h4>
                      <h4 
                       class="price"
                       v-else
-                      ><span>$ {{this.selectedPrice}}</span>
+                      ><span>$ {{selectedPrice}}</span>
+                      <del>{{selectedPriceOriginal}}</del>
                     </h4>
-
+                    {{selectedPrice}}
                     <p class="vote"><strong>91%</strong> of buyers enjoyed this product! <strong>(87 votes)</strong></p>
                     <div class="col-md-4">
                         <div class="input-group">
@@ -74,14 +76,14 @@
                         </button>
                     </h6>
                     <h6 class="colors">colors:
-                       
-                          <button class="product-variation" data-toggle="tooltip" title="Not In store"
-                           v-for="(item, index) in colorList" :key='item.id'
-                            :title="item.color"
-                             @click.prevent="selectColor(item.color, $event)" 
-                            > 
-                           {{item.color}}
-                          </button>
+                     
+                      <button class="product-variation" data-toggle="tooltip" title="Not In store"
+                       v-for="(item, index) in colorList" :key='item.id'
+                        :title="item.color"
+                         @click.prevent="selectColor(item.color, $event)" 
+                        > 
+                       {{item.color}}
+                      </button>
                        
                     </h6>
                     <div class="action">
@@ -98,42 +100,36 @@
 </template>
 
 <script>
-
+import { mapState } from 'vuex'
+import { mapGetters } from 'vuex'
     export default {
         props: [
             'sizes',
             'colors',
+            'priceRangeOnInit'
         ],
         data: () => ({
             selectedProduct: {},
-            priceRange: {},
             sizeList: [],
             colorList:[],
             selectedClass: 'font-weight-bold selected',
-            sizeColor:{
-              size: '',
-              color: ''
-            },
-            minPrice: '',
-            maxPrice: '',
-            selectedPrice: '',
-            totalQuantity: '',
-            quantity: 1
+            quantity: 1,
+            priceRangeOriginal:'',
+            selectedPriceOriginal:''
+
+            
         }),
 
         methods: {
-            async selectSize(size, e){
-                this.quantity = 1;
+             selectSize(size, e){
+                // this.quantity = 1;
                 let button = $(e.target);
 
                 // khi click lại vào chính button đó
                 if( size === this.sizeColor.size ){
                     button.removeClass(this.selectedClass);
                     this.sizeColor.size = '';
-                    let params = this.getParams();
-                    
-                    let response = await axios.post('/getPriceQuantity', params);
-                    this.getMinMaxQuantity(response);
+                    this.getMinMaxQuantity( this.sizeColor.color );
                     return;
                 }
 
@@ -141,6 +137,8 @@
                 if( button.hasClass('disabled') ){
                   return;
                 }
+                
+                this.sizeColor.size = size;
                 let sizeTags = $('h6.sizes button');
                 $( sizeTags ).each(function( i, el ) {
                    $(el).removeClass( this.selectedClass );
@@ -149,25 +147,19 @@
 
                 button.addClass(this.selectedClass);
 
-                //send to server
-                this.sizeColor.size = size;
-                let params = this.getParams();
-                let response = await axios.post('/getPriceQuantity', params);
-                this.getMinMaxQuantity(response);
+                //process logic
+                this.getMinMaxQuantity( size );
 
             },
-            async selectColor(color, e){
-                this.quantity = 1;
+             selectColor(color, e){
+                // this.quantity = 1;
                 let button = $(e.target);
 
                 // khi click lại vào chính button đó
                 if( color === this.sizeColor.color ){
-                    $('button[title=' + color + ']').removeClass(this.selectedClass);
+                    $(button).removeClass(this.selectedClass);
                     this.sizeColor.color = '';
-                    let params = this.getParams();
-                    
-                    let response = await axios.post('/getPriceQuantity', params);
-                    this.getMinMaxQuantity(response);
+                    this.getMinMaxQuantity( this.sizeColor.size );
                     return;
                 }                
 
@@ -175,6 +167,7 @@
                 if( button.hasClass('disabled') ){
                   return;
                 }
+                this.sizeColor.color = color;
                 let colorTags = $('h6.colors button');
 
                 $( colorTags ).each(function( i, el ) {
@@ -183,31 +176,13 @@
 
                 button.addClass(this.selectedClass);
 
-                 //send to server
-                this.sizeColor.color = color;
-                let params = this.getParams();
-                let response = await axios.post('/getPriceQuantity', params);
-                this.getMinMaxQuantity(response);
-            },
-            addToCart(){
-                axios.post('/addToCart', {
-                    fullNumber: this.ber,
-                    productName:  this.Name,
-                    price: this.selectedPrice,
-                    size: this.selectedSize,
-                    quantity: this.quantity,
-                  })
-                  .then(function (response) {
-                    console.log(response);
-                  })
-                  .catch(function (error) {
-                    console.log(error);
-                  });
+                //process logic
+                this.getMinMaxQuantity( color );
             },
             add(){   
              let value = this.getInputValue();  
                 if( value < this.totalQuantity ){
-                  $('input').val(++value);
+                  this.quantity++
                 }
                 else{
                   alert('stop: max reached!');
@@ -216,7 +191,7 @@
             substract(){ 
              let value = this.getInputValue(); 
                 if( value > 1 ){
-                 $('input').val(--value);
+                 this.quantity--
                 }
                 else{
                   alert('stop: min reached!');
@@ -226,111 +201,45 @@
             getInputValue(){
                 return $('input#quantity.form-control.input-number').val();
             },
-            getMinMaxQuantity(response){
+            getMinMaxQuantity(variation = null)
+            {
+                let result = [];
+                this.productSet.forEach( item => {
+                    item.size === variation || item.color === variation ? result.push(item) : ''
+                });
+                
+                
 
-                  let result = response.data;
-                  let priceRange = [];
-                  let totalQuantity = 0;
-
-              //khi size + color cùng đc tick 
-                  if( this.sizeColor.size.length !== 0 && this.sizeColor.color.length !== 0 )
-                  {   
-                      result.forEach( (item) => {
-                          totalQuantity += item.quantity;
-                      });
-                      this.totalQuantity = totalQuantity;
-          
-                      this.selectedPrice = result[0].price;
-
-                      return;
-                  }
-
-                  let sizeTags = $('h6.sizes button');
+                let sizeTags = $('h6.sizes button');
                   $( sizeTags ).each(function( i, el ) {
                      $(el).removeClass( 'disabled' );
+                  });
 
-                  }.bind(this));
-
-                  let colorTags = $('h6.colors button');
+                let colorTags = $('h6.colors button');
                   $( colorTags ).each(function( i, el ) {
                       $(el).removeClass( 'disabled' );
                   });
 
-                  
-
-              //khi size và color button đc released (ko đc tick)
-                  if( this.sizeColor.size.length === 0 && this.sizeColor.color.length === 0 )
-                  {
-                    //remove item where its quantity is < 0
-                      result = result.filter( e =>  e.quantity > 0 ); 
-
-                      result.forEach( (item) => {
-                          totalQuantity += item.quantity;
-                          priceRange.push( item.price )
-                      });
-                      this.totalQuantity = totalQuantity;
-
-                      
-                      let minPrice = _.min(priceRange);
-                      let maxPrice = _.max(priceRange);
-                      this.priceRange['min(price)'] = minPrice;
-                      this.priceRange['max(price)'] = maxPrice;
-
-                    //cho selectedPrice = '' để priceRange đc render trên template
-                      this.selectedPrice = '';
-                  }
-
               //khi hoặc size hoặc color đc tick
-                  if( this.sizeColor.size.length !== 0 || this.sizeColor.color.length !== 0)
-                  {
-                    //get the key of item where its quantity is 0
-                      let outOfStock = [];
-                      for( let item in result)
-                      {
-                        result[item].quantity === 0 ? outOfStock.push(+item) : '';
-                      }
-
-
-                    //if size is ticked
-                      if( this.sizeColor.size.length !== 0 )
-                      { 
-                        $( colorTags ).each( function( i, e ) {
-                            $.inArray( i, outOfStock ) !== -1 ?  $(e).addClass( 'disabled' ) : '';
-
-                        }.bind(this));
-                      }
-
-                      
-                    //if color is ticked
-                      if( this.sizeColor.color.length !== 0 )
-                      {
-                        $( sizeTags ).each( function( i, e ) {
-                           $.inArray( i, outOfStock ) !== -1 ?  $(e).addClass( 'disabled' ) : '';
-
-                        }.bind(this));
-                      }
-
-                    //remove item where its quantity is < 0
-                      result = result.filter( e =>  e.quantity > 0 ); 
-
-                      result.forEach( (item) => {
-                          totalQuantity += item.quantity;
-                          priceRange.push( item.price )
-                      });
-                      this.totalQuantity = totalQuantity;
-
-                      
-                      let minPrice = _.min(priceRange);
-                      let maxPrice = _.max(priceRange);
-                      this.priceRange['min(price)'] = minPrice;
-                      this.priceRange['max(price)'] = maxPrice;
-
-                    //cho selectedPrice = '' để priceRange đc render trên template
-                      this.selectedPrice = '';
-                          
+                  if( this.sizeColor.size.length !== 0 && this.sizeColor.color.length === 0 || 
+                    this.sizeColor.size.length === 0 && this.sizeColor.color.length !== 0
+                    )
+                  {//console.log('eitherSizeColor')
+                    this.eitherSizeColor( result, sizeTags, colorTags  )
                   } 
 
-                
+              //khi size + color cùng đc tick 
+                  if( this.sizeColor.size.length !== 0 && this.sizeColor.color.length !== 0 )
+                  {
+                    this.bothSizeColor( );
+                  }
+
+              //khi size + color button cùng ko đc tick
+                  if( this.sizeColor.size.length === 0 && this.sizeColor.color.length === 0 )
+                  { // console.log('neitherSizeColor')
+                     this.neitherSizeColor( );
+                  }
+    
             },
           getParams(){
               let styleID = {
@@ -352,18 +261,107 @@
               alert('stop: that\'s enough!');
               this.quantity = this.oldQuantity;
             }
-          }
+          },
+          addToCart(){
+              if(this.sizeColor.size.length === 0 || this.sizeColor.color.length === 0)
+              {
+                alert('please select size + price');
+                return;
+              }
+              let products =[];
+
+              let newItem =  {
+                  style_id: this.selectedProduct.id,
+                  style:  this.selectedProduct.style,
+                  fullNumber: this.selectedFullNumber,
+                  image: this.selectedProduct.colors_for_one_style_only[0].pivot.picture,
+                  size: this.sizeColor.size,
+                  color: this.sizeColor.color,
+                  price: this.selectedPrice,
+                  quantity: this.quantity
+              };
+
+              if( localStorage.getItem('products') ){
+
+                  products = JSON.parse( localStorage.getItem('products') );
+
+                  if( this.$Helper.containsObject(  products, newItem ) ){
+                     for(let item of products){
+                      if( item.fullNumber === newItem.fullNumber ){
+                        item.quantity += newItem.quantity;
+                      }
+                      
+                    }
+                    
+                  }
+                  else{
+                    products.push( newItem );
+                  }
+
+
+           
+              }
+              else{
+                 products.push(newItem);
+              }
+              
+
+              localStorage.setItem('products', JSON.stringify( products ) ) ;
+
+              alert('Add to cart successfully');
+          },
+        },
+        computed: {
+          ...mapState([
+              'totalQuantity'  ,
+              'selectedFullNumber'  ,
+              'priceRange' , 
+              'selectedPrice'  ,
+              'productSet' , 
+              'sizeColor',
+              'outOfStockSize',
+              'outOfStockColor',
+            ]),
+
+
         },
         created() { 
-          this.selectedProduct = this.$store.state.selectedProduct; console.log(this.selectedProduct)
-          this.sizeList = this.sizes;
-          this.colorList = this.colors;
-          this.priceRange = JSON.parse(JSON.stringify(this.$store.state.priceRange));
-          this.totalQuantity = this.$store.state.totalQuantity;
+            this.selectedProduct = this.$store.state.selectedProduct; //console.log(this.selectedProduct)
+            this.sizeList = this.sizes;
+            this.colorList = this.colors;
+
            
+
+            //bring priceRange to $store
+            this.$store.state.priceRange = this.priceRangeOnInit;
+            let minPrice = Math.round(this.priceRange['min(price)'] * 1.2);
+            let maxPrice = Math.round(this.priceRange['max(price)'] * 1.2);
+           
+            this.priceRangeOriginal =  `$${minPrice} - $${maxPrice}`;
+
+            let styleID = this.selectedProduct.colors_for_one_style_only[0].pivot.style_id;
+            this.$store.dispatch('getProductSetAction', styleID)
+
+            vm.$on('getPriceRangeOriginal', (priceRange) => {
+
+                let minPrice =  Math.round( _.min(priceRange) * 1.2 );
+                let maxPrice =  Math.round( _.max(priceRange) * 1.2 );
+                this.priceRangeOriginal = `$${minPrice} - $${maxPrice}`;
+               
+            });
+
+            vm.$on('getSelectedPriceOriginal', (price) => {
+
+               this.selectedPriceOriginal = '$' + Number( price * 1.2 );
+               
+            });
+
+        },
+        watch: {
+            
         },
         mounted () {
-            
+
         }
     }
 </script>

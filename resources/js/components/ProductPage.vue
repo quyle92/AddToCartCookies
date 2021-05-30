@@ -20,7 +20,7 @@
                     </ul>
                 </div>
                 <div class="details col-md-6">
-                    <h3 class="product-title"> <small>Code:  {{selectedProduct.colors_for_one_style_only[0].pivot.fullNumber}}</small></h3>
+                    <h3 class="product-title"> {{selectedProduct.style}} </h3>
                     <div class="rating">
                         <div class="stars">
                             <span class="fa fa-star checked"></span>
@@ -36,14 +36,16 @@
                     <h4 
                       class="price"
                       v-if=" ! selectedPrice"
-                      ><span>${{this.priceRange['min(price)']}} - {{this.priceRange['max(price)']}}</span>
+                      ><span >${{priceRange['min(price)']}} - {{priceRange['max(price)']}}</span>
+                      <del>{{priceRangeOriginal}}</del>
                     </h4>
                      <h4 
                       class="price"
                       v-else
-                      ><span>$ {{this.selectedPrice}}</span>
+                      ><span>$ {{selectedPrice}}</span>
+                      <del>{{selectedPriceOriginal}}</del>
                     </h4>
-
+                    {{selectedPrice}}
                     <p class="vote"><strong>91%</strong> of buyers enjoyed this product! <strong>(87 votes)</strong></p>
                     <div class="col-md-4">
                         <div class="input-group">
@@ -68,20 +70,32 @@
                        <button class="product-variation" data-toggle="tooltip" title="Not In store"
                            v-for="(item, index) in sizeList" :key='item.id'
                             :title="item.size"
-                             @click.prevent="selectSize(item.size, $event)" 
+                             @click.prevent="selectSize(item)" 
+                             :class="[
+                             item.size===sizeColor.size ? selectedClass : '',
+                             {
+                                'disabled': outOfStockSize.includes( item.size )
+                             }
+                             ] "
                             > 
                            {{item.size}}
                         </button>
                     </h6>
                     <h6 class="colors">colors:
-                       
-                          <button class="product-variation" data-toggle="tooltip" title="Not In store"
-                           v-for="(item, index) in colorList" :key='item.id'
-                            :title="item.color"
-                             @click.prevent="selectColor(item.color, $event)" 
-                            > 
-                           {{item.color}}
-                          </button>
+                     
+                      <button class="product-variation" data-toggle="tooltip" title="Not In store"
+                       v-for="(item, index) in colorList" :key='item.id'
+                        :title="item.color"
+                         @click.prevent="selectColor(item)" 
+                          :class="[
+                             item.color===sizeColor.color ? selectedClass : '',
+                             {
+                                'disabled': outOfStockColor.includes( item.color )
+                             }
+                             ] "
+                        > 
+                       {{item.color}}
+                      </button>
                        
                     </h6>
                     <div class="action">
@@ -98,109 +112,81 @@
 </template>
 
 <script>
-
+import { mapState } from 'vuex'
+import { mapGetters } from 'vuex'
     export default {
         props: [
             'sizes',
             'colors',
+            'priceRangeOnInit'
         ],
         data: () => ({
-            selectedProduct: {},
-            priceRange: {},
+            //selectedProduct: {},
             sizeList: [],
             colorList:[],
             selectedClass: 'font-weight-bold selected',
-            sizeColor:{
-              size: '',
-              color: ''
-            },
-            minPrice: '',
-            maxPrice: '',
-            selectedPrice: '',
-            totalQuantity: '',
             quantity: 1,
-            productSet:[]
+            priceRangeOriginal:'',
+            selectedPriceOriginal:''
+
+            
         }),
+        computed: {
+          ...mapState([
+              'selectedProduct',
+              'totalQuantity'  ,
+              'selectedFullNumber'  ,
+              'priceRange' , 
+              'selectedPrice'  ,
+              'productSet' , 
+              'sizeColor',
+              'outOfStockSize',
+              'outOfStockColor',
+            ]),
 
+
+        },
         methods: {
-            async selectSize(size, e){
-                this.quantity = 1;
-                let button = $(e.target);
-
+             selectSize(item){
+                
                 // khi click lại vào chính button đó
-                if( size === this.sizeColor.size ){
-                    button.removeClass(this.selectedClass);
+                if( item.size === this.sizeColor.size ){
                     this.sizeColor.size = '';
                     this.getMinMaxQuantity( this.sizeColor.color );
                     return;
                 }
 
                 //for css only
-                if( button.hasClass('disabled') ){
-                  return;
-                }
-                 this.sizeColor.size = size;
-                let sizeTags = $('h6.sizes button');
-                $( sizeTags ).each(function( i, el ) {
-                   $(el).removeClass( this.selectedClass );
+                this.sizeColor.size = '';
+                this.sizeColor.size = item.size;
+               
 
-                }.bind(this));
-
-                button.addClass(this.selectedClass);
-
-                //send to server
-                let variationType = 'size';
-                this.getMinMaxQuantity( size );
+                //process logic
+                this.getMinMaxQuantity( item.size);
 
             },
-            async selectColor(color, e){
-                this.quantity = 1;
-                let button = $(e.target);
-
+             selectColor(item){
+                
+                
                 // khi click lại vào chính button đó
-                if( color === this.sizeColor.color ){
-                    $(button).removeClass(this.selectedClass);
+                if( item.color === this.sizeColor.color ){
                     this.sizeColor.color = '';
                     this.getMinMaxQuantity( this.sizeColor.size );
                     return;
-                }                
-
-                 //for css only
-                if( button.hasClass('disabled') ){
-                  return;
                 }
-                this.sizeColor.color = color;
-                let colorTags = $('h6.colors button');
 
-                $( colorTags ).each(function( i, el ) {
-                   $(el).removeClass( this.selectedClass );
-                }.bind(this));
+                //for css only
+                this.sizeColor.color = '';
+                this.sizeColor.color = item.color;
+               
 
-                button.addClass(this.selectedClass);
-
-                 //send to server
-                 let variationType = 'color';
-                this.getMinMaxQuantity( color );
-            },
-            addToCart(){
-                axios.post('/addToCart', {
-                    fullNumber: this.ber,
-                    productName:  this.Name,
-                    price: this.selectedPrice,
-                    size: this.selectedSize,
-                    quantity: this.quantity,
-                  })
-                  .then(function (response) {
-                    console.log(response);
-                  })
-                  .catch(function (error) {
-                    console.log(error);
-                  });
+                //process logic
+               this.getMinMaxQuantity( item.color);
             },
             add(){   
              let value = this.getInputValue();  
                 if( value < this.totalQuantity ){
-                  $('input').val(++value);
+                  this.quantity++
                 }
                 else{
                   alert('stop: max reached!');
@@ -209,7 +195,7 @@
             substract(){ 
              let value = this.getInputValue(); 
                 if( value > 1 ){
-                 $('input').val(--value);
+                 this.quantity--
                 }
                 else{
                   alert('stop: min reached!');
@@ -219,140 +205,33 @@
             getInputValue(){
                 return $('input#quantity.form-control.input-number').val();
             },
-            getMinMaxQuantity(variation = null, variationType = null)
+            getMinMaxQuantity(variation = null)
             {
                 let result = [];
                 this.productSet.forEach( item => {
                     item.size === variation || item.color === variation ? result.push(item) : ''
                 });
-                let priceRange = [];
-                let totalQuantity = 0;
-
-                let sizeTags = $('h6.sizes button');
-                  $( sizeTags ).each(function( i, el ) {
-                     $(el).removeClass( 'disabled' );
-                  });
-
-                let colorTags = $('h6.colors button');
-                  $( colorTags ).each(function( i, el ) {
-                      $(el).removeClass( 'disabled' );
-                  });
-
-              //khi size + color cùng đc tick (logic này phải nằm trên cùng)
-                  if( this.sizeColor.size.length !== 0 && this.sizeColor.color.length !== 0 )
-                  {   
-                      let selectedProduct = {};
-                      this.productSet.forEach( item => {
-                          item.size === this.sizeColor.size && item.color === this.sizeColor.color 
-                                ? selectedProduct = item : '';
-                      });
-
-                      this.totalQuantity = selectedProduct.quantity;
-          
-                      this.selectedPrice = selectedProduct.price;
-                    //size: xem colors nào bị 0 quantity thì disabled nó
-                      let outOfStockColor = [];
-                      this.productSet.forEach( item => {
-                          item.size === this.sizeColor.size && item.quantity === 0
-                                ? outOfStockColor.push(item.color) : '';
-                      });
-                      
-                      $( outOfStockColor ).each(function( i, el ) {
-                           $(`h6.colors button[title="${el}"]`).addClass( 'disabled' );
-                       }.bind(this));
-
-                    //color: xem sizes nào bị 0 quantity thì disabled nó
-                      let outOfStockSize = [];
-                      this.productSet.forEach( item => {
-                          item.color === this.sizeColor.color && item.quantity === 0
-                                ? outOfStockSize.push(item.size) : '';
-                      });
-                      
-                      $( outOfStockSize ).each(function( i, el ) {
-                            $(`h6.sizes button[title="${el}"]`).addClass( 'disabled' );
-                       }.bind(this));
-
-                      return ;//tới đây phải thoát ra
-                  }
-
-                  
-
-                  
-
-              //khi size và color button đc released (đều ko đc tick)
-                  if( this.sizeColor.size.length === 0 && this.sizeColor.color.length === 0 )
-                  {  
-                      let result = this.productSet;   
-                    //remove item where its quantity is < 0
-                      result = result.filter( e =>  e.quantity > 0 ); 
-
-                      result.forEach( (item) => {
-                          totalQuantity += item.quantity;
-                          priceRange.push( item.price )
-                      });
-                      this.totalQuantity = totalQuantity;
-
-                      
-                      let minPrice = _.min(priceRange);
-                      let maxPrice = _.max(priceRange);
-                      this.priceRange['min(price)'] = minPrice;
-                      this.priceRange['max(price)'] = maxPrice;
-
-                    //cho selectedPrice = '' để priceRange đc render trên template
-                      this.selectedPrice = '';
-                  }
-
+   
               //khi hoặc size hoặc color đc tick
-                  if( this.sizeColor.size.length !== 0 || this.sizeColor.color.length !== 0)
+                  if( this.sizeColor.size.length !== 0 && this.sizeColor.color.length === 0 || 
+                    this.sizeColor.size.length === 0 && this.sizeColor.color.length !== 0
+                    )
                   {
-                    //get the key of item where its quantity is 0
-                      let outOfStock = [];
-                      for( let item in result)
-                      { 
-                        result[item].quantity === 0 ? outOfStock.push(+item) : '';
-
-                      }
-                     
-                    //if size is ticked
-                      if( this.sizeColor.size.length !== 0 )
-                      { 
-                        $( colorTags ).each( function( i, e ) {
-                            $.inArray( i, outOfStock ) !== -1 ?  $(e).addClass( 'disabled' ) : '';
-
-                        }.bind(this));
-                      }
-
-                      
-                    //if color is ticked
-                      if( this.sizeColor.color.length !== 0 )
-                      {
-                        $( sizeTags ).each( function( i, e ) {
-                           $.inArray( i, outOfStock ) !== -1 ?  $(e).addClass( 'disabled' ) : '';
-
-                        }.bind(this));
-                      }
-
-                    //remove item where its quantity is < 0
-                      result = result.filter( e =>  e.quantity > 0 ); 
-
-                      result.forEach( (item) => {
-                          totalQuantity += item.quantity;
-                          priceRange.push( item.price )
-                      });
-                      this.totalQuantity = totalQuantity;
-
-                      
-                      let minPrice = _.min(priceRange);
-                      let maxPrice = _.max(priceRange);
-                      this.priceRange['min(price)'] = minPrice;
-                      this.priceRange['max(price)'] = maxPrice;
-
-                    //cho selectedPrice = '' để priceRange đc render trên template
-                      this.selectedPrice = '';
-                          
+                    this.eitherSizeColor( result )
                   } 
 
-                
+              //khi size + color cùng đc tick 
+                  if( this.sizeColor.size.length !== 0 && this.sizeColor.color.length !== 0 )
+                  {
+                    this.bothSizeColor( );
+                  }
+
+              //khi size + color button cùng ko đc tick
+                  if( this.sizeColor.size.length === 0 && this.sizeColor.color.length === 0 )
+                  { // console.log('neitherSizeColor')
+                     this.neitherSizeColor( );
+                  }
+    
             },
           getParams(){
               let styleID = {
@@ -374,27 +253,93 @@
               alert('stop: that\'s enough!');
               this.quantity = this.oldQuantity;
             }
-          }
+          },
+          addToCart(){
+              if(this.sizeColor.size.length === 0 || this.sizeColor.color.length === 0)
+              {
+                alert('please select size + price');
+                return;
+              }
+              let products =[];
+
+              let newItem =  {
+                  style_id: this.selectedProduct.id,
+                  style:  this.selectedProduct.style,
+                  fullNumber: this.selectedFullNumber,
+                  image: this.selectedProduct.colors_for_one_style_only[0].pivot.picture,
+                  size: this.sizeColor.size,
+                  color: this.sizeColor.color,
+                  price: this.selectedPrice,
+                  quantity: this.quantity
+              };
+
+              if( localStorage.getItem('products') ){
+
+                  products = JSON.parse( localStorage.getItem('products') );
+
+                  if( this.$Helper.containsObject(  products, newItem ) ){
+                     for(let item of products){
+                      if( item.fullNumber === newItem.fullNumber ){
+                        item.quantity += newItem.quantity;
+                      }
+                      
+                    }
+                    
+                  }
+                  else{
+                    products.push( newItem );
+                  }
+
+
+           
+              }
+              else{
+                 products.push(newItem);
+              }
+              
+
+              localStorage.setItem('products', JSON.stringify( products ) ) ;
+
+              alert('Add to cart successfully');
+          },
         },
         created() { 
-            this.selectedProduct = this.$store.state.selectedProduct; //console.log(this.selectedProduct)
+
             this.sizeList = this.sizes;
             this.colorList = this.colors;
-            this.priceRange = JSON.parse(JSON.stringify(this.$store.state.priceRange));
-            this.totalQuantity = this.$store.state.totalQuantity;
-        
-            axios.get('/getPriceQuantity')
-              .then( ( response ) => {
-                this.productSet = response.data;
-                
-              })
-              .catch(function (error) {
-                console.log(error);
-              })
-             
+            
+            let result = this.productSet;
+
+            //bring priceRange to $store
+            this.$store.state.priceRange = this.priceRangeOnInit;
+            let minPrice = Math.round(Number(this.priceRange['min(price)'] * 1.2));
+            let maxPrice = Math.round(Number(this.priceRange['max(price)'] * 1.2));
+           
+            this.priceRangeOriginal =  `$${minPrice} - $${maxPrice}`;
+
+            let styleID = this.selectedProduct.colors_for_one_style_only[0].pivot.style_id;
+            this.$store.dispatch('getProductSetAction', styleID)
+
+            vm.$on('getPriceRangeOriginal', (priceRange) => {
+
+                let minPrice =  Math.round(Number( _.min(priceRange) * 1.2 ) );
+                let maxPrice =  Math.round(Number( _.max(priceRange) * 1.2 ) );
+                this.priceRangeOriginal = `$${minPrice} - $${maxPrice}`;
+               
+            });
+
+            vm.$on('getSelectedPriceOriginal', (price) => {
+
+               this.selectedPriceOriginal = '$' + Math.round( Number( price * 1.2 ) );
+               
+            });
+
+        },
+        watch: {
+            
         },
         mounted () {
-            
+
         }
     }
 </script>
