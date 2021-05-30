@@ -40,7 +40,9 @@ export default {
 		        });
 		        this.$store.state.outOfStockSize = outOfStockSize;
 
-	            //get totalQuantity + priceRange
+	            //remove item where its quantity is < 0
+	            result = result.filter( e =>  e.quantity > 0 ); 
+
 	            result.forEach( (item) => {
 	            	totalQuantity += item.quantity;
 	            	priceRange.push( +item.price )
@@ -95,12 +97,14 @@ export default {
         		let totalQuantity = 0;  
         		let priceRange = [];
         		let result = [];
-
+        		
         		this.$store.state.outOfStockSize = [];
         		this.$store.state.outOfStockColor = [];
 
-                //get totalQuantity + priceRange
-                this.productSet.forEach( (item) => {
+                //remove item where its quantity is < 0
+                result = this.productSet.filter( e =>  e.quantity > 0 ); 
+
+                result.forEach( (item) => {
                 	totalQuantity += item.quantity;
                 	priceRange.push( +item.price )
                 });

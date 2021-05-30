@@ -95,7 +95,8 @@ class ProductController extends Controller
                 ->join('sizes', 'products.size_id', '=', 'sizes.id')
                 ->join('colors', 'products.color_id', '=', 'colors.id')
                 ->where('style_id', $style_id)
-                ->where('quantity', '<>', 0)->select('style_id','fullNumber', 'color', 'size', 'quantity', 'price')->get();
+               // ->where('quantity', '<>', 0)
+                ->select('style_id','fullNumber', 'color', 'size', 'quantity', 'price')->get();
 
         //dd($priceQuantity);
         return $priceQuantity;

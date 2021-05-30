@@ -53648,8 +53648,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       this.productSet.forEach(function (item) {
         item.color === _this.sizeColor.color && item.quantity === 0 ? outOfStockSize.push(item.size) : '';
       });
-      this.$store.state.outOfStockSize = outOfStockSize; //get totalQuantity + priceRange
+      this.$store.state.outOfStockSize = outOfStockSize; //remove item where its quantity is < 0
 
+      result = result.filter(function (e) {
+        return e.quantity > 0;
+      });
       result.forEach(function (item) {
         totalQuantity += item.quantity;
         priceRange.push(+item.price);
@@ -53697,9 +53700,12 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       var priceRange = [];
       var result = [];
       this.$store.state.outOfStockSize = [];
-      this.$store.state.outOfStockColor = []; //get totalQuantity + priceRange
+      this.$store.state.outOfStockColor = []; //remove item where its quantity is < 0
 
-      this.productSet.forEach(function (item) {
+      result = this.productSet.filter(function (e) {
+        return e.quantity > 0;
+      });
+      result.forEach(function (item) {
         totalQuantity += item.quantity;
         priceRange.push(+item.price);
       });
