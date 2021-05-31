@@ -14,7 +14,11 @@ export default {
 			'priceRange' , 
 			'selectedPrice'  ,
 			'productSet' , 
-			'sizeColor'
+			'sizeColor',
+			'sizeList',
+			'colorList',
+			'outOfStockColorAll',
+			'outOfStockSizeAll'
 			]),
 	},
 	methods: {
@@ -30,15 +34,15 @@ export default {
 		        	item.size === this.sizeColor.size && item.quantity === 0
 		        	? outOfStockColor.push(item.color) : '';
 		        });
-		        this.$store.state.outOfStockColor = outOfStockColor;
-
+		        this.$store.state.outOfStockColor = [...outOfStockColor, ...this.outOfStockColorAll];
+		        //console.log(this.$store.state.outOfStockColor)
 				//color: xem sizes nào bị 0 quantity thì disabled nó
 		        let outOfStockSize = [];
 		        this.productSet.forEach( item => {
 		        	item.color === this.sizeColor.color && item.quantity === 0
 		        	? outOfStockSize.push(item.size) : '';
 		        });
-		        this.$store.state.outOfStockSize = outOfStockSize;
+		        this.$store.state.outOfStockSize = [...outOfStockSize, ...this.outOfStockSizeAll];
 
 	            //remove item where its quantity is < 0
 	            result = result.filter( e =>  e.quantity > 0 ); 
@@ -98,8 +102,8 @@ export default {
         		let priceRange = [];
         		let result = [];
         		
-        		this.$store.state.outOfStockSize = [];
-        		this.$store.state.outOfStockColor = [];
+        		this.$store.state.outOfStockSize = [...this.outOfStockSizeAll];
+        		this.$store.state.outOfStockColor = [...this.outOfStockColorAll];
 
                 //remove item where its quantity is < 0
                 result = this.productSet.filter( e =>  e.quantity > 0 ); 

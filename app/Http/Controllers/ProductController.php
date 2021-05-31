@@ -43,9 +43,9 @@ class ProductController extends Controller
                      ->select(DB::raw('min(price), max(price)'))
                      ->where('style_id', $id)->first() );
 
-        $sizes = Size::all();
+        $sizes = Size::select('size')->get();
 
-        $colors = Color::all();
+        $colors = Color::select('color')->get();
         $style_id = $product->colorsForOneStyleOnly[0]->pivot->style_id;
 
         $totalQuantity = intval( 

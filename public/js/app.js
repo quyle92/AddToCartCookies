@@ -2537,18 +2537,21 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
   data: function data() {
     return {
       //selectedProduct: {},
-      sizeList: [],
-      colorList: [],
       selectedClass: 'font-weight-bold selected',
       quantity: 1,
       priceRangeOriginal: '',
       selectedPriceOriginal: ''
     };
   },
-  computed: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['selectedProduct', 'totalQuantity', 'selectedFullNumber', 'priceRange', 'selectedPrice', 'productSet', 'sizeColor', 'outOfStockSize', 'outOfStockColor'])),
+  computed: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['selectedProduct', 'totalQuantity', 'selectedFullNumber', 'priceRange', 'selectedPrice', 'productSet', 'sizeColor', 'outOfStockSize', 'outOfStockColor', 'sizeList', 'colorList'])),
   methods: {
     selectSize: function selectSize(item) {
-      // khi click lại vào chính button đó
+      //khi click vào disabled size thì sẽ cho ko click đc tick
+      if (this.outOfStockSize.indexOf(item.size) !== -1) {
+        return;
+      } // khi click lại vào chính button đó
+
+
       if (item.size === this.sizeColor.size) {
         this.sizeColor.size = '';
         this.getMinMaxQuantity(this.sizeColor.color);
@@ -2562,7 +2565,12 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       this.getMinMaxQuantity(item.size);
     },
     selectColor: function selectColor(item) {
-      // khi click lại vào chính button đó
+      //khi click vào disabled color thì sẽ cho ko click đc tick
+      if (this.outOfStockColor.indexOf(item.color) !== -1) {
+        return;
+      } // khi click lại vào chính button đó
+
+
       if (item.color === this.sizeColor.color) {
         this.sizeColor.color = '';
         this.getMinMaxQuantity(this.sizeColor.size);
@@ -2614,7 +2622,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
       if (this.sizeColor.size.length === 0 && this.sizeColor.color.length === 0) {
-        // console.log('neitherSizeColor')
         this.neitherSizeColor();
       }
     },
@@ -2688,8 +2695,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
   created: function created() {
     var _this = this;
 
-    this.sizeList = this.sizes;
-    this.colorList = this.colors;
+    this.$store.state.sizeList = this.sizes;
+    this.$store.state.colorList = this.colors;
     var result = this.productSet; //bring priceRange to $store
 
     this.$store.state.priceRange = this.priceRangeOnInit;
@@ -39823,11 +39830,7 @@ var render = function() {
                           disabled: _vm.outOfStockSize.includes(item.size)
                         }
                       ],
-                      attrs: {
-                        "data-toggle": "tooltip",
-                        title: "Not In store",
-                        title: item.size
-                      },
+                      attrs: { "data-toggle": "tooltip", title: item.size },
                       on: {
                         click: function($event) {
                           $event.preventDefault()
@@ -39869,11 +39872,7 @@ var render = function() {
                           disabled: _vm.outOfStockColor.includes(item.color)
                         }
                       ],
-                      attrs: {
-                        "data-toggle": "tooltip",
-                        title: "Not In store",
-                        title: item.color
-                      },
+                      attrs: { "data-toggle": "tooltip", title: item.color },
                       on: {
                         click: function($event) {
                           $event.preventDefault()
@@ -53618,6 +53617,18 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm.js");
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
@@ -53629,7 +53640,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
   data: function data() {
     return {};
   },
-  computed: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['totalQuantity', 'selectedFullNumber', 'priceRange', 'selectedPrice', 'productSet', 'sizeColor'])),
+  computed: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['totalQuantity', 'selectedFullNumber', 'priceRange', 'selectedPrice', 'productSet', 'sizeColor', 'sizeList', 'colorList', 'outOfStockColorAll', 'outOfStockSizeAll'])),
   methods: {
     eitherSizeColor: function eitherSizeColor(result) {
       var _this = this;
@@ -53642,13 +53653,14 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       this.productSet.forEach(function (item) {
         item.size === _this.sizeColor.size && item.quantity === 0 ? outOfStockColor.push(item.color) : '';
       });
-      this.$store.state.outOfStockColor = outOfStockColor; //color: xem sizes nào bị 0 quantity thì disabled nó
+      this.$store.state.outOfStockColor = [].concat(outOfStockColor, _toConsumableArray(this.outOfStockColorAll)); //console.log(this.$store.state.outOfStockColor)
+      //color: xem sizes nào bị 0 quantity thì disabled nó
 
       var outOfStockSize = [];
       this.productSet.forEach(function (item) {
         item.color === _this.sizeColor.color && item.quantity === 0 ? outOfStockSize.push(item.size) : '';
       });
-      this.$store.state.outOfStockSize = outOfStockSize; //remove item where its quantity is < 0
+      this.$store.state.outOfStockSize = [].concat(outOfStockSize, _toConsumableArray(this.outOfStockSizeAll)); //remove item where its quantity is < 0
 
       result = result.filter(function (e) {
         return e.quantity > 0;
@@ -53699,8 +53711,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       var totalQuantity = 0;
       var priceRange = [];
       var result = [];
-      this.$store.state.outOfStockSize = [];
-      this.$store.state.outOfStockColor = []; //remove item where its quantity is < 0
+      this.$store.state.outOfStockSize = _toConsumableArray(this.outOfStockSizeAll);
+      this.$store.state.outOfStockColor = _toConsumableArray(this.outOfStockColorAll); //remove item where its quantity is < 0
 
       result = this.productSet.filter(function (e) {
         return e.quantity > 0;
@@ -54084,6 +54096,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(vue__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm.js");
 
+ //helper.js
+// import Helper from './helper';
+// Vuex.prototype.$Helper = new Helper();
 
 vue__WEBPACK_IMPORTED_MODULE_0___default.a.use(vuex__WEBPACK_IMPORTED_MODULE_1__["default"]);
 /* harmony default export */ __webpack_exports__["default"] = (new vuex__WEBPACK_IMPORTED_MODULE_1__["default"].Store({
@@ -54097,15 +54112,32 @@ vue__WEBPACK_IMPORTED_MODULE_0___default.a.use(vuex__WEBPACK_IMPORTED_MODULE_1__
     selectedPrice: '',
     outOfStockSize: '',
     outOfStockColor: '',
+    outOfStockSizeAll: '',
+    outOfStockColorAll: '',
     sizeColor: {
       size: '',
       color: ''
-    }
+    },
+    sizeList: [],
+    colorList: []
   },
   getters: {},
   mutations: {
     getProductSet: function getProductSet(state, payload) {
-      this.state.productSet = payload.data;
+      var productSet = payload.data;
+      var sizeList = [];
+      this.state.sizeList.forEach(function (size) {
+        sizeList.push(Object.values(size)[0]);
+      });
+      var colorList = [];
+      this.state.colorList.forEach(function (color) {
+        colorList.push(Object.values(color)[0]);
+      });
+      this.state.outOfStockSize = getOutOfStockVariation(sizeList, productSet);
+      this.state.outOfStockSizeAll = getOutOfStockVariation(sizeList, productSet);
+      this.state.outOfStockColor = getOutOfStockVariation(colorList, productSet);
+      this.state.outOfStockColorAll = getOutOfStockVariation(colorList, productSet);
+      this.state.productSet = productSet;
     },
     changeTotalQuantity: function changeTotalQuantity(state, payload) {
       this.state.totalQuantity = payload;
@@ -54133,6 +54165,46 @@ vue__WEBPACK_IMPORTED_MODULE_0___default.a.use(vuex__WEBPACK_IMPORTED_MODULE_1__
     }
   }
 }));
+
+function groupVariation(list, productSet) {
+  var output = [];
+  var filterProducts = list.forEach(function (size, index) {
+    var sum = 0;
+    productSet.forEach(function (product) {
+      if (product.size === size) {
+        sum += +product.quantity;
+        output[index] = {
+          size: size,
+          quantity: sum
+        };
+      }
+    });
+  });
+}
+
+function getOutOfStockVariation(list, productSet) {
+  var groupVariation = [];
+  var filterProducts = list.forEach(function (size, index) {
+    var sum = 0;
+    productSet.forEach(function (product) {
+      if (product.size === size) {
+        sum += +product.quantity;
+        groupVariation[index] = {
+          size: size,
+          quantity: sum
+        };
+      }
+    });
+  });
+  var zeroProduct = groupVariation.filter(function (e) {
+    return e.quantity === 0;
+  });
+  var output = [];
+  zeroProduct.forEach(function (e) {
+    output.push(e.size);
+  });
+  return output;
+}
 
 /***/ }),
 

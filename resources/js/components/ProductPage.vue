@@ -67,7 +67,7 @@
                     </div>
                     <h6 class="sizes mt-3">sizes:
 
-                       <button class="product-variation" data-toggle="tooltip" title="Not In store"
+                       <button class="product-variation" data-toggle="tooltip" 
                            v-for="(item, index) in sizeList" :key='item.id'
                             :title="item.size"
                              @click.prevent="selectSize(item)" 
@@ -83,7 +83,7 @@
                     </h6>
                     <h6 class="colors">colors:
                      
-                      <button class="product-variation" data-toggle="tooltip" title="Not In store"
+                      <button class="product-variation" data-toggle="tooltip" 
                        v-for="(item, index) in colorList" :key='item.id'
                         :title="item.color"
                          @click.prevent="selectColor(item)" 
@@ -122,8 +122,7 @@ import { mapGetters } from 'vuex'
         ],
         data: () => ({
             //selectedProduct: {},
-            sizeList: [],
-            colorList:[],
+            
             selectedClass: 'font-weight-bold selected',
             quantity: 1,
             priceRangeOriginal:'',
@@ -142,13 +141,20 @@ import { mapGetters } from 'vuex'
               'sizeColor',
               'outOfStockSize',
               'outOfStockColor',
+              'sizeList',
+              'colorList'
             ]),
 
 
         },
         methods: {
              selectSize(item){
-                
+                //khi click vào disabled size thì sẽ cho ko click đc tick
+                if(this.outOfStockSize.indexOf(item.size) !== -1 ){
+                    return
+                }
+
+
                 // khi click lại vào chính button đó
                 if( item.size === this.sizeColor.size ){
                     this.sizeColor.size = '';
@@ -167,6 +173,10 @@ import { mapGetters } from 'vuex'
             },
              selectColor(item){
                 
+                //khi click vào disabled color thì sẽ cho ko click đc tick
+                if(this.outOfStockColor.indexOf(item.color) !== -1 ){
+                    return
+                }
                 
                 // khi click lại vào chính button đó
                 if( item.color === this.sizeColor.color ){
@@ -228,7 +238,7 @@ import { mapGetters } from 'vuex'
 
               //khi size + color button cùng ko đc tick
                   if( this.sizeColor.size.length === 0 && this.sizeColor.color.length === 0 )
-                  { // console.log('neitherSizeColor')
+                  { 
                      this.neitherSizeColor( );
                   }
     
@@ -305,8 +315,8 @@ import { mapGetters } from 'vuex'
         },
         created() { 
 
-            this.sizeList = this.sizes;
-            this.colorList = this.colors;
+            this.$store.state.sizeList = this.sizes;
+            this.$store.state.colorList = this.colors;
             
             let result = this.productSet;
 

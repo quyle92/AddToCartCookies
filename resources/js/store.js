@@ -1,6 +1,10 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 
+//helper.js
+// import Helper from './helper';
+// Vuex.prototype.$Helper = new Helper();
+
 Vue.use(Vuex);
 
 export default  new Vuex.Store({
@@ -15,10 +19,14 @@ export default  new Vuex.Store({
 		selectedPrice:'',
 		outOfStockSize: '',
 		outOfStockColor: '',
+		outOfStockSizeAll: '',
+		outOfStockColorAll: '',
 		sizeColor:{
           size: '',
           color: ''
         },
+        sizeList: [],
+        colorList:[],
 
 
 	},
@@ -29,8 +37,26 @@ export default  new Vuex.Store({
 	},
 	mutations:
 	{
-		getProductSet( state, payload ){
-			this.state.productSet = payload.data;
+		getProductSet( state, payload )
+		{
+			let productSet = payload.data;
+			let sizeList = [];
+
+			this.state.sizeList.forEach(size => {
+			  sizeList.push(Object.values(size)[0])
+			})
+			let colorList = [];
+			this.state.colorList.forEach(color => {
+			  colorList.push(Object.values(color)[0])
+			})
+
+			this.state.outOfStockSize = getOutOfStockVariation(sizeList, productSet);
+			this.state.outOfStockSizeAll = getOutOfStockVariation(sizeList, productSet);
+
+			this.state.outOfStockColor = getOutOfStockVariation(colorList, productSet);
+			this.state.outOfStockColorAll = getOutOfStockVariation(colorList, productSet);
+
+			this.state.productSet = productSet;
 			
 		},
 
@@ -66,3 +92,51 @@ export default  new Vuex.Store({
 		}
 	}
 });
+
+function groupVariation (list, productSet){
+	    let output = [];
+	    let filterProducts = list.forEach( (size, index) => {
+	        let sum = 0
+	        productSet.forEach(product => {
+	            if ( product.size === size )
+	            { 
+	              sum += +product.quantity;
+	              output[index] = {
+	                size: size,
+	                quantity: sum
+	              }
+	            }
+	        })
+	    });
+
+	    
+	}
+
+function getOutOfStockVariation (list, productSet){
+
+	let groupVariation = [];
+	    let filterProducts = list.forEach( (size, index) => {
+	        let sum = 0
+	        productSet.forEach(product => {
+	            if ( product.size === size )
+	            { 
+	              sum += +product.quantity;
+	              groupVariation[index] = {
+	                size: size,
+	                quantity: sum
+	              }
+	            }
+	        })
+	    });
+
+	let zeroProduct = groupVariation.filter( e =>{
+	  return e.quantity === 0
+	});
+	
+	let output = []
+	  zeroProduct.forEach(e => {
+	    output.push(e.size)
+	})
+
+	return output;
+}
