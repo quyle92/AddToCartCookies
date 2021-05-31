@@ -68,33 +68,33 @@
                     <h6 class="sizes mt-3">sizes:
 
                        <button class="product-variation" data-toggle="tooltip" 
-                           v-for="(item, index) in sizeList" :key='item.id'
-                            :title="item.size"
-                             @click.prevent="selectSize(item)" 
+                           v-for="(size, index) in sizeList" :key='index'
+                            :title="size"
+                             @click.prevent="selectSize(size)" 
                              :class="[
-                             item.size===sizeColor.size ? selectedClass : '',
+                             size===sizeColor.size ? selectedClass : '',
                              {
-                                'disabled': outOfStockSize.includes( item.size )
+                                'disabled': outOfStockSize.includes( size )
                              }
                              ] "
                             > 
-                           {{item.size}}
+                           {{size}}
                         </button>
                     </h6>
                     <h6 class="colors">colors:
                      
                       <button class="product-variation" data-toggle="tooltip" 
-                       v-for="(item, index) in colorList" :key='item.id'
-                        :title="item.color"
-                         @click.prevent="selectColor(item)" 
+                       v-for="(color, index) in colorList" :key='index'
+                        :title="color"
+                         @click.prevent="selectColor(color)" 
                           :class="[
-                             item.color===sizeColor.color ? selectedClass : '',
+                             color===sizeColor.color ? selectedClass : '',
                              {
-                                'disabled': outOfStockColor.includes( item.color )
+                                'disabled': outOfStockColor.includes( color )
                              }
                              ] "
                         > 
-                       {{item.color}}
+                       {{color}}
                       </button>
                        
                     </h6>
@@ -148,15 +148,15 @@ import { mapGetters } from 'vuex'
 
         },
         methods: {
-             selectSize(item){
+             selectSize(size){
                 //khi click vào disabled size thì sẽ cho ko click đc tick
-                if(this.outOfStockSize.indexOf(item.size) !== -1 ){
+                if(this.outOfStockSize.indexOf(size) !== -1 ){
                     return
                 }
 
 
                 // khi click lại vào chính button đó
-                if( item.size === this.sizeColor.size ){
+                if( size === this.sizeColor.size ){
                     this.sizeColor.size = '';
                     this.getMinMaxQuantity( this.sizeColor.color );
                     return;
@@ -164,22 +164,22 @@ import { mapGetters } from 'vuex'
 
                 //for css only
                 this.sizeColor.size = '';
-                this.sizeColor.size = item.size;
+                this.sizeColor.size = size;
                
 
                 //process logic
-                this.getMinMaxQuantity( item.size);
+                this.getMinMaxQuantity( size);
 
             },
-             selectColor(item){
-                
+             selectColor(color){
+               
                 //khi click vào disabled color thì sẽ cho ko click đc tick
-                if(this.outOfStockColor.indexOf(item.color) !== -1 ){
+                if(this.outOfStockColor.indexOf(color) !== -1 ){
                     return
                 }
                 
                 // khi click lại vào chính button đó
-                if( item.color === this.sizeColor.color ){
+                if( color === this.sizeColor.color ){
                     this.sizeColor.color = '';
                     this.getMinMaxQuantity( this.sizeColor.size );
                     return;
@@ -187,11 +187,11 @@ import { mapGetters } from 'vuex'
 
                 //for css only
                 this.sizeColor.color = '';
-                this.sizeColor.color = item.color;
+                this.sizeColor.color = color;
                
 
                 //process logic
-               this.getMinMaxQuantity( item.color);
+               this.getMinMaxQuantity( color);
             },
             add(){   
              let value = this.getInputValue();  
@@ -280,7 +280,8 @@ import { mapGetters } from 'vuex'
                   size: this.sizeColor.size,
                   color: this.sizeColor.color,
                   price: this.selectedPrice,
-                  quantity: this.quantity
+                  quantity: this.quantity,
+                  date: new Date(), 
               };
 
               if( localStorage.getItem('products') ){

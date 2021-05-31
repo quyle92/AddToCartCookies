@@ -25,6 +25,35 @@ export default class Helper {
 		return false;
 	}
 
+	 getOutOfStockVariation (list, productSet){
+
+	let groupVariation = [];
+	    let filterProducts = list.forEach( (size, index) => {
+	        let sum = 0
+	        productSet.forEach(product => {
+	            if ( product.size === size )
+	            { 
+	              sum += +product.quantity;
+	              groupVariation[index] = {
+	                size: size,
+	                quantity: sum
+	              }
+	            }
+	        })
+	    });
+
+	let zeroProduct = groupVariation.filter( e =>{
+	  return e.quantity === 0
+	});
+	
+	let output = []
+	  zeroProduct.forEach(e => {
+	    output.push(e.size)
+	})
+
+	return output;
+}
+
 	
 
 

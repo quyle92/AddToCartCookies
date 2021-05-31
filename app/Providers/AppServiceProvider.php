@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\MyFacades\MyDatabaseManager;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use App\Http\View\Composers\SizeColorComposer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,7 +27,8 @@ class AppServiceProvider extends ServiceProvider
      * @return void
      */
     public function boot()
-    {
-        //
+    {   
+        View::composer(['cart','product'], SizeColorComposer::class);
+
     }
 }

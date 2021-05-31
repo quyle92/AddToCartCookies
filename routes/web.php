@@ -1,9 +1,11 @@
 <?php
+
+use App\Size;
  $priceQuantity = DB::table('products')
  					->join('sizes', 'products.size_id', '=', 'sizes.id')
  					->join('colors', 'products.color_id', '=', 'colors.id')
  					->where('style_id', 1)->select('color', 'size', 'quantity','price')->get();
-//dd($priceQuantity);
+
 
 
 /*

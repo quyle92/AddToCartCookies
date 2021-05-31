@@ -2205,10 +2205,14 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
   },
   created: function created() {
     if (!localStorage.getItem('products')) return;
-    this.productsOnCart = JSON.parse(localStorage.getItem('products'));
+    var products = JSON.parse(localStorage.getItem('products'));
+    products = _.orderBy(products, ['style_id', 'fullNumber'], ['asc', 'asc']);
+    this.productsOnCart = products;
     this.productsOnCart.forEach(function (item) {
       Vue.set(item, 'isEdit', false);
     });
+    this.$store.state.sizeList = sizeList;
+    this.$store.state.colorList = colorList;
   },
   mounted: function mounted() {}
 });
@@ -2284,16 +2288,15 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
   props: ['itemInfo'],
   data: function data() {
     return {
-      selectedSize: '',
-      sizeList: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-      colorList: ['black', 'white', 'gray', 'maroon', 'purple', 'navy', 'teal'],
+      // sizeList: ['XS','S', 'M', 'L', 'XL', 'XXL'],
+      // colorList: ['black','white', 'gray', 'maroon', 'purple', 'navy', 'teal'],
       lastSelectedSize: '',
       lastSelectedColor: '',
       countSizeSelect: 0,
       countColorSelect: 0
     };
   },
-  computed: _objectSpread(_objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['selectedProduct', 'outOfStockSize', 'outOfStockColor', 'sizeColor'])), {}, {
+  computed: _objectSpread(_objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['selectedProduct', 'outOfStockSize', 'outOfStockColor', 'sizeColor', 'sizeList', 'colorList'])), {}, {
     hightlightSize: function hightlightSize() {
       var sizeList = _objectSpread({}, this.sizeList);
 
@@ -2313,8 +2316,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       return sizeList;
     },
     hightlightColor: function hightlightColor() {
-      console.log(this.selectedProduct.color);
-
       var colorList = _objectSpread({}, this.colorList);
 
       for (var item in colorList) {
@@ -2330,7 +2331,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       }
 
       ;
-      return colorList; //console.log(sizeList);
+      return colorList;
     }
   }),
   methods: {
@@ -2545,14 +2546,14 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
   },
   computed: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['selectedProduct', 'totalQuantity', 'selectedFullNumber', 'priceRange', 'selectedPrice', 'productSet', 'sizeColor', 'outOfStockSize', 'outOfStockColor', 'sizeList', 'colorList'])),
   methods: {
-    selectSize: function selectSize(item) {
+    selectSize: function selectSize(size) {
       //khi click vào disabled size thì sẽ cho ko click đc tick
-      if (this.outOfStockSize.indexOf(item.size) !== -1) {
+      if (this.outOfStockSize.indexOf(size) !== -1) {
         return;
       } // khi click lại vào chính button đó
 
 
-      if (item.size === this.sizeColor.size) {
+      if (size === this.sizeColor.size) {
         this.sizeColor.size = '';
         this.getMinMaxQuantity(this.sizeColor.color);
         return;
@@ -2560,18 +2561,18 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
       this.sizeColor.size = '';
-      this.sizeColor.size = item.size; //process logic
+      this.sizeColor.size = size; //process logic
 
-      this.getMinMaxQuantity(item.size);
+      this.getMinMaxQuantity(size);
     },
-    selectColor: function selectColor(item) {
+    selectColor: function selectColor(color) {
       //khi click vào disabled color thì sẽ cho ko click đc tick
-      if (this.outOfStockColor.indexOf(item.color) !== -1) {
+      if (this.outOfStockColor.indexOf(color) !== -1) {
         return;
       } // khi click lại vào chính button đó
 
 
-      if (item.color === this.sizeColor.color) {
+      if (color === this.sizeColor.color) {
         this.sizeColor.color = '';
         this.getMinMaxQuantity(this.sizeColor.size);
         return;
@@ -2579,9 +2580,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
       this.sizeColor.color = '';
-      this.sizeColor.color = item.color; //process logic
+      this.sizeColor.color = color; //process logic
 
-      this.getMinMaxQuantity(item.color);
+      this.getMinMaxQuantity(color);
     },
     add: function add() {
       var value = this.getInputValue();
@@ -2658,7 +2659,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         size: this.sizeColor.size,
         color: this.sizeColor.color,
         price: this.selectedPrice,
-        quantity: this.quantity
+        quantity: this.quantity,
+        date: new Date()
       };
 
       if (localStorage.getItem('products')) {
@@ -39816,32 +39818,30 @@ var render = function() {
               { staticClass: "sizes mt-3" },
               [
                 _vm._v("sizes:\n\n                       "),
-                _vm._l(_vm.sizeList, function(item, index) {
+                _vm._l(_vm.sizeList, function(size, index) {
                   return _c(
                     "button",
                     {
-                      key: item.id,
+                      key: index,
                       staticClass: "product-variation",
                       class: [
-                        item.size === _vm.sizeColor.size
-                          ? _vm.selectedClass
-                          : "",
+                        size === _vm.sizeColor.size ? _vm.selectedClass : "",
                         {
-                          disabled: _vm.outOfStockSize.includes(item.size)
+                          disabled: _vm.outOfStockSize.includes(size)
                         }
                       ],
-                      attrs: { "data-toggle": "tooltip", title: item.size },
+                      attrs: { "data-toggle": "tooltip", title: size },
                       on: {
                         click: function($event) {
                           $event.preventDefault()
-                          return _vm.selectSize(item)
+                          return _vm.selectSize(size)
                         }
                       }
                     },
                     [
                       _vm._v(
                         " \n                           " +
-                          _vm._s(item.size) +
+                          _vm._s(size) +
                           "\n                        "
                       )
                     ]
@@ -39858,32 +39858,30 @@ var render = function() {
                 _vm._v(
                   "colors:\n                     \n                      "
                 ),
-                _vm._l(_vm.colorList, function(item, index) {
+                _vm._l(_vm.colorList, function(color, index) {
                   return _c(
                     "button",
                     {
-                      key: item.id,
+                      key: index,
                       staticClass: "product-variation",
                       class: [
-                        item.color === _vm.sizeColor.color
-                          ? _vm.selectedClass
-                          : "",
+                        color === _vm.sizeColor.color ? _vm.selectedClass : "",
                         {
-                          disabled: _vm.outOfStockColor.includes(item.color)
+                          disabled: _vm.outOfStockColor.includes(color)
                         }
                       ],
-                      attrs: { "data-toggle": "tooltip", title: item.color },
+                      attrs: { "data-toggle": "tooltip", title: color },
                       on: {
                         click: function($event) {
                           $event.preventDefault()
-                          return _vm.selectColor(item)
+                          return _vm.selectColor(color)
                         }
                       }
                     },
                     [
                       _vm._v(
                         " \n                       " +
-                          _vm._s(item.color) +
+                          _vm._s(color) +
                           "\n                      "
                       )
                     ]
@@ -54074,6 +54072,31 @@ var Helper = /*#__PURE__*/function () {
 
       return false;
     }
+  }, {
+    key: "getOutOfStockVariation",
+    value: function getOutOfStockVariation(list, productSet) {
+      var groupVariation = [];
+      var filterProducts = list.forEach(function (size, index) {
+        var sum = 0;
+        productSet.forEach(function (product) {
+          if (product.size === size) {
+            sum += +product.quantity;
+            groupVariation[index] = {
+              size: size,
+              quantity: sum
+            };
+          }
+        });
+      });
+      var zeroProduct = groupVariation.filter(function (e) {
+        return e.quantity === 0;
+      });
+      var output = [];
+      zeroProduct.forEach(function (e) {
+        output.push(e.size);
+      });
+      return output;
+    }
   }]);
 
   return Helper;
@@ -54095,12 +54118,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.common.js");
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(vue__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm.js");
+/* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./helper */ "./resources/js/helper.js");
 
- //helper.js
-// import Helper from './helper';
-// Vuex.prototype.$Helper = new Helper();
 
 vue__WEBPACK_IMPORTED_MODULE_0___default.a.use(vuex__WEBPACK_IMPORTED_MODULE_1__["default"]);
+
+var helper = new _helper__WEBPACK_IMPORTED_MODULE_2__["default"]();
 /* harmony default export */ __webpack_exports__["default"] = (new vuex__WEBPACK_IMPORTED_MODULE_1__["default"].Store({
   state: {
     selectedProduct: window.product,
@@ -54133,10 +54156,10 @@ vue__WEBPACK_IMPORTED_MODULE_0___default.a.use(vuex__WEBPACK_IMPORTED_MODULE_1__
       this.state.colorList.forEach(function (color) {
         colorList.push(Object.values(color)[0]);
       });
-      this.state.outOfStockSize = getOutOfStockVariation(sizeList, productSet);
-      this.state.outOfStockSizeAll = getOutOfStockVariation(sizeList, productSet);
-      this.state.outOfStockColor = getOutOfStockVariation(colorList, productSet);
-      this.state.outOfStockColorAll = getOutOfStockVariation(colorList, productSet);
+      this.state.outOfStockSize = helper.getOutOfStockVariation(sizeList, productSet);
+      this.state.outOfStockSizeAll = helper.getOutOfStockVariation(sizeList, productSet);
+      this.state.outOfStockColor = helper.getOutOfStockVariation(colorList, productSet);
+      this.state.outOfStockColorAll = helper.getOutOfStockVariation(colorList, productSet);
       this.state.productSet = productSet;
     },
     changeTotalQuantity: function changeTotalQuantity(state, payload) {
@@ -54165,46 +54188,6 @@ vue__WEBPACK_IMPORTED_MODULE_0___default.a.use(vuex__WEBPACK_IMPORTED_MODULE_1__
     }
   }
 }));
-
-function groupVariation(list, productSet) {
-  var output = [];
-  var filterProducts = list.forEach(function (size, index) {
-    var sum = 0;
-    productSet.forEach(function (product) {
-      if (product.size === size) {
-        sum += +product.quantity;
-        output[index] = {
-          size: size,
-          quantity: sum
-        };
-      }
-    });
-  });
-}
-
-function getOutOfStockVariation(list, productSet) {
-  var groupVariation = [];
-  var filterProducts = list.forEach(function (size, index) {
-    var sum = 0;
-    productSet.forEach(function (product) {
-      if (product.size === size) {
-        sum += +product.quantity;
-        groupVariation[index] = {
-          size: size,
-          quantity: sum
-        };
-      }
-    });
-  });
-  var zeroProduct = groupVariation.filter(function (e) {
-    return e.quantity === 0;
-  });
-  var output = [];
-  zeroProduct.forEach(function (e) {
-    output.push(e.size);
-  });
-  return output;
-}
 
 /***/ }),
 

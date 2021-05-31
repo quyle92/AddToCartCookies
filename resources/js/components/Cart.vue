@@ -322,13 +322,16 @@ export default {
   created(){
   		if( ! localStorage.getItem('products') ) return;
 
-  		this.productsOnCart =  JSON.parse( localStorage.getItem('products') );
+  		let products =  JSON.parse( localStorage.getItem('products') );
+  		products = _.orderBy(products, ['style_id', 'fullNumber'], ['asc', 'asc']);
+  		this.productsOnCart =  products;
 
   		this.productsOnCart.forEach( item =>  {
   				Vue.set(item, 'isEdit', false);
   		});
 
-  	
+  	this.$store.state.sizeList = sizeList
+		this.$store.state.colorList = colorList
 
   },
   mounted(){

@@ -52,9 +52,8 @@ export default {
   props:['itemInfo'],
   data: function() {
     return {
-    selectedSize:'',
- 		sizeList: ['XS','S', 'M', 'L', 'XL', 'XXL'],
- 		colorList: ['black','white', 'gray', 'maroon', 'purple', 'navy', 'teal'],
+ 		// sizeList: ['XS','S', 'M', 'L', 'XL', 'XXL'],
+ 		// colorList: ['black','white', 'gray', 'maroon', 'purple', 'navy', 'teal'],
  		lastSelectedSize:'',
  		lastSelectedColor:'',
  		countSizeSelect: 0, 
@@ -66,7 +65,9 @@ export default {
   		'selectedProduct'  ,
   		'outOfStockSize',
   		'outOfStockColor',
-  		'sizeColor'
+  		'sizeColor',
+  		'sizeList',
+  		'colorList'
   		]),
   	hightlightSize(){
   		let sizeList = { ...this.sizeList };
@@ -87,7 +88,7 @@ export default {
   		return sizeList;
   		
   	},
-  	hightlightColor(){console.log( this.selectedProduct.color)
+  	hightlightColor(){
   		let colorList = { ...this.colorList };
   		for (let item in colorList) {
   			if( colorList[item] === this.selectedProduct.color ){
@@ -104,7 +105,7 @@ export default {
   			}
   		};
   		return colorList;
-  		//console.log(sizeList);
+ 
   	}
   },
   methods:{
@@ -177,6 +178,8 @@ export default {
 
   created(){
   	
+  	
+
   	vm.$on('cancel', () => {
   		this.cancel()
   	})

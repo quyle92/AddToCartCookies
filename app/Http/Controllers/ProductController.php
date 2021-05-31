@@ -64,19 +64,6 @@ class ProductController extends Controller
         $color = $request->color;
 
         //this query is for learning only
-        if( isset( $size ) && isset( $color ) ){
-            $priceQuantity = DB::table('products')
-                ->join('sizes', 'products.size_id', '=', 'sizes.id')
-                ->join('colors', 'products.color_id', '=', 'colors.id')
-                ->where('style_id', $style_id )
-                ->where('size', $size )
-                ->where('color', $color )
-                ->get();
-
-            return $priceQuantity;
-        }
-
-        //this query is for learning only
         $priceQuantity = DB::table('products')
                 //nếu chỉ có $size ko thì chạy cái này
                 ->when($size, function( $query, $size ){
@@ -138,7 +125,9 @@ class ProductController extends Controller
 
     public function showCart()
     {
-    	//$products = $_COOKIE[$this->cookie_name];
+    	// $sizes = Size::select('size')->get();
+
+     //    $colors = Color::select('color')->get();
 
     	return view('cart');
     }
