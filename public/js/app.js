@@ -2054,6 +2054,10 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 //
 //
 //
+//
+//
+//
+//
 
  //import clickOutside from '../directive';
 
@@ -2061,18 +2065,15 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
   props: ['products'],
   data: function data() {
     return {
-      productsOnCart: [],
-      //popover: false,
       show: false,
       count: 0,
       max: 10,
       min: 1,
       selectedItem: {},
-      styleSet: [] // sizeColor: {}
-
+      styleSet: []
     };
   },
-  computed: _objectSpread(_objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['totalQuantity', 'selectedFullNumber', 'priceRange', 'selectedPrice', 'productSet'])), {}, {
+  computed: _objectSpread(_objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['totalQuantity', 'selectedFullNumber', 'priceRange', 'selectedPrice', 'productSet', 'productsOnCart'])), {}, {
     totalQty: function totalQty() {
       var result = 0;
       this.productsOnCart.forEach(function (item) {
@@ -2097,7 +2098,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       //hide popover  nếu click lại lần 2
       var selectedProduct = _.find(this.productsOnCart, {
         'isEdit': true
-      });
+      }); //console.log(this.productsOnCart[0], selectedProduct)
+
 
       if (_.isEqual(selectedProduct, item)) {
         item.isEdit = false; //$on: popover.vue
@@ -2123,7 +2125,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
           if (this.styleSet[i][0].style_id === item.style_id) {
             this.$store.state.productSet = this.styleSet[i];
             this.bothSizeColor();
-            this.productsOnCart[index].isEdit = true; //(2)
+            item.isEdit = true; //(2)
 
             return;
           }
@@ -2136,7 +2138,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
           _this.bothSizeColor();
 
-          _this.productsOnCart[index].isEdit = true; //(2)
+          item.isEdit = true; //(2)
         })["catch"](function (error) {
           console.log(error);
         });
@@ -2199,7 +2201,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     },
     productsOnCart: {
       deep: true,
-      handler: function handler(newObj, oldObj) {//console.log('hi',newObj);
+      handler: function handler(newObj, oldObj) {//console.log('watch',newObj);
       }
     }
   },
@@ -2207,7 +2209,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     if (!localStorage.getItem('products')) return;
     var products = JSON.parse(localStorage.getItem('products'));
     products = _.orderBy(products, ['style_id', 'fullNumber'], ['asc', 'asc']);
-    this.productsOnCart = products;
+    this.$store.state.productsOnCart = products;
     this.productsOnCart.forEach(function (item) {
       Vue.set(item, 'isEdit', false);
     });
@@ -2285,18 +2287,14 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
 /* harmony default export */ __webpack_exports__["default"] = ({
-  props: ['itemInfo'],
+  props: ['keyIndex'],
   data: function data() {
     return {
-      // sizeList: ['XS','S', 'M', 'L', 'XL', 'XXL'],
-      // colorList: ['black','white', 'gray', 'maroon', 'purple', 'navy', 'teal'],
-      lastSelectedSize: '',
-      lastSelectedColor: '',
-      countSizeSelect: 0,
-      countColorSelect: 0
+      count: 0,
+      lastSelectedProduct: {}
     };
   },
-  computed: _objectSpread(_objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['selectedProduct', 'outOfStockSize', 'outOfStockColor', 'sizeColor', 'sizeList', 'colorList'])), {}, {
+  computed: _objectSpread(_objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['selectedProduct', 'outOfStockSize', 'outOfStockColor', 'sizeColor', 'sizeList', 'colorList', 'productsOnCart', 'selectedPrice', 'productSet'])), {}, {
     hightlightSize: function hightlightSize() {
       var sizeList = _objectSpread({}, this.sizeList);
 
@@ -2335,61 +2333,70 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     }
   }),
   methods: {
+    selectSize: function selectSize(size) {
+      if (this.outOfStockSize.includes(size)) return;
+
+      if (this.count === 0) {
+        this.lastSelectedProduct = _objectSpread({}, this.selectedProduct); //console.log( this.lastSelectedProduct, this.lastSelectedProduct.size) (2)
+      }
+
+      this.count++;
+      this.sizeColor.size = size;
+      this.bothSizeColor();
+      this.selectedProduct.date = new Date();
+    },
+    selectColor: function selectColor(color) {
+      if (this.outOfStockColor.includes(color)) return;
+
+      if (this.count === 0) {
+        this.lastSelectedProduct = _objectSpread({}, this.selectedProduct);
+      }
+
+      this.count++;
+      this.sizeColor.color = color;
+      this.bothSizeColor();
+      this.selectedProduct.date = new Date();
+    },
     cancel: function cancel() {
-      if (this.lastSelectedSize) {
-        this.selectedProduct.size = this.sizeColor.size = this.lastSelectedSize;
+      if (!_.isEmpty(this.lastSelectedProduct)) {
+        this.selectedProduct.size = this.lastSelectedProduct.size;
+        this.selectedProduct.color = this.lastSelectedProduct.color;
+        this.selectedProduct.price = this.lastSelectedProduct.price;
+        this.selectedProduct.fullNumber = this.lastSelectedProduct.fullNumber;
       }
 
-      if (this.lastSelectedColor) {
-        this.selectedProduct.color = this.sizeColor.color = this.lastSelectedColor;
-      }
-
-      this.lastSelectedSize = this.lastSelectedColor = '';
-      this.countSizeSelect = this.countColorSelect = 0;
-      this.itemInfo.isEdit = false; // $('.popoverVariation').on( "click", ".cancel", function( e ) {
+      this.lastSelectedProduct = {};
+      this.count = 0;
+      this.selectedProduct.isEdit = false; // $('.popoverVariation').on( "click", ".cancel", function( e ) {
       // 	$(this).parentsUntil(".product-des").parent().find('.position-absolute').addClass('d-none');
       // 	$(this).parentsUntil(".product-des").parent().find('i.fa').replaceWith(  '<i class="fa fa-sort-up ml-1"></i>' );
       // });
     },
     confirm: function confirm() {
-      this.lastSelectedSize = this.lastSelectedColor = '';
-      this.countSizeSelect = this.countColorSelect = 0;
-      this.itemInfo.isEdit = false; // this.$store.state.selectedSize = this.selectedSize;
+      var _this = this;
+
+      this.selectedProduct.isEdit = false;
+      if (!localStorage.getItem('products')) return;
+      var productsOnStorage = JSON.parse(localStorage.getItem('products'));
+      productsOnStorage = productsOnStorage.filter(function (e) {
+        return e.fullNumber !== _this.lastSelectedProduct.fullNumber;
+      });
+      productsOnStorage.push(this.selectedProduct);
+      localStorage.removeItem('products');
+      localStorage.setItem('products', JSON.stringify(productsOnStorage));
+      this.lastSelectedProduct = {};
+      this.count = 0; // this.$store.state.selectedSize = this.selectedSize;
       // $('.popoverVariation').on( "click", ".confirm", function() {
       // 	$(this).prev().click();//(1)
       // 	$(this).prev().trigger( "click" );//(1)
       // });
-    },
-    selectSize: function selectSize(size, target) {
-      if (this.outOfStockSize.includes(size)) return;
-
-      if (this.countSizeSelect === 0) {
-        this.lastSelectedSize = this.selectedProduct.size;
-      }
-
-      this.countSizeSelect++;
-      this.selectedProduct.size = size;
-      this.sizeColor.size = size;
-      this.bothSizeColor();
-    },
-    selectColor: function selectColor(color, target) {
-      if (this.outOfStockColor.includes(color)) return;
-
-      if (this.countColorSelect === 0) {
-        this.lastSelectedColor = this.selectedProduct.color;
-      }
-
-      this.countColorSelect++;
-      this.selectedProduct.color = color;
-      this.sizeColor.color = color;
-      this.bothSizeColor();
     }
   },
   created: function created() {
-    var _this = this;
+    var _this2 = this;
 
     vm.$on('cancel', function () {
-      _this.cancel();
+      _this2.cancel();
     });
   }
 });
@@ -7195,7 +7202,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.sinlge-bar.shopping[data-v-3644a4ec] {\r\n    border: 1px solid rgba(0,0,0,.09);\r\n    box-shadow: 0 5px 10px 0 rgb(0 0 0 / 9%);\r\n    padding: 10px;\n}\n.product-variation[data-v-3644a4ec] {\r\n\tborder-radius: 2px;\r\n\tborder: 1px solid rgba(0,0,0,.09);\n}\n.disabled[data-v-3644a4ec]{\r\n  color: rgba(0,0,0,.26);\r\n  cursor: not-allowed;\n}\n.btn.disabled[data-v-3644a4ec]:hover {\r\n\tbox-shadow: none;\n}\n.btn.disabled[data-v-3644a4ec]:focus{\r\n\tbox-shadow: none;\r\n\tbackground-color: transparent;\n}\n.btn.disabled[data-v-3644a4ec]:hover{\r\n\tbackground: transparent;\r\n\tbox-shadow: transparent\n}\n.btn[data-v-3644a4ec]:hover{\r\n\t\tbackground-color: transparent;\r\n\t\tbox-shadow: 0 0 0 0.2rem rgb(52 144 220 / 25%);\n}\r\n\r\n", ""]);
+exports.push([module.i, "\n.sinlge-bar.shopping[data-v-3644a4ec] {\r\n    border: 1px solid rgba(0,0,0,.09);\r\n    box-shadow: 0 5px 10px 0 rgb(0 0 0 / 9%);\r\n    padding: 10px;\n}\n.product-variation[data-v-3644a4ec] {\r\n\tborder-radius: 2px;\r\n\tborder: 1px solid rgba(0,0,0,.09);\n}\n.disabled[data-v-3644a4ec]{\r\n  color: rgba(0,0,0,.26);\r\n  cursor: not-allowed;\n}\n.btn.disabled[data-v-3644a4ec]:hover {\r\n\tbox-shadow: none;\n}\n.btn.disabled[data-v-3644a4ec]:focus{\r\n\tbox-shadow: none;\r\n\tbackground-color: transparent;\n}\n.btn.disabled[data-v-3644a4ec]:hover{\r\n\tbackground: transparent;\r\n\tbox-shadow: transparent\n}\n.btn[data-v-3644a4ec]:hover{\r\n\t\tbackground-color: #ffed4a;\r\n\t\tbox-shadow: 0 0 0 0.2rem rgb(52 144 220 / 25%);\n}\r\n\r\n\r\n\r\n", ""]);
 
 // exports
 
@@ -39193,11 +39200,13 @@ var render = function() {
                             ]
                           ),
                           _vm._v(" "),
-                          _c("popover", {
-                            staticClass: "position-absolute bg-white",
-                            staticStyle: { "z-index": "999" },
-                            attrs: { itemInfo: item }
-                          })
+                          item.isEdit
+                            ? _c("popover", {
+                                staticClass: "position-absolute bg-white",
+                                staticStyle: { "z-index": "999" },
+                                attrs: { keyIndex: index }
+                              })
+                            : _vm._e()
                         ],
                         1
                       ),
@@ -39212,7 +39221,6 @@ var render = function() {
                         },
                         [_c("span", [_vm._v("$" + _vm._s(item.price) + " ")])]
                       ),
-                      _vm._v(" "),
                       _c(
                         "td",
                         { staticClass: "qty", attrs: { "data-title": "Qty" } },
@@ -39499,118 +39507,109 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("div", [
-    _vm.itemInfo.isEdit
-      ? _c(
-          "div",
-          {
-            staticClass: "sinlge-bar shopping popoverVariation",
-            attrs: { id: _vm.itemInfo.fullNumber }
-          },
-          [
-            _c("form", [
-              _c("div", [
-                _c("span", { staticClass: "d-block" }, [_vm._v("Size")]),
-                _vm._v(" "),
-                _c(
-                  "div",
-                  { staticClass: "buttonList" },
-                  _vm._l(_vm.hightlightSize, function(item, index) {
-                    return _c(
-                      "button",
-                      {
-                        key: index,
-                        staticClass: "btn btn-default product-variation size",
-                        class: [
-                          Object.values(item)[0],
-                          {
-                            disabled: _vm.outOfStockSize.includes(
-                              Object.keys(item)[0]
-                            )
-                          }
-                        ],
-                        attrs: { type: "button" },
-                        on: {
-                          click: function($event) {
-                            _vm.selectSize(Object.keys(item)[0], $event.target)
-                          }
-                        }
-                      },
-                      [
-                        _vm._v(
-                          "\n\t\t\t\t\t\t" +
-                            _vm._s(Object.keys(item)[0]) +
-                            "\n\t\t\t\t\t"
-                        )
-                      ]
-                    )
-                  }),
-                  0
-                ),
-                _vm._v(" "),
-                _c("span", { staticClass: "d-block" }, [_vm._v("Color")]),
-                _vm._v(" "),
-                _c(
-                  "div",
-                  { staticClass: "colorList" },
-                  _vm._l(_vm.hightlightColor, function(item, index) {
-                    return _c(
-                      "button",
-                      {
-                        key: index,
-                        staticClass: "btn btn-default product-variation color",
-                        class: [
-                          Object.values(item)[0],
-                          {
-                            disabled: _vm.outOfStockColor.includes(
-                              Object.keys(item)[0]
-                            )
-                          }
-                        ],
-                        attrs: { type: "button" },
-                        on: {
-                          click: function($event) {
-                            _vm.selectColor(Object.keys(item)[0], $event.target)
-                          }
-                        }
-                      },
-                      [
-                        _vm._v(
-                          "\n\t\t\t\t\t\t" +
-                            _vm._s(Object.keys(item)[0]) +
-                            "\n\t\t\t\t\t"
-                        )
-                      ]
-                    )
-                  }),
-                  0
-                )
-              ]),
-              _vm._v(" "),
-              _c("div", { staticClass: "mt-3" }, [
-                _c(
-                  "button",
-                  {
-                    staticClass: "btn btn-default cancel",
-                    attrs: { type: "button" },
-                    on: { click: _vm.cancel }
-                  },
-                  [_vm._v("Cancel")]
-                ),
-                _vm._v(" "),
-                _c(
-                  "button",
-                  {
-                    staticClass: "btn btn-danger confirm",
-                    attrs: { type: "button" },
-                    on: { click: _vm.confirm }
-                  },
-                  [_vm._v("OK")]
-                )
-              ])
-            ])
-          ]
-        )
-      : _vm._e()
+    _c("div", { staticClass: "sinlge-bar shopping popoverVariation" }, [
+      _c("form", [
+        _c("div", [
+          _c("span", { staticClass: "d-block" }, [_vm._v("Size")]),
+          _vm._v(_vm._s(_vm.lastSelectedProduct.color) + "\n\t\t\t\t"),
+          _c(
+            "div",
+            { staticClass: "buttonList" },
+            _vm._l(_vm.hightlightSize, function(item, index) {
+              return _c(
+                "button",
+                {
+                  key: index,
+                  staticClass: "btn btn-default product-variation size",
+                  class: [
+                    Object.values(item)[0],
+                    {
+                      disabled: _vm.outOfStockSize.includes(
+                        Object.keys(item)[0]
+                      )
+                    }
+                  ],
+                  attrs: { type: "button" },
+                  on: {
+                    click: function($event) {
+                      _vm.selectSize(Object.keys(item)[0])
+                    }
+                  }
+                },
+                [
+                  _vm._v(
+                    "\n\t\t\t\t\t\t" +
+                      _vm._s(Object.keys(item)[0]) +
+                      "\n\t\t\t\t\t"
+                  )
+                ]
+              )
+            }),
+            0
+          ),
+          _vm._v(" "),
+          _c("span", { staticClass: "d-block" }, [_vm._v("Color")]),
+          _vm._v(" "),
+          _c(
+            "div",
+            { staticClass: "colorList" },
+            _vm._l(_vm.hightlightColor, function(item, index) {
+              return _c(
+                "button",
+                {
+                  key: index,
+                  staticClass: "btn btn-default product-variation color",
+                  class: [
+                    Object.values(item)[0],
+                    {
+                      disabled: _vm.outOfStockColor.includes(
+                        Object.keys(item)[0]
+                      )
+                    }
+                  ],
+                  attrs: { type: "button" },
+                  on: {
+                    click: function($event) {
+                      _vm.selectColor(Object.keys(item)[0])
+                    }
+                  }
+                },
+                [
+                  _vm._v(
+                    "\n\t\t\t\t\t\t" +
+                      _vm._s(Object.keys(item)[0]) +
+                      "\n\t\t\t\t\t"
+                  )
+                ]
+              )
+            }),
+            0
+          )
+        ]),
+        _vm._v(" "),
+        _c("div", { staticClass: "mt-3" }, [
+          _c(
+            "button",
+            {
+              staticClass: "btn btn-default cancel",
+              attrs: { type: "button" },
+              on: { click: _vm.cancel }
+            },
+            [_vm._v("Cancel")]
+          ),
+          _vm._v(" "),
+          _c(
+            "button",
+            {
+              staticClass: "btn btn-danger confirm",
+              attrs: { type: "button" },
+              on: { click: _vm.confirm }
+            },
+            [_vm._v("OK")]
+          )
+        ])
+      ])
+    ])
   ])
 }
 var staticRenderFns = []
@@ -53638,7 +53637,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
   data: function data() {
     return {};
   },
-  computed: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['totalQuantity', 'selectedFullNumber', 'priceRange', 'selectedPrice', 'productSet', 'sizeColor', 'sizeList', 'colorList', 'outOfStockColorAll', 'outOfStockSizeAll'])),
+  computed: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['totalQuantity', 'selectedFullNumber', 'priceRange', 'selectedPrice', 'productSet', 'sizeColor', 'sizeList', 'colorList', 'outOfStockColorAll', 'outOfStockSizeAll', 'productsOnCart', 'selectedProduct'])),
   methods: {
     eitherSizeColor: function eitherSizeColor(result) {
       var _this = this;
@@ -53682,16 +53681,19 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     bothSizeColor: function bothSizeColor() {
       var _this2 = this;
 
-      var selectedProduct = {};
       this.productSet.forEach(function (item) {
-        item.size === _this2.sizeColor.size && item.color === _this2.sizeColor.color ? selectedProduct = item : '';
-      }); //console.log(this.totalQuantity)
+        if (item.size === _this2.sizeColor.size && item.color === _this2.sizeColor.color) {
+          _this2.selectedProduct.size = item.size;
+          _this2.selectedProduct.color = item.color;
+          _this2.selectedProduct.price = item.price;
+          _this2.selectedProduct.fullNumber = item.fullNumber;
+        }
+      });
+      this.$store.commit('changeTotalQuantity', this.selectedProduct.quantity);
+      this.$store.commit('changeSelectedFullNumber', this.selectedProduct.fullNumber);
+      this.$store.commit('changeSelectedPrice', this.selectedProduct.price); //$on at ProductPage
 
-      this.$store.commit('changeTotalQuantity', selectedProduct.quantity);
-      this.$store.commit('changeSelectedFullNumber', selectedProduct.fullNumber);
-      this.$store.commit('changeSelectedPrice', selectedProduct.price); //$on at ProductPage
-
-      vm.$emit('getSelectedPriceOriginal', selectedProduct.price); //size: xem colors nào bị 0 quantity thì disabled nó
+      vm.$emit('getSelectedPriceOriginal', this.selectedProduct.price); //size: xem colors nào bị 0 quantity thì disabled nó
 
       var outOfStockColor = [];
       this.productSet.forEach(function (item) {
@@ -54123,16 +54125,18 @@ __webpack_require__.r(__webpack_exports__);
 
 vue__WEBPACK_IMPORTED_MODULE_0___default.a.use(vuex__WEBPACK_IMPORTED_MODULE_1__["default"]);
 
-var helper = new _helper__WEBPACK_IMPORTED_MODULE_2__["default"]();
+
+var _helper = new _helper__WEBPACK_IMPORTED_MODULE_2__["default"]();
+
 /* harmony default export */ __webpack_exports__["default"] = (new vuex__WEBPACK_IMPORTED_MODULE_1__["default"].Store({
   state: {
     selectedProduct: window.product,
     priceRange: '',
     selectedFullNumber: '',
-    //selectedSize:'',
+    productsOnCart: '',
     totalQuantity: window.totalQuantity,
     productSet: [],
-    selectedPrice: '',
+    selectedPrice: 0,
     outOfStockSize: '',
     outOfStockColor: '',
     outOfStockSizeAll: '',
@@ -54156,10 +54160,10 @@ var helper = new _helper__WEBPACK_IMPORTED_MODULE_2__["default"]();
       this.state.colorList.forEach(function (color) {
         colorList.push(Object.values(color)[0]);
       });
-      this.state.outOfStockSize = helper.getOutOfStockVariation(sizeList, productSet);
-      this.state.outOfStockSizeAll = helper.getOutOfStockVariation(sizeList, productSet);
-      this.state.outOfStockColor = helper.getOutOfStockVariation(colorList, productSet);
-      this.state.outOfStockColorAll = helper.getOutOfStockVariation(colorList, productSet);
+      this.state.outOfStockSize = _helper.getOutOfStockVariation(sizeList, productSet);
+      this.state.outOfStockSizeAll = _helper.getOutOfStockVariation(sizeList, productSet);
+      this.state.outOfStockColor = _helper.getOutOfStockVariation(colorList, productSet);
+      this.state.outOfStockColorAll = _helper.getOutOfStockVariation(colorList, productSet);
       this.state.productSet = productSet;
     },
     changeTotalQuantity: function changeTotalQuantity(state, payload) {

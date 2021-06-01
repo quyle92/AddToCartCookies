@@ -3,7 +3,7 @@ import Vuex from 'vuex';
 Vue.use(Vuex);
 
 import Helper from './helper';
-let helper = new Helper()
+let _helper = new Helper()
 
 
 export default  new Vuex.Store({
@@ -12,10 +12,10 @@ export default  new Vuex.Store({
 		selectedProduct: window.product,
 		priceRange: '',
 		selectedFullNumber:'',
-		//selectedSize:'',
+		productsOnCart:'',
 		totalQuantity: window.totalQuantity,
 		productSet: [],
-		selectedPrice:'',
+		selectedPrice:0,
 		outOfStockSize: '',
 		outOfStockColor: '',
 		outOfStockSizeAll: '',
@@ -49,11 +49,11 @@ export default  new Vuex.Store({
 			  colorList.push(Object.values(color)[0])
 			})
 
-			this.state.outOfStockSize = helper.getOutOfStockVariation(sizeList, productSet);
-			this.state.outOfStockSizeAll = helper.getOutOfStockVariation(sizeList, productSet);
+			this.state.outOfStockSize = _helper.getOutOfStockVariation(sizeList, productSet);
+			this.state.outOfStockSizeAll = _helper.getOutOfStockVariation(sizeList, productSet);
 
-			this.state.outOfStockColor = helper.getOutOfStockVariation(colorList, productSet);
-			this.state.outOfStockColorAll = helper.getOutOfStockVariation(colorList, productSet);
+			this.state.outOfStockColor = _helper.getOutOfStockVariation(colorList, productSet);
+			this.state.outOfStockColorAll = _helper.getOutOfStockVariation(colorList, productSet);
 
 			this.state.productSet = productSet;
 			

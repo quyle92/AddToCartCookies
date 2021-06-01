@@ -52,10 +52,14 @@
 										<popover 
 										class="position-absolute bg-white" 
 										style="z-index:999" 
-										:itemInfo="item"
+										:keyIndex="index"
+										v-if="item.isEdit"
 										/>
 									</td>
-									<td class="price" data-title="Price" ref="mySecondLevelRefName"><span>${{item.price}} </span></td>
+									<td class="price" data-title="Price" ref="mySecondLevelRefName">
+										<span >${{item.price}} </span> 
+		
+					<!-- 					<span v-else>${{selectedPrice}} </span> </td> -->
 									<td class="qty" data-title="Qty"><!-- Input Order -->
 										<div class="input-group">
 											<div class="button minus">
@@ -148,15 +152,13 @@ export default {
    ],
   data: function() {
     return {
-		 		productsOnCart:[],
-		 		//popover: false,
 		 		show:false,
 		 		count: 0,
 		 		max: 10,
 		 		min:1,
 		 		selectedItem: {},
 		 		styleSet:[],
-		 		// sizeColor: {}
+
  		}
   },
   computed: {
@@ -165,7 +167,8 @@ export default {
 			'selectedFullNumber'  ,
 			'priceRange' , 
 			'selectedPrice'  ,
-			'productSet' , 
+			'productSet' ,
+			'productsOnCart'
 
   		]),
   	totalQty(){
@@ -194,7 +197,7 @@ export default {
   	showPopover(item, index)
   	{	
   		//hide popover  nếu click lại lần 2
-  		let selectedProduct= _.find(this.productsOnCart, {'isEdit': true});
+  		let selectedProduct= _.find(this.productsOnCart, {'isEdit': true});//console.log(this.productsOnCart[0], selectedProduct)
   		if( _.isEqual(selectedProduct, item) ){
   			item.isEdit = false;
   			//$on: popover.vue
@@ -223,7 +226,7 @@ export default {
 	  				if( this.styleSet[i][0].style_id === item.style_id ){
 	  						this.$store.state.productSet = this.styleSet[i];
 	  						this.bothSizeColor();
-	  						this.productsOnCart[index].isEdit = true;//(2)
+	  						item.isEdit = true;//(2)
 	  						return;
 	  				}
 	  			}
@@ -233,7 +236,7 @@ export default {
 								this.styleSet.push(response.data);
 								this.$store.state.productSet = response.data;
 								this.bothSizeColor();
-								this.productsOnCart[index].isEdit = true;//(2)
+								item.isEdit = true;//(2)
 						})
 						.catch(function (error) {
 							console.log(error);
@@ -315,7 +318,7 @@ export default {
   	productsOnCart: {
   		deep: true,
   		handler: function (newObj, oldObj) {
-      		//console.log('hi',newObj);
+      		//console.log('watch',newObj);
   		}
     }
   },
@@ -324,12 +327,12 @@ export default {
 
   		let products =  JSON.parse( localStorage.getItem('products') );
   		products = _.orderBy(products, ['style_id', 'fullNumber'], ['asc', 'asc']);
-  		this.productsOnCart =  products;
+  		this.$store.state.productsOnCart =  products;
 
   		this.productsOnCart.forEach( item =>  {
   				Vue.set(item, 'isEdit', false);
   		});
-
+  		
   	this.$store.state.sizeList = sizeList
 		this.$store.state.colorList = colorList
 

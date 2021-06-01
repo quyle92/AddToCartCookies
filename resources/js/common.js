@@ -18,7 +18,9 @@ export default {
 			'sizeList',
 			'colorList',
 			'outOfStockColorAll',
-			'outOfStockSizeAll'
+			'outOfStockSizeAll',
+			'productsOnCart',
+			'selectedProduct'
 			]),
 	},
 	methods: {
@@ -66,20 +68,25 @@ export default {
 
             },
             bothSizeColor( ){  
-				let selectedProduct = {};
+            	
 				this.productSet.forEach( item => {
-					item.size === this.sizeColor.size && item.color === this.sizeColor.color 
-					? selectedProduct = item : '';
+					if (item.size === this.sizeColor.size && item.color === this.sizeColor.color )
+					{
+						this.selectedProduct.size = item.size;
+						this.selectedProduct.color = item.color;
+						this.selectedProduct.price = item.price;
+						this.selectedProduct.fullNumber = item.fullNumber;
+					}
+					
 				});
 
-				//console.log(this.totalQuantity)
-				this.$store.commit('changeTotalQuantity', selectedProduct.quantity);
-				this.$store.commit('changeSelectedFullNumber', selectedProduct.fullNumber);
-				this.$store.commit('changeSelectedPrice', selectedProduct.price);
+				this.$store.commit('changeTotalQuantity', this.selectedProduct.quantity);
+				this.$store.commit('changeSelectedFullNumber', this.selectedProduct.fullNumber);
+				this.$store.commit('changeSelectedPrice', this.selectedProduct.price);
 
 				//$on at ProductPage
-				vm.$emit('getSelectedPriceOriginal', selectedProduct.price );
-				
+				vm.$emit('getSelectedPriceOriginal', this.selectedProduct.price );
+
 		        //size: xem colors nào bị 0 quantity thì disabled nó
 		        let outOfStockColor = [];
 		        this.productSet.forEach( item => {

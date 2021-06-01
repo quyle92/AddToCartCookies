@@ -1,13 +1,13 @@
 <template>
 	<div  >
-		<div class="sinlge-bar shopping popoverVariation" :id="itemInfo.fullNumber" v-if="itemInfo.isEdit">
+		<div class="sinlge-bar shopping popoverVariation"  >
 			<form>
 				<div>
-					<span class="d-block">Size</span>
+					<span class="d-block">Size</span>{{lastSelectedProduct.color}}
 					<div class="buttonList">
 						<button type="button" class="btn btn-default product-variation size"  
 						v-for="(item, index) in hightlightSize" :key="index"  
-						@click="selectSize( Object.keys(item)[0] , $event.target)" 
+						@click="selectSize( Object.keys(item)[0] )" 
 						:class="[
 						Object.values(item)[0] , 
 						{
@@ -22,7 +22,7 @@
 					<div class="colorList">
 						<button type="button" class="btn btn-default product-variation color"  
 						v-for="(item, index) in hightlightColor" :key="index"  
-						@click="selectColor( Object.keys(item)[0] , $event.target)" 
+						@click="selectColor( Object.keys(item)[0] )" 
 						:class="[
 						Object.values(item)[0] , 
 						{
@@ -49,15 +49,11 @@
 import { mapState } from 'vuex'
 import { mapGetters } from 'vuex'
 export default {
-  props:['itemInfo'],
+  props:[ 'keyIndex'],
   data: function() {
     return {
- 		// sizeList: ['XS','S', 'M', 'L', 'XL', 'XXL'],
- 		// colorList: ['black','white', 'gray', 'maroon', 'purple', 'navy', 'teal'],
- 		lastSelectedSize:'',
- 		lastSelectedColor:'',
- 		countSizeSelect: 0, 
- 		countColorSelect: 0, 
+ 		count: 0,
+ 		lastSelectedProduct: {}
  	  }
   },
     computed:{
@@ -67,7 +63,10 @@ export default {
   		'outOfStockColor',
   		'sizeColor',
   		'sizeList',
-  		'colorList'
+  		'colorList',
+  		'productsOnCart',
+  		'selectedPrice',
+  		'productSet'
   		]),
   	hightlightSize(){
   		let sizeList = { ...this.sizeList };
@@ -109,23 +108,56 @@ export default {
   	}
   },
   methods:{
+  	selectSize(size)
+  	{	
+  		if( this.outOfStockSize.includes(size) ) return;
+
+  		if( this.count === 0 ) {
+  			this.lastSelectedProduct = {...this.selectedProduct };
+//console.log( this.lastSelectedProduct, this.lastSelectedProduct.size) (2)
+  		}
+  		this.count++;
+
+
+  		this.sizeColor.size = size;
+  		
+  		this.bothSizeColor();
+  		this.selectedProduct.date = new Date();
+
+  		
+  	},
+  	selectColor(color)
+  	{
+  		if( this.outOfStockColor.includes(color) ) return;
+
+  		if( this.count === 0 ) {
+  			this.lastSelectedProduct = {...this.selectedProduct};
+  			
+  		}
+  		this.count++;
+
+  		this.sizeColor.color = color;
+
+  		this.bothSizeColor();
+  		this.selectedProduct.date = new Date();
+  	},
   	cancel(){
 
-  			if( this.lastSelectedSize )
-  			{
-  					this.selectedProduct.size = this.sizeColor.size = this.lastSelectedSize;
+  			if( ! _.isEmpty(this.lastSelectedProduct)   )
+  			{		
+  					this.selectedProduct.size = this.lastSelectedProduct.size;
+  					this.selectedProduct.color = this.lastSelectedProduct.color;
+  					this.selectedProduct.price = this.lastSelectedProduct.price;
+  					this.selectedProduct.fullNumber = this.lastSelectedProduct.fullNumber;
+
   			}
 
-  			if( this.lastSelectedColor )
-  			{
-  					this.selectedProduct.color = this.sizeColor.color = this.lastSelectedColor;
-  			}
 
-  		this.lastSelectedSize = this.lastSelectedColor = '';
-  		this.countSizeSelect = this.countColorSelect = 0 ;
+  		this.lastSelectedProduct = {};
+  		this.count = 0 ;
 
 
-  		this.itemInfo.isEdit = false;
+  		this.selectedProduct.isEdit = false;
 
   		// $('.popoverVariation').on( "click", ".cancel", function( e ) {
 
@@ -135,45 +167,32 @@ export default {
   	},
   	confirm(){
 
-  		this.lastSelectedSize = this.lastSelectedColor = '';
-  		this.countSizeSelect = this.countColorSelect = 0 ;
   		
-  		this.itemInfo.isEdit = false;
+  		
+  		this.selectedProduct.isEdit = false;
 
+  		if( ! localStorage.getItem('products') ) return;
 
+  		let productsOnStorage =  JSON.parse( localStorage.getItem('products') );
+
+  		productsOnStorage = productsOnStorage.filter( e => {
+  			return e.fullNumber !== this.lastSelectedProduct.fullNumber;
+  		});
+
+  		productsOnStorage.push( this.selectedProduct );
+  		
+  		localStorage.removeItem('products');
+  		localStorage.setItem('products', JSON.stringify( productsOnStorage ) ) ;
+
+  		this.lastSelectedProduct = {};
+  		this.count = 0 ;
   		// this.$store.state.selectedSize = this.selectedSize;
   		// $('.popoverVariation').on( "click", ".confirm", function() {
   		// 	$(this).prev().click();//(1)
   		// 	$(this).prev().trigger( "click" );//(1)
   		// });
   	},
-  	selectSize(size, target)
-  	{	
-  		if( this.outOfStockSize.includes(size) ) return;
-  		
-  		if( this.countSizeSelect === 0 ) {
-  			this.lastSelectedSize = this.selectedProduct.size;
-  		}
-  		this.countSizeSelect++;
-
-  		this.selectedProduct.size = size;
-  		this.sizeColor.size = size;
-
-  		this.bothSizeColor()
-  	},
-  	selectColor(color, target)
-  	{
-  		if( this.outOfStockColor.includes(color) ) return;
-
-  		if( this.countColorSelect === 0 ) {
-  			this.lastSelectedColor = this.selectedProduct.color;
-  		}
-  		this.countColorSelect++
-  		this.selectedProduct.color = color;
-  		this.sizeColor.color = color;
-
-  		this.bothSizeColor()
-  	}
+  	
   },
 
   created(){
@@ -221,12 +240,15 @@ export default {
 }
 
 .btn:hover{
-		background-color: transparent;
+		background-color: #ffed4a;
 		box-shadow: 0 0 0 0.2rem rgb(52 144 220 / 25%);
 }
+
+
 
 </style>
 
 <!-- notes
 (1): phải cho click trước rồi trigger sau mới đc. Ref: https://api.jquery.com/trigger/#trigger-eventType-extraParameters (example đầu tiên)
+(2):nếu this.lastSelectedProduct = this.selectedProduct: size trong this.lastSelectedProduct khác với this.lastSelectedProduct.size vì this.lastSelectedProduct đã đc updated rồi, còn this.lastSelectedProduct.size là giá trị ban đầu.
  -->
