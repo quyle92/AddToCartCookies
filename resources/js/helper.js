@@ -14,9 +14,9 @@ export default class Helper {
 
 	} 
 
-	isInProductSet( productSet, obj ) 
+	isInselectedStyleSet( selectedStyleSet, obj ) 
 	{
-		for(let item of productSet ){
+		for(let item of selectedStyleSet ){
 			if(item.style_id === obj.style_id){
 				return true;
 			}
@@ -25,15 +25,15 @@ export default class Helper {
 		return false;
 	}
 
-	 getOutOfStockVariation (list, productSet){
-
-	let groupVariation = [];
+	getOutOfStockVariation (list, selectedStyleSet)
+	{
+		let groupVariation = [];
 	    let filterProducts = list.forEach( (size, index) => {
 	        let sum = 0
-	        productSet.forEach(product => {
-	            if ( product.size === size )
+	        selectedStyleSet.forEach(style => {
+	            if ( style.size === size )
 	            { 
-	              sum += +product.quantity;
+	              sum += +style.quantity;
 	              groupVariation[index] = {
 	                size: size,
 	                quantity: sum
@@ -42,17 +42,25 @@ export default class Helper {
 	        })
 	    });
 
-	let zeroProduct = groupVariation.filter( e =>{
-	  return e.quantity === 0
-	});
-	
-	let output = []
-	  zeroProduct.forEach(e => {
-	    output.push(e.size)
-	})
+		let zeroProduct = groupVariation.filter( e =>{
+		  return e.quantity === 0
+		});
+		
+		let output = []
+		  zeroProduct.forEach(e => {
+		    output.push(e.size)
+		})
 
-	return output;
-}
+		return output;
+	}
+
+	isObjEmpty(obj) {
+	    for(var key in obj) {
+	        if(obj.hasOwnProperty(key))
+	            return false;
+	    }
+	    return true;
+	}
 
 	
 

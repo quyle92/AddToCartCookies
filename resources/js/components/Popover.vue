@@ -3,7 +3,7 @@
 		<div class="sinlge-bar shopping popoverVariation"  >
 			<form>
 				<div>
-					<span class="d-block">Size</span>{{lastSelectedProduct.color}}
+					<span class="d-block">Size</span>
 					<div class="buttonList">
 						<button type="button" class="btn btn-default product-variation size"  
 						v-for="(item, index) in hightlightSize" :key="index"  
@@ -53,7 +53,7 @@ export default {
   data: function() {
     return {
  		count: 0,
- 		lastSelectedProduct: {}
+ 		//lastSelectedProduct: {}
  	  }
   },
     computed:{
@@ -66,7 +66,9 @@ export default {
   		'colorList',
   		'productsOnCart',
   		'selectedPrice',
-  		'productSet'
+  		'selectedStyle',
+  		'maxQuantityArr',
+  		'lastSelectedProduct'
   		]),
   	hightlightSize(){
   		let sizeList = { ...this.sizeList };
@@ -94,13 +96,11 @@ export default {
   				  let obj = {};
 			      obj[colorList[item]] = 'btn-warning'
 			      colorList[item] = obj;
-			      //console.log( colorList[item] )
   			}
   			else{
   				let obj = {};
   				obj[colorList[item] ] = ''
 			    colorList[item] = obj;
-			   // console.log( 'a',colorList[item] )
   			}
   		};
   		return colorList;
@@ -109,11 +109,12 @@ export default {
   },
   methods:{
   	selectSize(size)
-  	{	
+  	{		
   		if( this.outOfStockSize.includes(size) ) return;
 
   		if( this.count === 0 ) {
-  			this.lastSelectedProduct = {...this.selectedProduct };
+  			this.$store.commit('SET_LAST_SELECTED_PRODUCT', {...this.selectedProduct});
+  			
 //console.log( this.lastSelectedProduct, this.lastSelectedProduct.size) (2)
   		}
   		this.count++;
@@ -123,25 +124,29 @@ export default {
   		
   		this.bothSizeColor();
   		this.selectedProduct.date = new Date();
-
   		
   	},
   	selectColor(color)
   	{
-  		if( this.outOfStockColor.includes(color) ) return;
+	  		if( this.outOfStockColor.includes(color) ) return;
 
-  		if( this.count === 0 ) {
-  			this.lastSelectedProduct = {...this.selectedProduct};
-  			
-  		}
-  		this.count++;
+	  		if( this.count === 0 ) {
+	  			// this.lastSelectedProduct = {...this.selectedProduct};
+	  			this.$store.commit('SET_LAST_SELECTED_PRODUCT', {...this.selectedProduct});
+	  		}
+	  		this.count++;
 
-  		this.sizeColor.color = color;
+	  		this.sizeColor.color = color;
 
-  		this.bothSizeColor();
-  		this.selectedProduct.date = new Date();
+	  		this.bothSizeColor();
+	  		this.selectedProduct.date = new Date();
+
   	},
   	cancel(){
+  			this.selectedProduct.isEdit = false;
+  			if( this.selectedProduct.quantity > this.lastSelectedProduct.maxQuantity ) {
+  			 this.selectedProduct.quantity = this.lastSelectedProduct.maxQuantity;
+  			}
 
   			if( ! _.isEmpty(this.lastSelectedProduct)   )
   			{		
@@ -149,48 +154,40 @@ export default {
   					this.selectedProduct.color = this.lastSelectedProduct.color;
   					this.selectedProduct.price = this.lastSelectedProduct.price;
   					this.selectedProduct.fullNumber = this.lastSelectedProduct.fullNumber;
+  					this.selectedProduct.maxQuantity = this.lastSelectedProduct.maxQuantity;
 
   			}
 
 
-  		this.lastSelectedProduct = {};
-  		this.count = 0 ;
+	  		this.$store.commit('SET_LAST_SELECTED_PRODUCT', {} );
+	  		this.count = 0 ;
 
 
-  		this.selectedProduct.isEdit = false;
+	  		
 
-  		// $('.popoverVariation').on( "click", ".cancel", function( e ) {
+	  		// $('.popoverVariation').on( "click", ".cancel", function( e ) {
 
-  		// 	$(this).parentsUntil(".product-des").parent().find('.position-absolute').addClass('d-none');
-  		// 	$(this).parentsUntil(".product-des").parent().find('i.fa').replaceWith(  '<i class="fa fa-sort-up ml-1"></i>' );
-  		// });
+	  		// 	$(this).parentsUntil(".product-des").parent().find('.position-absolute').addClass('d-none');
+	  		// 	$(this).parentsUntil(".product-des").parent().find('i.fa').replaceWith(  '<i class="fa fa-sort-up ml-1"></i>' );
+	  		// });
   	},
   	confirm(){
 
-  		
-  		
   		this.selectedProduct.isEdit = false;
+  		if( this.selectedProduct.quantity > this.selectedProduct.maxQuantity ) {
+  			 this.selectedProduct.quantity = this.selectedProduct.maxQuantity;
+  		}
 
-  		if( ! localStorage.getItem('products') ) return;
+  		this.updateLocalStorage();
 
-  		let productsOnStorage =  JSON.parse( localStorage.getItem('products') );
-
-  		productsOnStorage = productsOnStorage.filter( e => {
-  			return e.fullNumber !== this.lastSelectedProduct.fullNumber;
-  		});
-
-  		productsOnStorage.push( this.selectedProduct );
-  		
-  		localStorage.removeItem('products');
-  		localStorage.setItem('products', JSON.stringify( productsOnStorage ) ) ;
-
-  		this.lastSelectedProduct = {};
+  		this.$store.commit('SET_LAST_SELECTED_PRODUCT', {} );
   		this.count = 0 ;
   		// this.$store.state.selectedSize = this.selectedSize;
   		// $('.popoverVariation').on( "click", ".confirm", function() {
   		// 	$(this).prev().click();//(1)
   		// 	$(this).prev().trigger( "click" );//(1)
   		// });
+  		
   	},
   	
   },

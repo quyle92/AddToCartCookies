@@ -24,36 +24,36 @@
 
     <script src="{{ mix('/js/app.js') }}"></script>
         <!-- Jquery -->
-    <script src="/eshop_js/jquery.min.js"></script>
-    <script src="/eshop_js/jquery-migrate-3.0.0.js"></script>
-    <script src="/eshop_js/jquery-ui.min.js"></script>
+    <script src="/eshop_js/jquery.min.js" defer></script>
+    <script src="/eshop_js/jquery-migrate-3.0.0.js" defer></script>
+    <script src="/eshop_js/jquery-ui.min.js" defer></script>
     <!-- Popper JS -->
-    <script src="/eshop_js/popper.min.js"></script>
+    <script src="/eshop_js/popper.min.js" defer></script>
     <!-- Bootstrap JS -->
-    <script src="/eshop_js/bootstrap.min.js"></script>
+    <script src="/eshop_js/bootstrap.min.js" defer></script>
     <!-- Color JS -->
-    <script src="/eshop_js/colors.js"></script>
+    <script src="/eshop_js/colors.js" defer></script>
     <!-- Slicknav JS -->
-    <script src="/eshop_js/slicknav.min.js"></script>
+    <script src="/eshop_js/slicknav.min.js" defer></script>
     <!-- Owl Carousel JS -->
-    <script src="/eshop_js/owl-carousel.js"></script>
+    <script src="/eshop_js/owl-carousel.js" defer></script>
     <!-- Magnific Popup JS -->
-    <script src="/eshop_js/magnific-popup.js"></script>
+    <script src="/eshop_js/magnific-popup.js" defer></script>
     <!-- Waypoints JS -->
-    <script src="/eshop_js/waypoints.min.js"></script>
+    <script src="/eshop_js/waypoints.min.js" defer></script>
     <!-- Countdown JS -->
-    <script src="/eshop_js/finalcountdown.min.js"></script>
+    <script src="/eshop_js/finalcountdown.min.js" defer></script>
     <!-- Nice Select JS -->
-    <script src="/eshop_js/nicesellect.js"></script>
+    <script src="/eshop_js/nicesellect.js" defer></script>
     <!-- Flex Slider JS -->
-    <script src="/eshop_js/flex-slider.js"></script>
+    <script src="/eshop_js/flex-slider.js" defer></script>
     <!-- ScrollUp JS -->
-    <script src="/eshop_js/scrollup.js"></script>
+    <script src="/eshop_js/scrollup.js" defer></script>
     <!-- Onepage Nav JS -->
-    <script src="/eshop_js/onepage-nav.min.js"></script>
+    <script src="/eshop_js/onepage-nav.min.js" defer></script>
     <!-- Easing JS -->
-    <script src="/eshop_js/easing.js"></script>
+    <script src="/eshop_js/easing.js" defer></script>
     <!-- Active JS -->
-    <script src="/eshop_js/active.js"></script>
+    <script src="/eshop_js/active.js" defer></script>
     </body>
 </html>

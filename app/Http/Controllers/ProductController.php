@@ -28,7 +28,7 @@ class ProductController extends Controller
     	return view('home')->with( compact('products') );
     }
 
-    public function getSelectedProduct($id)
+    public function getSelectedStyle($id)
     {   
     	$product = Style::with([
             'colorsForOneStyleOnly' => function ($query) {     
@@ -53,11 +53,12 @@ class ProductController extends Controller
                     ->join('styles', 'styles.id', '=', 'products.style_id')->where('style_id', $style_id )
                     ->sum('quantity') 
         );
-       // dd( $totalQuantity );
-    	return view('product')->with( compact('product',  'priceRange', 'sizes', 'colors', 'totalQuantity') );
+        $style_id = $id;
+    	return view('product', compact('style_id'));
+        //->with( compact('product',  'priceRange', 'sizes', 'colors', 'totalQuantity') );
     }
 
-    public function getPriceQuantity( Request $request )
+    public function getSelectedStyleSet( Request $request )
     {   
         $style_id = $request->styleID;
         $size = $request->size;
@@ -81,9 +82,11 @@ class ProductController extends Controller
         $priceQuantity = DB::table('products')
                 ->join('sizes', 'products.size_id', '=', 'sizes.id')
                 ->join('colors', 'products.color_id', '=', 'colors.id')
+                ->join('styles', 'products.style_id', '=', 'styles.id')
                 ->where('style_id', $style_id)
                // ->where('quantity', '<>', 0)
-                ->select('style_id','fullNumber', 'color', 'size', 'quantity', 'price')->get();
+                ->select('style_id','style','fullNumber', 'color', 'size', 'quantity', 'price', 'picture')
+                ->get();
 
         //dd($priceQuantity);
         return $priceQuantity;
@@ -124,10 +127,7 @@ class ProductController extends Controller
     }
 
     public function showCart()
-    {
-    	// $sizes = Size::select('size')->get();
-
-     //    $colors = Color::select('color')->get();
+    {   
 
     	return view('cart');
     }
@@ -146,6 +146,23 @@ class ProductController extends Controller
              $style_id => $variationSet
         ], 200);
     }
+
+    public function getMaxQuantityForEachItem( Request $request )
+    {   
+        //if( ! $request->has('params') ) return;
+
+        $fullNumberArr = explode(  ',' ,$request->query('params'));
+
+        $maxQuantityArr = DB::table('products')->select('fullNumber', 'quantity')
+                    ->whereIn('fullNumber', $fullNumberArr)
+                    ->get();
+
+        return response([
+             'maxQuantityArr' => $maxQuantityArr
+        ], 200);
+    }
+
+
 }
 
 

@@ -5,14 +5,18 @@
             <div class="wrapper row">
                 <div class="preview col-md-6">
                     <div class="preview-pic tab-content">
-                      <div class="tab-pane active" id="pic-1"><img v-bind:src="selectedProduct.colors_for_one_style_only[0].pivot.picture" /></div>
+                      <div class="tab-pane active" id="pic-1"><img 
+                    :src="selectedStyleSet[0].picture" v-if="selectedStyleSet[0]"/>
+                    </div>
                       <div class="tab-pane" id="pic-2"><img src="http://placekitten.com/400/252" /></div>
                       <div class="tab-pane" id="pic-3"><img src="http://placekitten.com/400/252" /></div>
                       <div class="tab-pane" id="pic-4"><img src="http://placekitten.com/400/252" /></div>
                       <div class="tab-pane" id="pic-5"><img src="http://placekitten.com/400/252" /></div>
                     </div>
                     <ul class="preview-thumbnail nav nav-tabs">
-                      <li class="active"><a data-target="#pic-1" data-toggle="tab"><img :src="selectedProduct.colors_for_one_style_only[0].pivot.picture" /></a></li>
+                      <li class="active"><a data-target="#pic-1" data-toggle="tab"><img 
+                       :src="selectedStyleSet[0].picture" v-if="selectedStyleSet[0]"
+                       /></a></li>
                       <li><a data-target="#pic-2" data-toggle="tab"><img src="http://placekitten.com/200/126" /></a></li>
                       <li><a data-target="#pic-3" data-toggle="tab"><img src="http://placekitten.com/200/126" /></a></li>
                       <li><a data-target="#pic-4" data-toggle="tab"><img src="http://placekitten.com/200/126" /></a></li>
@@ -20,7 +24,7 @@
                     </ul>
                 </div>
                 <div class="details col-md-6">
-                    <h3 class="product-title"> {{selectedProduct.style}} </h3>
+                    <h3 class="product-title"> {{selectedProduct.style}}</h3>
                     <div class="rating">
                         <div class="stars">
                             <span class="fa fa-star checked"></span>
@@ -36,16 +40,15 @@
                     <h4 
                       class="price"
                       v-if=" ! selectedPrice"
-                      ><span >${{priceRange['min(price)']}} - {{priceRange['max(price)']}}</span>
+                      ><span >${{priceRange['min(price)']}} - ${{priceRange['max(price)']}}</span>
                       <del>{{priceRangeOriginal}}</del>
                     </h4>
-                     <h4 
+                    <h4 
                       class="price"
                       v-else
                       ><span>$ {{selectedPrice}}</span>
                       <del>{{selectedPriceOriginal}}</del>
                     </h4>
-                    {{selectedPrice}}
                     <p class="vote"><strong>91%</strong> of buyers enjoyed this product! <strong>(87 votes)</strong></p>
                     <div class="col-md-4">
                         <div class="input-group">
@@ -74,7 +77,7 @@
                              :class="[
                              size===sizeColor.size ? selectedClass : '',
                              {
-                                'disabled': outOfStockSize.includes( size )
+                                'disabled': outOfStockSize.includes( size ) || outOfStockSizeAll.includes( size )
                              }
                              ] "
                             > 
@@ -118,7 +121,7 @@ import { mapGetters } from 'vuex'
         props: [
             'sizes',
             'colors',
-            'priceRangeOnInit'
+            'styleId'
         ],
         data: () => ({
             //selectedProduct: {},
@@ -137,7 +140,7 @@ import { mapGetters } from 'vuex'
               'selectedFullNumber'  ,
               'priceRange' , 
               'selectedPrice'  ,
-              'productSet' , 
+              'selectedStyleSet' , 
               'sizeColor',
               'outOfStockSize',
               'outOfStockColor',
@@ -218,10 +221,10 @@ import { mapGetters } from 'vuex'
             getMinMaxQuantity(variation = null)
             {
                 let result = [];
-                this.productSet.forEach( item => {
+                this.selectedStyleSet.forEach( item => {
                     item.size === variation || item.color === variation ? result.push(item) : ''
                 });
-   
+
               //khi hoặc size hoặc color đc tick
                   if( this.sizeColor.size.length !== 0 && this.sizeColor.color.length === 0 || 
                     this.sizeColor.size.length === 0 && this.sizeColor.color.length !== 0
@@ -243,17 +246,6 @@ import { mapGetters } from 'vuex'
                   }
     
             },
-          getParams(){
-              let styleID = {
-                  styleID: this.selectedProduct.colors_for_one_style_only[0].pivot.style_id
-              };
-              let params = {
-                ...styleID,
-                ...this.sizeColor
-              }
-              
-              return params;
-          },
           focus(event){
             this.oldQuantity = parseInt( event.target.value );
           },
@@ -273,10 +265,10 @@ import { mapGetters } from 'vuex'
               let products =[];
 
               let newItem =  {
-                  style_id: this.selectedProduct.id,
+                  style_id: this.selectedProduct.style_id,
                   style:  this.selectedProduct.style,
-                  fullNumber: this.selectedFullNumber,
-                  image: this.selectedProduct.colors_for_one_style_only[0].pivot.picture,
+                  fullNumber: this.selectedProduct.fullNumber,
+                  image: this.selectedProduct.picture,
                   size: this.sizeColor.size,
                   color: this.sizeColor.color,
                   price: this.selectedPrice,
@@ -319,17 +311,9 @@ import { mapGetters } from 'vuex'
             this.$store.state.sizeList = this.sizes;
             this.$store.state.colorList = this.colors;
             
-            let result = this.productSet;
 
-            //bring priceRange to $store
-            this.$store.state.priceRange = this.priceRangeOnInit;
-            let minPrice = Math.round(Number(this.priceRange['min(price)'] * 1.2));
-            let maxPrice = Math.round(Number(this.priceRange['max(price)'] * 1.2));
-           
-            this.priceRangeOriginal =  `$${minPrice} - $${maxPrice}`;
 
-            let styleID = this.selectedProduct.colors_for_one_style_only[0].pivot.style_id;
-            this.$store.dispatch('getProductSetAction', styleID)
+            this.$store.dispatch('getSelectedStyleSetAction', this.styleId);
 
             vm.$on('getPriceRangeOriginal', (priceRange) => {
 

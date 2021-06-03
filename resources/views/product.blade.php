@@ -1,13 +1,12 @@
 @extends('layout.index')
 @section('content')
  	
-	<product-page  :sizes={{$sizes}} :colors={{$colors}} :price-range-on-init={{$priceRange}}></product-page>
+	<product-page  :sizes={{$sizes}} :colors={{$colors}} :style-id="{{$style_id}}"></product-page>
 
 @endsection 
 
 @push('scripts')
 <script>
-	window.product  = JSON.parse( htmlDecode("{{$product}} ") ); 
-	window.totalQuantity = "{{$totalQuantity}}"
+
 </script>
 @endpush

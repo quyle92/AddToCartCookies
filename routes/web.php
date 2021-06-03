@@ -21,8 +21,9 @@ use App\Size;
 
 Route::get('/','ProductController@getAllProducts');
 Route::get('/home', 'ProductController@getAllProducts');
-Route::get('/product/{id}', 'ProductController@getselectedProduct');
+Route::get('/product/{id}', 'ProductController@getSelectedStyle');
 Route::post('/addToCart', 'ProductController@addToCart');
 Route::get('/cart', 'ProductController@showCart');
-Route::get('/getPriceQuantity', 'ProductController@getPriceQuantity');
+Route::get('/getSelectedStyleSet', 'ProductController@getSelectedStyleSet');
 Route::get('/getVariationSet', 'ProductController@getVariationSet');
+Route::get('/getMaxQuantityForEachItem', 'ProductController@getMaxQuantityForEachItem');

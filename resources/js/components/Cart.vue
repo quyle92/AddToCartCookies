@@ -64,16 +64,14 @@
 										<div class="input-group">
 											<div class="button minus">
 												<button type="button" class="btn btn-primary btn-number"  data-type="minus" data-field="quant[1]" 
-												@click="substract(item)" >
+												@click="minus(item)" >
 													<i class="ti-minus"></i>
 												</button>
 											</div>
 											<input type="text" name="quant[1]" class="input-number"  :data-min='min' 
 											:data-max="max" 
 											:value="item.quantity" 
-											@change="checkInput($event, item)"
-											:id="item.fullNumber"
-											
+											@change="checkInput( $event, item)"
 											>
 											<div class="button plus">
 												<button type="button" class="btn btn-primary btn-number" data-type="plus" data-field="quant[1]" 
@@ -82,6 +80,9 @@
 												</button>
 											</div>
 										</div>
+										<small id="passwordHelpBlock" class="form-text text-danger text-center" >
+                          Only {{ item.maxQuantity}} {{item.maxQuantity > 1 ? 'items' : 'item'}} left!
+                        </small>
 										<!--/ End Input Order -->
 									</td>
 									<td class="total-amount" data-title="Total"><span>${{item.quantity * item.price}}</span></td>
@@ -125,8 +126,8 @@
 											<li class="last">You Pay<span>${{totalAmount}}</span></li>
 										</ul>
 										<div class="button5">
-											<a href="#" class="btn">Checkout</a>
-											<a href="#" class="btn">Continue shopping</a>
+											<a href="#" class="btn btn-warning">Checkout</a>
+											<a href="#" class="btn btn-warning">Continue shopping</a>
 										</div>
 									</div>
 								</div>
@@ -158,6 +159,7 @@ export default {
 		 		min:1,
 		 		selectedItem: {},
 		 		styleSet:[],
+		 		oldQuantity:''
 
  		}
   },
@@ -167,12 +169,15 @@ export default {
 			'selectedFullNumber'  ,
 			'priceRange' , 
 			'selectedPrice'  ,
-			'productSet' ,
-			'productsOnCart'
+			'selectedStyleSet' ,
+			'productsOnCart',
+			'maxQuantityArr'
 
   		]),
   	totalQty(){
   		let result = 0;
+  		if(! this.productsOnCart) return;
+
   		this.productsOnCart.forEach( (item) => {
   			 result += item.quantity
   		})
@@ -180,6 +185,7 @@ export default {
   	},
   	totalAmount(){
   		let result = 0;
+  		if(! this.productsOnCart) return;
 
   		this.productsOnCart.forEach( item => {
   			let subTotal = item.quantity * item.price;
@@ -204,7 +210,7 @@ export default {
   			vm.$emit('cancel')
   			return;
   		}
-
+  		
   		//hide popover cũ rồi mới show popover mới lên
   		this.productsOnCart.forEach( e => {
   				e.isEdit === true ? e.isEdit = false : '';
@@ -221,20 +227,20 @@ export default {
   		let style_id = item.style_id;
   		if( this.styleSet.length > 0  )
   		{		
-  				//check if selectedStyle is in productSet, if not call to server
+  				//check if selectedStyleSet is in selectedStyleSet, if not call to server
 	  			for (var i = 0; i < this.styleSet.length; i++) {
 	  				if( this.styleSet[i][0].style_id === item.style_id ){
-	  						this.$store.state.productSet = this.styleSet[i];
+	  						this.$store.state.selectedStyleSet = this.styleSet[i];
 	  						this.bothSizeColor();
 	  						item.isEdit = true;//(2)
 	  						return;
 	  				}
 	  			}
 
-	  			axios.get(`/getPriceQuantity?styleID=${style_id}`)
+	  			axios.get(`/getSelectedStyleSet?styleID=${style_id}`)
 						.then( ( response ) => {
 								this.styleSet.push(response.data);
-								this.$store.state.productSet = response.data;
+								this.$store.state.selectedStyleSet = response.data;
 								this.bothSizeColor();
 								item.isEdit = true;//(2)
 						})
@@ -248,13 +254,13 @@ export default {
   		}
   		else
   		{
-  				axios.get(`/getPriceQuantity?styleID=${style_id}`)
+  				axios.get(`/getSelectedStyleSet?styleID=${style_id}`)
 						.then( ( response ) => {
 								this.styleSet.push(response.data);
 
-								let selectedStyle = response.data;
+								let selectedStyleSet = response.data;
 								
-					  		this.$store.state.productSet = selectedStyle;
+					  		this.$store.state.selectedStyleSet = selectedStyleSet;
 					  		this.bothSizeColor();
 								this.productsOnCart[index].isEdit = true;//(2)
 					  		
@@ -280,16 +286,19 @@ export default {
   		this.productsOnCart.splice( index, 1 );
   	},
   	add(item){
-  		if(item.quantity < this.max ){
+			this.$store.commit('SET_SELECTED_PRODUCT', item);
+
+  		if(item.quantity < item.maxQuantity ){
           item.quantity++;
+          this.updateLocalStorage();
         }
-        else
-        {
-          alert('stop: max reache')
-        }
-        console.log(item.quantity)
+      else
+      {
+        alert('stop: max reache')
+      }
+        
   	},
-  	substract(item){
+  	minus(item){
   		if(item.quantity > this.min ){
           item.quantity--;
         }
@@ -297,13 +306,21 @@ export default {
         {
           alert('stop: min reache')
         }
-        console.log(item.quantity)
+        
   	},
   	checkInput(e, item){
-
-        if( isNaN(e.data) || e.data < min || e.data > max){
-          alert('stop: invalid')
+				let inputVal = e.target.value
+        if(  ! isNaN(inputVal) && inputVal > 1 && inputVal <= item.maxQuantity ){
+          item.quantity = +inputVal;
+          this.selectedProduct = item;
+          this.updateLocalStorage();
         }
+        else{
+  				alert('stop: invalid');
+        	this.$forceUpdate()
+        }
+        
+
   	}
   },
   
@@ -323,18 +340,45 @@ export default {
     }
   },
   created(){
+  		let fullNumberArr = [];
   		if( ! localStorage.getItem('products') ) return;
 
-  		let products =  JSON.parse( localStorage.getItem('products') );
-  		products = _.orderBy(products, ['style_id', 'fullNumber'], ['asc', 'asc']);
-  		this.$store.state.productsOnCart =  products;
+  		this.$store.state.sizeList = sizeList;
+			this.$store.state.colorList = colorList;
 
-  		this.productsOnCart.forEach( item =>  {
+  		let products =  JSON.parse( localStorage.getItem('products') );
+  		products.forEach( item =>  {
   				Vue.set(item, 'isEdit', false);
+  				fullNumberArr.push(item.fullNumber)
   		});
-  		
-  	this.$store.state.sizeList = sizeList
-		this.$store.state.colorList = colorList
+
+			axios.get(`/getMaxQuantityForEachItem?params=${fullNumberArr}` )
+					.then( ( response ) => {
+							let maxQuantityArr = response.data.maxQuantityArr;
+
+							products = _.orderBy(products, ['fullNumber'], ['asc']);
+							maxQuantityArr = _.orderBy(maxQuantityArr, ['fullNumber'], ['asc']);
+
+							for (var i = 0; i < maxQuantityArr.length; i++) {
+								products[i].maxQuantity = maxQuantityArr[i].quantity;
+							}
+
+							products = _.orderBy(products, ['style_id', 'date'], ['asc', 'asc']);
+							this.$store.state.productsOnCart =  products;
+
+					})	
+					.catch(function (error) {
+						console.log(error);
+					});
+
+			
+			
+		
+
+
+			
+
+
 
   },
   mounted(){
