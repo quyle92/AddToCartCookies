@@ -9,9 +9,9 @@ export default {
 	},
 	computed: {
 		...mapState([
-			'totalQuantity'  ,
 			'selectedFullNumber'  ,
 			'priceRange' , 
+			'productsOnCart',
 			'selectedPrice'  ,
 			'selectedStyleSet' , 
 			'sizeColor',
@@ -19,7 +19,6 @@ export default {
 			'colorList',
 			'outOfStockColorAll',
 			'outOfStockSizeAll',
-			'productsOnCart',
 			'selectedProduct',
 			'lastSelectedProduct'
 			]),
@@ -149,7 +148,7 @@ export default {
 
 	        	if( ! localStorage.getItem('products') ) return;
 
-	        	let productsOnStorage =  JSON.parse( localStorage.getItem('products') );
+	        	let productsOnStorage =  this.productsOnCart;
 
 	        	//replace existing product by new one
 	        	if( ! this.$Helper.isObjEmpty( this.lastSelectedProduct ) ) {
@@ -161,7 +160,7 @@ export default {
 			  		productsOnStorage.push( this.selectedProduct );
 
 	        	}
-	        	
+
 	        	//updade existing product quantity
 	        	if( this.$Helper.isObjEmpty( this.lastSelectedProduct ) ) {
 
@@ -173,6 +172,7 @@ export default {
 
 	        	}
 
+	        	this.$store.state.productsOnCart = productsOnStorage;
 	        	localStorage.setItem('products', JSON.stringify( productsOnStorage ) ) ;
 	  		
         }

@@ -3,9 +3,9 @@ import isEqual  from 'lodash';
 export default class Helper {
 
 	containsObject(list, obj) 
-	{
+	{//console.log(list, obj);
 		for(let item of list ){
-			if(item.fullNumber === obj.fullNumber){
+			if(item.fullNumber === obj.fullNumber){//console.log('true');debugger
 				return true;
 			}
 		}

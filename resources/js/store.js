@@ -12,7 +12,6 @@ export default  new Vuex.Store({
 		selectedProduct: {},
 		priceRange: [],
 		selectedFullNumber:'',
-		productsOnCart:'',
 		totalQuantity: window.totalQuantity,
 		selectedStyleSet: [],
 		selectedPrice:0,
@@ -27,7 +26,8 @@ export default  new Vuex.Store({
         sizeList: [],
         colorList:[],
         maxQuantityArr:[],
-        lastSelectedProduct: {}
+        lastSelectedProduct: {},
+      	productsOnCart: [],
 
 
 	},

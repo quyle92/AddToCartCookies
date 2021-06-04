@@ -64,7 +64,6 @@ export default {
   		'sizeColor',
   		'sizeList',
   		'colorList',
-  		'productsOnCart',
   		'selectedPrice',
   		'selectedStyle',
   		'maxQuantityArr',

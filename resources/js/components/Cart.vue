@@ -299,12 +299,14 @@ export default {
         
   	},
   	minus(item){
+  		this.$store.commit('SET_SELECTED_PRODUCT', item);
   		if(item.quantity > this.min ){
           item.quantity--;
+          this.updateLocalStorage();
         }
         else
         {
-          alert('stop: min reache')
+          alert('stop: min reache');
         }
         
   	},
@@ -365,6 +367,7 @@ export default {
 
 							products = _.orderBy(products, ['style_id', 'date'], ['asc', 'asc']);
 							this.$store.state.productsOnCart =  products;
+
 
 					})	
 					.catch(function (error) {

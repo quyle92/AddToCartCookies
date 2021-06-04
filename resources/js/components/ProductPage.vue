@@ -6,7 +6,7 @@
                 <div class="preview col-md-6">
                     <div class="preview-pic tab-content">
                       <div class="tab-pane active" id="pic-1"><img 
-                    :src="selectedStyleSet[0].picture" v-if="selectedStyleSet[0]"/>
+                    :src="selectedStyleSet[0].picture" v-if="selectedStyleSet[0]"/> <!--(1)-->
                     </div>
                       <div class="tab-pane" id="pic-2"><img src="http://placekitten.com/400/252" /></div>
                       <div class="tab-pane" id="pic-3"><img src="http://placekitten.com/400/252" /></div>
@@ -24,7 +24,8 @@
                     </ul>
                 </div>
                 <div class="details col-md-6">
-                    <h3 class="product-title"> {{selectedProduct.style}}</h3>
+                    <h3 class="product-title" v-if="selectedStyleSet[0]"> {{selectedStyleSet[0].style}} | 
+                        <small>{{selectedProduct.fullNumber}}</small> </h3>
                     <div class="rating">
                         <div class="stars">
                             <span class="fa fa-star checked"></span>
@@ -138,7 +139,8 @@ import { mapGetters } from 'vuex'
               'selectedProduct',
               'totalQuantity'  ,
               'selectedFullNumber'  ,
-              'priceRange' , 
+              'priceRange' ,
+              'productsOnCart', 
               'selectedPrice'  ,
               'selectedStyleSet' , 
               'sizeColor',
@@ -299,11 +301,11 @@ import { mapGetters } from 'vuex'
               else{
                  products.push(newItem);
               }
-              
-
+              //console.log(products)
               localStorage.setItem('products', JSON.stringify( products ) ) ;
 
-              alert('Add to cart successfully');
+              this.$store.state.productsOnCart = JSON.parse( localStorage.getItem('products') );
+               alert('Add to cart successfully');
           },
         },
         created() { 
@@ -362,3 +364,7 @@ import { mapGetters } from 'vuex'
   cursor: not-allowed;
 }
 </style>
+
+
+<!-- Note:
+(1) must have v-if to  trigger a truthy expression. Ref:https://forum.vuejs.org/t/getting-a-typeerror-warning-but-app-works-fine/39307

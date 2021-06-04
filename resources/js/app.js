@@ -21,19 +21,6 @@ Vue.mixin(common)
 
 window.vm = new Vue();
 
-//eshop
-// require  ('./eshop_js/active.js');
-// require  ('./eshop_js/easing.js');
-// require  ('./eshop_js/facnybox.min.js');
-// require  ('./eshop_js/finalcountdown.min.js');
-// require  ('./eshop_js/magnific-popup.js');
-// require  ('./eshop_js/nicesellect.js');
-// require  ('./eshop_js/onepage-nav.min.js');
-// require  ('./eshop_js/popper.min.js');
-// require  ('./eshop_js/scrollup.js');
-// require  ('./eshop_js/slicknav.min.js');
-// require  ('./eshop_js/waypoints.min.js');
-// require  ('./eshop_js/ytplayer.min.js');
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue
@@ -48,6 +35,8 @@ window.vm = new Vue();
 Vue.component('product-page', require('./components/ProductPage.vue').default);
 Vue.component('cart', require('./components/Cart.vue').default);
 Vue.component('popover', require('./components/Popover.vue').default);
+Vue.component('dropdown-cart', require('./components/DropdownCart.vue').default);
+
 const getCookieValue = (name) => (
   document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)')?.pop() || ''
 )
@@ -78,6 +67,10 @@ const app = new Vue({
 
   	}
 });
+
+// const cart = new Vue({
+//   el: '#dropdown-cart'
+// })
 
 
 /*
