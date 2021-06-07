@@ -126,8 +126,8 @@
 											<li class="last">You Pay<span>${{totalAmount}}</span></li>
 										</ul>
 										<div class="button5">
-											<a href="#" class="btn btn-warning">Checkout</a>
-											<a href="#" class="btn btn-warning">Continue shopping</a>
+											<a href="/checkout" class="btn btn-warning">Checkout</a>
+											<a href="/home" class="btn btn-warning">Continue shopping</a>
 										</div>
 									</div>
 								</div>

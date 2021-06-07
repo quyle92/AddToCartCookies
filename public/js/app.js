@@ -39604,11 +39604,13 @@ var staticRenderFns = [
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
     return _c("div", { staticClass: "button5" }, [
-      _c("a", { staticClass: "btn btn-warning", attrs: { href: "#" } }, [
-        _vm._v("Checkout")
-      ]),
+      _c(
+        "a",
+        { staticClass: "btn btn-warning", attrs: { href: "/checkout" } },
+        [_vm._v("Checkout")]
+      ),
       _vm._v(" "),
-      _c("a", { staticClass: "btn btn-warning", attrs: { href: "#" } }, [
+      _c("a", { staticClass: "btn btn-warning", attrs: { href: "/home" } }, [
         _vm._v("Continue shopping")
       ])
     ])

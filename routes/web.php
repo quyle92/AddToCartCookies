@@ -27,3 +27,4 @@ Route::get('/cart', 'ProductController@showCart');
 Route::get('/getSelectedStyleSet', 'ProductController@getSelectedStyleSet');
 Route::get('/getVariationSet', 'ProductController@getVariationSet');
 Route::get('/getMaxQuantityForEachItem', 'ProductController@getMaxQuantityForEachItem');
+Route::get('/checkout', 'ProductController@checkout');
