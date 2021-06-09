@@ -16,7 +16,9 @@ class DatabaseSeeder extends Seeder
             //ColorTableSeeder::class,
             //SizeTableSeeder::class,
             //StyleTableSeeder::class,
-            ProductTableSeeder::class,
+            //ProductTableSeeder::class,
+            DeliveryMethodsSeeder::class,
+            PaymentMethodsSeeder::class,
          ]);
         
     }

@@ -4,6 +4,11 @@
  * building robust, powerful web applications using Vue and Laravel.
  * eslint-env node
  */
+// $.ajaxSetup({
+//     headers: {
+//         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+//     }
+// });
 
 require('./bootstrap');
 

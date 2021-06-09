@@ -8,7 +8,7 @@
 				<a href="#">View Cart</a>
 			</div>
 			<ul class="shopping-list">
-				<li v-for="item in productsOnCart">
+				<li v-for="item in products">
 					<a href="#" class="remove" title="Remove this item"><i class="fa fa-remove"></i></a>
 					<a class="cart-img" href="#"><img src="https://via.placeholder.com/70x70" alt="#"></a>
 					<h4><a href="#">{{item.style}} | {{item.fullNumber}}</a></h4>
@@ -47,7 +47,7 @@ export default {
 			]),
 	},
 	methods: {
-		arrangeProductsByDate(products){console.log(products)
+		arrangeProductsByDate(products){
 			//reset the products, totalQuantity
 			this.products = [];
 			this.totalQuantity = 0;
@@ -57,13 +57,17 @@ export default {
 			products.forEach( ( item, index ) => {
 				this.totalQuantity++;
 				this.totalAmount += item.quantity * item.price;
-				
 				if( index === 0 || index === 1 ){
 					this.products.push(item);
 				} 
 			});
 
 		}
+	},
+	created() {
+		let products =  JSON.parse( localStorage.getItem('products') );
+		this.arrangeProductsByDate(products);
+
 	},
 	watch: {
 		productsOnCart: {

@@ -2311,8 +2311,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     arrangeProductsByDate: function arrangeProductsByDate(products) {
       var _this = this;
 
-      console.log(products); //reset the products, totalQuantity
-
+      //reset the products, totalQuantity
       this.products = [];
       this.totalQuantity = 0;
       this.totalAmount = 0;
@@ -2326,6 +2325,10 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         }
       });
     }
+  },
+  created: function created() {
+    var products = JSON.parse(localStorage.getItem('products'));
+    this.arrangeProductsByDate(products);
   },
   watch: {
     productsOnCart: {
@@ -39656,7 +39659,7 @@ var render = function() {
       _c(
         "ul",
         { staticClass: "shopping-list" },
-        _vm._l(_vm.productsOnCart, function(item) {
+        _vm._l(_vm.products, function(item) {
           return _c("li", [
             _vm._m(0, true),
             _vm._v(" "),
@@ -53721,6 +53724,11 @@ __webpack_require__.r(__webpack_exports__);
  * building robust, powerful web applications using Vue and Laravel.
  * eslint-env node
  */
+// $.ajaxSetup({
+//     headers: {
+//         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+//     }
+// });
 __webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js");
 
 window.Vue = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.common.js");

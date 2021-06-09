@@ -27,6 +27,11 @@ class Product extends Model
 		return $this->belongsTo(Series::class);
 	}
 
+	public function orders()
+    {
+        return $this->belongsToMany(Order::class, 'order_details');
+    }
+
 
 }
 

@@ -9,43 +9,37 @@
 						<h2>Make Your Checkout Here</h2>
 						<p>Please register in order to checkout more quickly</p>
 						<!-- Form -->
-						<form class="form" method="post" action="#">
+						<form class="form" method="post" action="#" id="checkoutForm">
 							<div class="row">
-								<div class="col-lg-6 col-md-6 col-12">
+								<div class="col-lg-12 col-md-12 col-12">
 									<div class="form-group">
 										<label>First Name<span>*</span></label>
-										<input type="text" name="name" placeholder="" required="required">
-									</div>
-								</div>
-								<div class="col-lg-6 col-md-6 col-12">
-									<div class="form-group">
-										<label>Last Name<span>*</span></label>
-										<input type="text" name="name" placeholder="" required="required">
+										<input type="text" name="customer_name" placeholder="" required="required" value="{{$faker->name}}">
 									</div>
 								</div>
 								<div class="col-lg-6 col-md-6 col-12">
 									<div class="form-group">
 										<label>Email Address<span>*</span></label>
-										<input type="email" name="email" placeholder="" required="required">
+										<input type="email" name="customer_email" placeholder="" required="required" value="{{$faker->companyEmail}}">
 									</div>
 								</div>
 								<div class="col-lg-6 col-md-6 col-12">
 									<div class="form-group">
 										<label>Phone Number<span>*</span></label>
-										<input type="number" name="number" placeholder="" required="required">
+										<input type="text" name="customer_phone" placeholder="" required="required" value="{{$faker->phoneNumber}}">
 									</div>
 								</div>
 								<div class="col-lg-12 col-md-12 col-12">
 									<div class="form-group">
 										<label>Address Line 1<span>*</span></label>
-										<input type="text" name="address" placeholder="" required="required">
+										<input type="text" name="customer_address" placeholder="" required="required" value="{{$faker->streetAddress, $faker->city }}">
 									</div>
 								</div>
 
 								<div class="col-lg-6 col-md-6 col-12">
 									<div class="form-group">
 										<label>Postal Code<span>*</span></label>
-										<input type="text" name="post" placeholder="" required="required">
+										<input type="text" name="post" placeholder="" required="required" value="{{$faker->postcode }}" >
 									</div>
 								</div>
 								<div class="col-lg-6 col-md-6 col-12">
@@ -80,21 +74,29 @@
 							<h2>CART  TOTALS</h2>
 							<div class="content">
 								<ul>
-									<li>Sub Total<span>$330.00</span></li>
-									<li>(+) Shipping<span>$10.00</span></li>
-									<li class="last">Total<span>$340.00</span></li>
+									<!-- <li>item<span>$10.00</span><br><small>2 x $5</small></li> -->
+									<li class="last">Sub Total<span id="subtotal">$330.00</span></li>
+									<li>(+) Shipping<span id="shipping">$10.00</span></li>
+									<li class="last" id="grandTotal">Total<span></span></li>
 								</ul>
 							</div>
 						</div>
 						<!--/ End Order Widget -->
+
 						<!-- Order Widget -->
 						<div class="single-widget">
 							<h2>Payments</h2>
 							<div class="content">
 								<div class="checkbox">
-									<label class="checkbox-inline" for="1"><input name="updates" id="1" type="checkbox"> Check Payments</label>
-									<label class="checkbox-inline" for="2"><input name="news" id="2" type="checkbox"> Cash On Delivery</label>
-									<label class="checkbox-inline" for="3"><input name="news" id="3" type="checkbox"> PayPal</label>
+									@foreach($payment_methods as $item)
+									<label class="checkbox-inline" for="{{$item['payment_type']}}">
+										<input name="paymentMethod[]" id="{{$item['payment_type']}}" type="checkbox" value="{{$item['payment_type']}}">
+										@inject('Str', 'Illuminate\Support\Str')
+									 	{{Str::title($item['payment_type'])}}
+									</label>
+									@endforeach
+									<!-- <label class="checkbox-inline" for="2"><input name="paymentMethod[]" id="2" type="checkbox" value="cod"> Cash On Delivery</label>
+									<label class="checkbox-inline" for="3"><input name="paymentMethod[]" id="3" type="checkbox" value="paypal"> PayPal</label> -->
 								</div>
 							</div>
 						</div>
@@ -109,8 +111,8 @@
 						<!-- Button Widget -->
 						<div class="single-widget get-button">
 							<div class="content">
-								<div class="button">
-									<a href="#" class="btn">confirm</a>
+								<div class="button" style="background: #333">
+									<a href="#" class="btn">proceed</a>
 								</div>
 							</div>
 						</div>
@@ -119,21 +121,95 @@
 				</div>
 			</div>
 		</div>
+<form action="/checkout/payment/paypal" method="post">
+	{{csrf_field()}}
+    <input type="text" name="amount" value="20.00" />
+    <input type="submit" name="submit" value="Pay Now">
+</form>
 	</section>
-
+<?php if(isset($message)) dd($message); ?>
 @endsection 
 
 @push('scripts')
 <script>
 
+
 $(function() {
+	let products =  JSON.parse( localStorage.getItem('products') );
+	let itemList = '';
+	let subTotal = 0;
+	products.forEach( e => {
+		let amount = +e.price * +e.quantity;
+		itemList += `<li>${e.style} | ${e.fullNumber}<span>$${amount.toFixed(2)}</span><br><small>${e.quantity} x $${e.price}</small></li>`;
+		subTotal += amount;
+	});
+	$('.content ul').prepend(itemList);
+
+	//get grandTotal
+	$('#subtotal').text(`$${subTotal.toFixed(2)}`)
+	subTotal = $('#subtotal').text();
+	let shipping = $('#shipping').text();
+
+	subTotal = subTotal.replace('$', '');
+	shipping = shipping.replace('$', '');
+
+	let grandTotal = +subTotal + +shipping
+	$('#grandTotal span').text( `$ ${grandTotal.toFixed(2)}` );
+
+	//select preferred payment method
+	var inputs = $('.checkbox').find('input');
 	$( "body" ).on( "click", ".checkbox input", function( event ) {
-		let inputs = $('.checkbox').find('input');
+		
 		inputs.each(function( index ) {
 		  $(this).parent("label").removeClass('checked');
 		});
 		$(this).parent("label").addClass('checked')	
 	});
+
+	//submit 
+	$('.button').click( function(e) {
+		e.preventDefault();
+		let inputChecked = $('.checkbox input:checkbox:checked');
+		let isChecked = inputChecked.length > 0;
+
+		if(isChecked) 
+		{
+		  	switch( inputChecked.val() ) {
+			  case 'cod':
+			    window.location.href='/thankyou'
+			    break;
+			  case 'bank transfer ':
+			    // code block
+			    break;
+			  case 'paypal':
+			  	var clientInfo= $('#checkoutForm').serialize();
+			  	const searchParams = new URLSearchParams(clientInfo);
+			  	clientInfo = Object.fromEntries(searchParams);console.log(clientInfo)
+			  	$.ajax({
+			  		method: 'post',
+			  		headers: {
+			  			'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+			  		},
+			  		url: '/checkout/payment/paypal',
+			  		data: {
+			  			clientInfo:  clientInfo,
+			  			products: products,
+			  			grandTotal: grandTotal
+			  		},
+			  		success: function(response) {
+			  			console.log(response)
+			  		}
+			  	})
+			    
+	
+			    break;
+			    
+			}
+		}
+
+
+	})
+
 });
 </script>
 @endpush

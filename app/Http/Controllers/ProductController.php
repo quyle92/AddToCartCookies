@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Color;
+use App\PaymentMethod;
 use App\Product;
 use App\Size;
 use App\Style;
+use Faker\Generator as Faker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -128,6 +130,7 @@ class ProductController extends Controller
 
     public function showCart()
     {   
+        
 
     	return view('cart');
     }
@@ -162,10 +165,11 @@ class ProductController extends Controller
         ], 200);
     }
 
-    public function checkout() 
-    {
-
-        return view('checkout');
+    public function checkout(Faker $faker ) 
+    {   
+        $payment_methods = PaymentMethod::get('payment_type');
+        
+        return view( 'checkout', compact('faker', 'payment_methods') );
     }
 
 

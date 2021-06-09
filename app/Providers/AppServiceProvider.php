@@ -30,5 +30,6 @@ class AppServiceProvider extends ServiceProvider
     {   
         View::composer(['cart','product'], SizeColorComposer::class);
 
+
     }
 }

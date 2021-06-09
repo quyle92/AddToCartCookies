@@ -27,4 +27,34 @@ Route::get('/cart', 'ProductController@showCart');
 Route::get('/getSelectedStyleSet', 'ProductController@getSelectedStyleSet');
 Route::get('/getVariationSet', 'ProductController@getVariationSet');
 Route::get('/getMaxQuantityForEachItem', 'ProductController@getMaxQuantityForEachItem');
-Route::get('/checkout', 'ProductController@checkout');
+Route::get('/checkout', [
+    'as' => 'app.checkout',
+    'uses' =>'ProductController@checkout'
+]);
+
+/*
+Paypal Omnipay
+ */
+Route::post('/checkout/payment/paypal', [
+    'name' => 'PayPal Express Checkout',
+    'as' => 'checkout.payment.paypal',
+    'uses' => 'PayPalController@checkout',
+]);
+
+Route::get('/paypal/checkout/completed', [
+    'name' => 'PayPal Express Checkout',
+    'as' => 'paypal.checkout.completed',
+    'uses' => 'PayPalController@completed',
+]);
+
+Route::get('/paypal/checkout/cancelled', [
+    'name' => 'PayPal Express Checkout',
+    'as' => 'paypal.checkout.cancelled',
+    'uses' => 'PayPalController@cancelled',
+]);
+
+Route::get('/thankyou', [
+    'as' => 'app.thankyou',
+    'uses' =>'PayPalController@thankyou'
+]);
+
