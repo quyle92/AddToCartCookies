@@ -1,12 +1,14 @@
 <?php
+// use Illuminate\Support\Facades\Session;
+// Session::flash('foo','bar');
+// dd( Session::get('foo') );
 
-use App\Size;
- $priceQuantity = DB::table('products')
- 					->join('sizes', 'products.size_id', '=', 'sizes.id')
- 					->join('colors', 'products.color_id', '=', 'colors.id')
- 					->where('style_id', 1)->select('color', 'size', 'quantity','price')->get();
+// $mydate = getdate(date("U"));
+// $now = DateTime::createFromFormat('U.u', microtime(true));
+// $now = $now->format("m-d-Y H:i:s.u");
 
-
+// $transaction_id = 'COD_' . $mydate['year'] .  ( $mydate['mon'] < 10 ? '0'.$mydate['mon'] : $mydate['mon'] ) . $mydate['mday'] . ( $mydate['hours'] < 10 ? '0'.$mydate['hours'] : $mydate['hours'] ) . ( $mydate['minutes'] < 10 ? '0'.$mydate['minutes'] : $mydate['minutes'] ) . ( $mydate['seconds'] < 10 ? '0'.$mydate['seconds'] : $mydate['seconds'] ) . '.' . Str::substr($now, 20, 7);
+// dd($transaction_id) ;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,6 +21,10 @@ use App\Size;
 |
 */
 
+Route::get('/test',function() {
+    return response()->view('thankyou', ['transaction_id' => 111]);
+
+});
 Route::get('/','ProductController@getAllProducts');
 Route::get('/home', 'ProductController@getAllProducts');
 Route::get('/product/{id}', 'ProductController@getSelectedStyle');
@@ -30,6 +36,10 @@ Route::get('/getMaxQuantityForEachItem', 'ProductController@getMaxQuantityForEac
 Route::get('/checkout', [
     'as' => 'app.checkout',
     'uses' =>'ProductController@checkout'
+]);
+Route::post('/checkProducts', [
+    'as' => 'app.checkProducts',
+    'uses' =>'ProductController@checkProducts'
 ]);
 
 /*
@@ -57,4 +67,13 @@ Route::get('/thankyou', [
     'as' => 'app.thankyou',
     'uses' =>'PayPalController@thankyou'
 ]);
+
+/*
+COD Payment
+ */
+Route::post('/checkout/payment/cod', [
+    'as' => 'app.codCheckOut',
+    'uses' =>'CODController@codCheckOut'
+]);
+
 

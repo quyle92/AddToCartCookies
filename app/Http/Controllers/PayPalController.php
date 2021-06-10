@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\DeliveryMethod;
 use App\Order;
 use App\PayPal;
+use App\PaymentMethod;
+use App\Product;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Session;
+use DB;
 /**
  * Class PayPalController
  * @package App\Http\Controllers
  */
 class PayPalController extends Controller
 {   
-    private $payment_method_id = 3;//paypal
     /**
      * @param Request $request
      */
@@ -25,6 +28,8 @@ class PayPalController extends Controller
         return view('form', compact('order'));
     }
 
+    
+
     /**
      * @param $order_id
      * @param Request $request
@@ -32,55 +37,26 @@ class PayPalController extends Controller
     public function checkout( Request $request)
     {
         $paypal = new PayPal;
-        //dd($request['products']);
-        
-        $request->session()->flash('customer_name', $request['clientInfo']['customer_name']);
-        $request->session()->flash('customer_email',$request['clientInfo']['customer_email']);
-        $request->session()->flash('customer_phone', $request['clientInfo']['customer_phone']);
-        $request->session()->flash('customer_address', $request['clientInfo']['customer_address']);
+         //  dd($request['customer_name']);
+        Session::flash('customer_name', $request['customer_name']);
+        Session::flash('customer_email',$request['customer_email']);
+        Session::flash('customer_phone', $request['customer_phone']);
+        Session::flash('customer_address', $request['customer_address']);
 
-        $product =  $request['products'];
-        $out_of_stock = [];
-        foreach ($products as &$item)
-        {
-            $ordered_item = Product::where('fullNumber', $item['fullNumber'])->first();
-            $item['price'] = $ordered_item->price;
-            
-            if( empty( $ordered_item ) )
-            {
-                return redirect()->back()->with([
-                    'error' => `{$item['fullNumber']} is not available in our DB`,
-                ]);
-            }
-            if( $item['quantity'] > $ordered_item->quantity )
-            {
-                $out_of_stock =  $item['fullNumber'];
-
-            }
-
-        }
-
-        if( count($out_of_stock) > 0 )
-        {
-           return redirect()->back()->with([
-            'out_of_stock' => $out_of_stock,
-            ]);
-        }
-
-        $request->session()->flash( 'products', $request['products'] );
-
+        Session::keep(['products','grand_total']);
+// dd(Session::get('grand_total'));
         $response = $paypal->purchase([
-            //'amount' => $paypal->formatAmount( $request->grandTotal ),
-            'amount' =>10,
+            'amount' => Session::get('grand_total'),
             'currency' => 'USD',
             'cancelUrl' => $paypal->getCancelUrl(),
             'returnUrl' => $paypal->getReturnUrl(),
         ]);
 
         if ($response->isRedirect()) {
+            Session::flash('transaction_id', $response->getTransactionReference());
             $response->redirect();
         }
-        //dd($response->getMessage());
+
         return redirect()->back()->with([
             'message' => $response->getMessage(),
         ]);
@@ -95,54 +71,28 @@ class PayPalController extends Controller
     {
 
         $paypal = new PayPal;
-
         $response = $paypal->complete([
-            'amount' => $paypal->formatAmount(20),
+            'amount' => Session::get('grand_total'),
             'currency' => 'USD',
 
         ]);
 
-        if ($response->isSuccessful()) {
-           // dd($response);
-            // $order->update([
-            //     'transaction_id' => $response->getTransactionReference(),
-            //     'payment_status' => Order::PAYMENT_COMPLETED,
-            // ]);
-            $order = Order::create([
-                'transaction_id' => $response->getTransactionReference(),
-                'customer_name' =>  $request->session()->get('customer_name'),
-                'customer_email' => $request->session()->get('customer_email'),
-                'customer_phone' => $request->session()->get('customer_phone'),
-                'customer_address' => $request->session()->get('customer_address'),
-                'payment_method_id' => $this->payment_method_id,
-                'payment_status' => Order::PAYMENT_COMPLETED,
-            ]);
+        if ($response->isSuccessful()) 
+        {
+             $transaction_id = Order::order_process('paypal');
 
-            $products = $request->session()->get('products');
-            $data = [];
-            foreach($products as $item)
-            {   
-                $ordered_item = Product::where('fullNumber', $item['fullNumber'])->select('price','quantity');
-                $data[] = [
-                    'product_fullNumber'=>$item['fullNumber'],
-                    //'order_id' => 
-                    'unit_price' => $item['price'],
-                    'order_quantity' => $item['quantity'],
-                    'order_amount' => $item['price'] * $item['quantity'],
-                ]; 
-            }
-
-            $order->order_details()->createMany($comment);
-           
-            return redirect()->route('app.checkout')->with([
-                'message' => 'You recent payment is sucessful with reference code ' . $response->getTransactionReference(),
-                'transaction_id' =>  $response->getTransactionReference()
-            ]);
+             return response()->view('thankyou', [
+                'transaction_id' => $transaction_id,
+                'products' => Session::get('products')
+             ]);
         }
-
-        return redirect()->back()->with([
-            'message' => $response->getMessage(),
-        ]);
+        else
+        {
+            return redirect()->back()->with([
+                'message' => $response->getMessage(),
+             ]);
+        }
+        
     }
 
     /**

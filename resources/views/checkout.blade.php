@@ -9,7 +9,8 @@
 						<h2>Make Your Checkout Here</h2>
 						<p>Please register in order to checkout more quickly</p>
 						<!-- Form -->
-						<form class="form" method="post" action="#" id="checkoutForm">
+						<form class="form" method="post" action="/checkout/payment/paypal" id="checkoutForm">
+							{{csrf_field()}}
 							<div class="row">
 								<div class="col-lg-12 col-md-12 col-12">
 									<div class="form-group">
@@ -121,11 +122,11 @@
 				</div>
 			</div>
 		</div>
-<form action="/checkout/payment/paypal" method="post">
+<!-- <form action="/checkout/payment/paypal" method="post">
 	{{csrf_field()}}
     <input type="text" name="amount" value="20.00" />
     <input type="submit" name="submit" value="Pay Now">
-</form>
+</form> -->
 	</section>
 <?php if(isset($message)) dd($message); ?>
 @endsection 
@@ -135,7 +136,8 @@
 
 
 $(function() {
-	let products =  JSON.parse( localStorage.getItem('products') );
+	const form = $('#checkoutForm');
+	let products =  JSON.parse( localStorage.getItem('products') ) ?? [];
 	let itemList = '';
 	let subTotal = 0;
 	products.forEach( e => {
@@ -173,43 +175,73 @@ $(function() {
 		let isChecked = inputChecked.length > 0;
 
 		if(isChecked) 
-		{
-		  	switch( inputChecked.val() ) {
-			  case 'cod':
-			    window.location.href='/thankyou'
-			    break;
-			  case 'bank transfer ':
-			    // code block
-			    break;
-			  case 'paypal':
-			  	var clientInfo= $('#checkoutForm').serialize();
-			  	const searchParams = new URLSearchParams(clientInfo);
-			  	clientInfo = Object.fromEntries(searchParams);console.log(clientInfo)
-			  	$.ajax({
-			  		method: 'post',
-			  		headers: {
-			  			'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-			  		},
-			  		url: '/checkout/payment/paypal',
-			  		data: {
-			  			clientInfo:  clientInfo,
-			  			products: products,
-			  			grandTotal: grandTotal
-			  		},
-			  		success: function(response) {
-			  			console.log(response)
-			  		}
-			  	})
-			    
-	
-			    break;
-			    
-			}
+		{	console.log(form);
+			var clientInfo= form.serialize();
+		  	const searchParams = new URLSearchParams(clientInfo);
+		  	clientInfo = Object.fromEntries(searchParams);
+		  	$.ajax({
+		  		method: 'post',
+		  		headers: {
+		  			'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+		  		},
+		  		url: '{{route('app.checkProducts')}}',
+		  		data: {
+		  			// clientInfo:  clientInfo,
+		  			products: products,
+		  			grandTotal: grandTotal
+		  		},
+		  		success: function(response) {
+		  			let result = response?.message.product_not_available ?? undefined;
+		  			//if( response.message.hasOwnProperty('product_not_available') ) (1)
+		  			if( result !== undefined ) 
+		  			{
+		  				alert(response.message.product_not_available);
+		  			}
+		  			
+		  			if( response.message.hasOwnProperty('out_of_stock') )
+		  			{
+		  				let products = response.message.out_of_stock;
+		  				let message = [];
+		  				products.forEach( e => {
+		  					message.push(`${e.fullNumber} has only ${e.quantityLeft}  left`) 
+		  				})
+		  				//console.log(products)
+		  				alert(message.toString());
+		  			}
+
+		  			if(response.message === "success")
+			  		{
+			  			switch( inputChecked.val() ) 
+			  			{
+							case 'cod':
+							   	form.attr('action', '/checkout/payment/cod');
+							   	form.submit();
+							   	
+							    break;
+							case 'bank transfer':
+							    // code block
+							    break;
+							case 'paypal':
+					  			form.submit();
+				  			
+						    break;
+						    
+						}
+					}
+					
+		  		}
+		  	});
+		  	
 		}
 
 
 	})
 
 });
+
+/*
+note
+*/
+//(1) this is solution 2 of the above.
 </script>
 @endpush

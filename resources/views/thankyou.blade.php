@@ -1,5 +1,6 @@
 @extends('layout.index')
 @section('content')
+
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
     <tr>
         <td align="center" style="background-color: #eeeeee;" bgcolor="#eeeeee">
@@ -51,7 +52,7 @@
                                     <table cellspacing="0" cellpadding="0" border="0" width="100%">
                                         <tr>
                                             <td width="75%" align="left" bgcolor="#eeeeee" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 800; line-height: 24px; padding: 10px;"> Order Confirmation # </td>
-                                            <td width="25%" align="left" bgcolor="#eeeeee" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 800; line-height: 24px; padding: 10px;"> 2345678 </td>
+                                            <td width="25%" align="left" bgcolor="#eeeeee" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 800; line-height: 24px; padding: 10px;"> {{$transaction_id}} </td>
                                         </tr>
                                         <tr>
                                             <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Purchased Item (1) </td>
@@ -154,8 +155,21 @@
         </td>
     </tr>
 </table>
+
 @endsection 
 
+@push('scripts')
+<script>
+
+    let products = JSON.parse( htmlDecode("{{json_encode($products)}} ") )  ?? [];
+    if( products.length > 0 )
+    {
+        localStorage.removeItem("products"); 
+
+    }
+   
+</script>
+@endpush
 <style>
         body,
         table,

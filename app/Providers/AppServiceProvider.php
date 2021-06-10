@@ -6,6 +6,8 @@ use App\MyFacades\MyDatabaseManager;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use App\Http\View\Composers\SizeColorComposer;
+use Illuminate\Support\Str;
+use App\Mixin\StrMixin;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,6 +32,6 @@ class AppServiceProvider extends ServiceProvider
     {   
         View::composer(['cart','product'], SizeColorComposer::class);
 
-
+        Str::mixin( new StrMixin());
     }
 }

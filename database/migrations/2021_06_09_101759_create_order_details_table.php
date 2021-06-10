@@ -16,7 +16,7 @@ class CreateOrderDetailsTable extends Migration
         Schema::create('order_details', function (Blueprint $table) {
             $table->bigIncrements('id');
 
-            $table->string('product_fullNumber')->unique();
+            $table->string('product_fullNumber');
             $table->foreign('product_fullNumber')->references('fullNumber')->on('products')->onDelete('cascade');
 
             $table->unsignedBigInteger('order_id');

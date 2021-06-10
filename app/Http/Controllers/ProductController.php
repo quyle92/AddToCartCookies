@@ -10,6 +10,7 @@ use App\Style;
 use Faker\Generator as Faker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class ProductController extends Controller
 {	
@@ -130,8 +131,6 @@ class ProductController extends Controller
 
     public function showCart()
     {   
-        
-
     	return view('cart');
     }
 
@@ -170,6 +169,57 @@ class ProductController extends Controller
         $payment_methods = PaymentMethod::get('payment_type');
         
         return view( 'checkout', compact('faker', 'payment_methods') );
+    }
+
+    public function checkProducts(Request $request) 
+    {
+        if( ! $request->products ) return; 
+        
+        Session::flash('grand_total', $request->grandTotal );
+        Session::flash('products', $request->products);
+        
+        $products =  $request->products;
+        $out_of_stock = [];
+        foreach( $products as &$item )
+        {
+            $ordered_item = Product::where('fullNumber', $item['fullNumber'])->first();
+            $item['price'] = $ordered_item->price;
+            
+            if( empty( $ordered_item ) )
+            {   
+
+                return response()->json([
+                    'message' => [
+                        'product_not_available' => `{$item['fullNumber']} is not available in our DB`
+                    ],
+                   
+                ]);
+            }
+            if( $item['quantity'] > $ordered_item->quantity )
+            {
+                $out_of_stock[] =  [ 
+                    'fullNumber' => $item['fullNumber'],
+                    'quantityLeft' => $ordered_item['quantity']
+                ];
+                
+            }
+
+        }
+
+        if( count($out_of_stock) > 0 )
+        {
+            return response()->json([
+                    'message' => [
+                        'out_of_stock' =>  $out_of_stock
+                    ],
+                   
+            ]);
+
+        }
+
+        return response()->json([
+            'message' => 'success'
+        ]);
     }
 
 

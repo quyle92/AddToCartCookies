@@ -1,6 +1,6 @@
 @extends('layout.index')
 @section('content')
-	
+	<?=dd($sizes)?>
 	<cart  ></cart>
 @endsection 
 
