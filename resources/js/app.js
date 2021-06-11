@@ -4,11 +4,11 @@
  * building robust, powerful web applications using Vue and Laravel.
  * eslint-env node
  */
-// $.ajaxSetup({
-//     headers: {
-//         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-//     }
-// });
+$.ajaxSetup({
+    headers: {
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+    }
+});
 
 require('./bootstrap');
 
@@ -25,6 +25,8 @@ import common from './common';
 Vue.mixin(common)
 
 window.vm = new Vue();
+
+
 
 /**
  * The following block of code may be used to automatically register your

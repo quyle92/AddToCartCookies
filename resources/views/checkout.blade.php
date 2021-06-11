@@ -37,24 +37,23 @@
 									</div>
 								</div>
 
-								<div class="col-lg-6 col-md-6 col-12">
+								<div class="col-lg-4 col-md-4 col-12">
 									<div class="form-group">
-										<label>Postal Code<span>*</span></label>
-										<input type="text" name="post" placeholder="" required="required" value="{{$faker->postcode }}" >
+										<label>Province<span>*</span></label>
+										<input type="text" name="province" id="select-province">
+										</select>
 									</div>
 								</div>
-								<div class="col-lg-6 col-md-6 col-12">
+								<div class="col-lg-4 col-md-4 col-12">
 									<div class="form-group">
-										<label>Company<span>*</span></label>
-										<select name="company_name" id="company">
-											<option value="company" selected="selected">Microsoft</option>
-											<option>Apple</option>
-											<option>Xaiomi</option>
-											<option>Huawer</option>
-											<option>Wpthemesgrid</option>
-											<option>Samsung</option>
-											<option>Motorola</option>
-										</select>
+										<label>Distinct<span>*</span></label>
+										<input type="text" name="district" id="select-district">
+									</div>
+								</div>
+								<div class="col-lg-4 col-md-4 col-12">
+									<div class="form-group">
+										<label>Ward<span>*</span></label>
+										<input type="text" name="ward" id="select-ward">
 									</div>
 								</div>
 								<div class="col-12">
@@ -128,7 +127,7 @@
     <input type="submit" name="submit" value="Pay Now">
 </form> -->
 	</section>
-<?php if(isset($message)) dd($message); ?>
+
 @endsection 
 
 @push('scripts')
@@ -181,9 +180,9 @@ $(function() {
 		  	clientInfo = Object.fromEntries(searchParams);
 		  	$.ajax({
 		  		method: 'post',
-		  		headers: {
-		  			'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-		  		},
+		  		// headers: {
+		  		// 	'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+		  		// },
 		  		url: '{{route('app.checkProducts')}}',
 		  		data: {
 		  			// clientInfo:  clientInfo,
@@ -235,8 +234,124 @@ $(function() {
 		}
 
 
-	})
+	});
 
+	var $selectDistrict;
+
+	var $selectProvince = $('#select-province').selectize({
+		options: [],
+		maxItems: 1,
+		preload: true,
+		labelField: 'ProvinceName',
+		valueField: 'ProvinceID',
+		searchField: ['ProvinceName'],
+		sortField: 'ProvinceName',
+		closeAfterSelect: true,
+		create: false,
+		placeholder: 'Select your province...',
+		load: function(query, callback) {
+			$.ajax({
+				method : 'get',
+				url : 'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province',
+				headers: {
+		        	token:  '503b4b90-c9fb-11eb-bc42-967656021ee1',
+		    	},
+		        success: function(response) {
+		        	 callback(response.data);
+		        }
+		    	
+			});
+		},
+		onChange(value, $item) {
+			if( $selectDistrict ){
+				let selectize = $selectDistrict[0].selectize;
+				selectize.destroy();
+				selectize.clear();
+			};
+
+			if( $selectWard && $selectWard[0].selectize !== undefined ) {
+					let selectize = $selectWard[0].selectize;
+					selectize.destroy();
+					selectize.clear();
+			};
+				
+			getDistrict( value );
+			
+
+
+
+		}
+	});
+
+	var $selectWard ;
+	let getDistrict =  function (province) {
+		$selectDistrict = $('#select-district').selectize({
+				options: [],
+				maxItems: 1,
+				preload: true,
+				labelField: 'DistrictName',
+				valueField: 'DistrictID',
+				searchField: ['DistrictName'],
+				sortField: 'DistrictName',
+				closeAfterSelect: true,
+				create: false,
+				placeholder: 'Select your district...',
+				load: function(query, callback) {
+					$.ajax({
+						method : 'get',
+						url : `https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/district?province_id=${province}` ,
+						headers: {
+				        	token:  '503b4b90-c9fb-11eb-bc42-967656021ee1',
+				    	},
+				        success: function(response) {
+				        	callback(response.data);
+				        }
+				    	
+					});
+				},
+				onChange(value, $item) {
+
+					if( $selectWard && $selectWard[0].selectize !== undefined ) {
+						let selectize = $selectWard[0].selectize;
+						selectize.destroy();
+						selectize.clear();
+					};
+						
+					getWard( value );
+					
+				},
+				
+			});
+	}
+
+
+	let getWard = function(district) {
+		$selectWard = $('#select-ward').selectize({
+			options: [],
+			maxItems: 1,
+			preload: true,
+			labelField: 'WardName',
+			valueField: 'WardCode',
+			searchField: ['WardName'],
+			sortField: 'WardName',
+			closeAfterSelect: true,
+			create: false,
+			placeholder: 'Select your ward...',
+			load: function(query, callback) {
+				$.ajax({
+					method : 'get',
+					url : `https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/ward?district_id=${district}` ,
+					headers: {
+			        	token:  '503b4b90-c9fb-11eb-bc42-967656021ee1',
+			    	},
+			        success: function(response) {
+			        	 callback(response.data);
+			        }
+			    	
+				});
+			}
+		});
+	}
 });
 
 /*
@@ -244,4 +359,9 @@ note
 */
 //(1) this is solution 2 of the above.
 </script>
+<style>
+.selectize-dropdown, .selectize-input, .selectize-input input{
+	font-size: 17spx;
+}
+</style>
 @endpush

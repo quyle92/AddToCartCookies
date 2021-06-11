@@ -26,6 +26,8 @@
     "dependencies": {
         "jquery-ui": "^1.12.1",
         "owl-carousel": "^1.0.0",
+        "selectize": "^0.12.6",
+        "selectize-bootstrap4-theme": "^2.0.2",
         "themify-icons": "^1.0.0",
         "vuex": "^3.6.2"
     }

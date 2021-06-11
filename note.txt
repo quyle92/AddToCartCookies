@@ -42,3 +42,6 @@ public function boot()
 }
 
 ref: https://stackoverflow.com/a/61538886/11297747
+
+3/ Create product search box:
+https://maxoffsky.com/code-blog/laravel-shop-tutorial-3-implementing-smart-search/

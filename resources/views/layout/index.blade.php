@@ -7,9 +7,9 @@
         <title>@yield('title')</title>
         <link rel="stylesheet" href="{{ mix('/css/app.css') }}" />
         <script src="/eshop_js/jquery.min.js" ></script>
-        <script src="dist/js/v-minusplusfield.js" type="text/javascript"></script>
-        <link href="dist/css/v-minusplusfield.css" rel="stylesheet" />
+        
         <script src="{{ asset('/js/my_script.js') }}"></script> 
+
         @stack('scripts')
     </head>
     <body>
@@ -23,15 +23,15 @@
         @include('layout.footer')
         </div>
 
-    <script src="{{ mix('/js/app.js') }}" ></script>
+<script src="{{ mix('/js/app.js') }}" ></script>
         <!-- Jquery -->
-    <script src="/eshop_js/jquery.min.js" ></script>
+
 <!--     <script src="/eshop_js/jquery-migrate-3.0.0.js" defer></script> -->
-    <script src="/eshop_js/jquery-ui.min.js" defer></script>
+<!--     <script src="/eshop_js/jquery-ui.min.js" defer></script> -->
     <!-- Popper JS -->
-    <script src="/eshop_js/popper.min.js" defer></script>
+<!--     <script src="/eshop_js/popper.min.js" defer></script> -->
     <!-- Bootstrap JS -->
-    <script src="/eshop_js/bootstrap.min.js" defer></script>
+<!--     <script src="/eshop_js/bootstrap.min.js" defer></script> -->
     <!-- Color JS --><!-- 
     <script src="/eshop_js/colors.js" defer></script> -->
     <!-- Slicknav JS -->
