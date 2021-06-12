@@ -40,8 +40,7 @@
 								<div class="col-lg-4 col-md-4 col-12">
 									<div class="form-group">
 										<label>Province<span>*</span></label>
-										<input type="text" name="province" id="select-province">
-										</select>
+										<input type="text" name="province" id="select-province" >
 									</div>
 								</div>
 								<div class="col-lg-4 col-md-4 col-12">
@@ -236,9 +235,10 @@ $(function() {
 
 	});
 
-	var $selectDistrict;
+	var $selectDistrict, $selectWard;
 
 	var $selectProvince = $('#select-province').selectize({
+		plugins: ['remove_button'],
 		options: [],
 		maxItems: 1,
 		preload: true,
@@ -262,30 +262,51 @@ $(function() {
 		    	
 			});
 		},
+		render: {
+		    item: function(item, escape) {
+		    	 window.ProvinceName = item.ProvinceName;
+		      return '<div>' +
+		        (item.ProvinceName ? '<span class="name">' + escape(item.ProvinceName) + '</span>' : '') +
+		        '</div>';
+		    }
+		},
 		onChange(value, $item) {
+
+			if( $selectDistrict && $selectWard[0].selectize !== undefined){
+				let selectize = $selectDistrict[0].selectize;
+				selectize.destroy();
+				selectize.clear();
+			};
+
+			// if( $selectWard && $selectWard[0].selectize !== undefined) {
+			// 	let selectize = $selectWard[0].selectize;
+			// 	selectize.destroy();
+			// 	selectize.clear();
+			// };
+				
+			getDistrict( value );
+			
+		},
+		onClear(){
+			console.log('getProvince_onClear');
 			if( $selectDistrict ){
 				let selectize = $selectDistrict[0].selectize;
 				selectize.destroy();
 				selectize.clear();
 			};
 
-			if( $selectWard && $selectWard[0].selectize !== undefined ) {
-					let selectize = $selectWard[0].selectize;
-					selectize.destroy();
-					selectize.clear();
+			if( $selectWard  && $selectWard[0].selectize !== undefined) {
+				let selectize = $selectWard[0]?.selectize;
+				selectize.destroy();
+				selectize.clear();
 			};
-				
-			getDistrict( value );
-			
-
-
-
 		}
 	});
+		
 
-	var $selectWard ;
 	let getDistrict =  function (province) {
 		$selectDistrict = $('#select-district').selectize({
+				plugins: ["remove_button"],
 				options: [],
 				maxItems: 1,
 				preload: true,
@@ -297,6 +318,7 @@ $(function() {
 				create: false,
 				placeholder: 'Select your district...',
 				load: function(query, callback) {
+					if( ! province ) return;
 					$.ajax({
 						method : 'get',
 						url : `https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/district?province_id=${province}` ,
@@ -304,15 +326,19 @@ $(function() {
 				        	token:  '503b4b90-c9fb-11eb-bc42-967656021ee1',
 				    	},
 				        success: function(response) {
-				        	callback(response.data);
+				        	let dist = response.data.filter( e => {
+				        		
+				        		return e.DistrictName !== ProvinceName;
+				        	});
+				        	callback(dist);
 				        }
 				    	
 					});
 				},
 				onChange(value, $item) {
-
-					if( $selectWard && $selectWard[0].selectize !== undefined ) {
-						let selectize = $selectWard[0].selectize;
+					
+					if( $selectWard && $selectWard[0].selectize !== undefined) {
+						let selectize = $selectWard[0]?.selectize;
 						selectize.destroy();
 						selectize.clear();
 					};
@@ -320,6 +346,14 @@ $(function() {
 					getWard( value );
 					
 				},
+				onClear(){
+					console.log('getDistrict_onClear');
+					if( $selectWard && $selectWard[0].selectize !== undefined) {
+						let selectize = $selectWard[0]?.selectize;
+						selectize.destroy();
+						selectize.clear();
+					};
+				}
 				
 			});
 	}
@@ -327,6 +361,7 @@ $(function() {
 
 	let getWard = function(district) {
 		$selectWard = $('#select-ward').selectize({
+			plugins: ["remove_button"],
 			options: [],
 			maxItems: 1,
 			preload: true,
