@@ -20,7 +20,7 @@ class CreateOrdersTable extends Migration
             $table->string('customer_phone');
             $table->string('customer_email');
             $table->string('customer_address')->nullable();
-            $table->float('subtotal')->unsigned();
+            $table->float('sub_total')->unsigned();
 
             $table->unsignedBigInteger('payment_method_id');
             $table->foreign('payment_method_id')->references('id')->on('payment_methods')->onDelete('cascade');

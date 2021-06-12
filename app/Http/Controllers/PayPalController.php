@@ -37,16 +37,16 @@ class PayPalController extends Controller
     public function checkout( Request $request)
     {
         $paypal = new PayPal;
-         //  dd($request['customer_name']);
+
         Session::flash('customer_name', $request['customer_name']);
         Session::flash('customer_email',$request['customer_email']);
         Session::flash('customer_phone', $request['customer_phone']);
         Session::flash('customer_address', $request['customer_address']);
 
-        Session::keep(['products','grand_total']);
-// dd(Session::get('grand_total'));
+        Session::keep(['products', 'shipping_fee', 'sub_total']);
+
         $response = $paypal->purchase([
-            'amount' => Session::get('grand_total'),
+            'amount' => Session::get('sub_total') + Session::get('shipping_fee'),
             'currency' => 'USD',
             'cancelUrl' => $paypal->getCancelUrl(),
             'returnUrl' => $paypal->getReturnUrl(),
@@ -69,10 +69,10 @@ class PayPalController extends Controller
      */
     public function completed( Request $request)
     {
-
+        
         $paypal = new PayPal;
         $response = $paypal->complete([
-            'amount' => Session::get('grand_total'),
+            'amount' =>  Session::get('sub_total') + Session::get('shipping_fee'),
             'currency' => 'USD',
 
         ]);

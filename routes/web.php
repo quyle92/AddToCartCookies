@@ -41,6 +41,10 @@ Route::post('/checkProducts', [
     'as' => 'app.checkProducts',
     'uses' =>'ProductController@checkProducts'
 ]);
+Route::get('/saveShippingFee', [
+    'as' => 'app.saveShippingFee',
+    'uses' =>'ProductController@saveShippingFee'
+]);
 
 /*
 Paypal Omnipay

@@ -68,6 +68,8 @@ class Order extends Model
                 $transaction_id = 'PPL_' . Session::get('transaction_id');
             }
            
+            $grand_total = Session::get('sub_total') + Session::get('shipping_fee');
+            Session::flash('grand_total', $grand_total );
 
             $order = Order::create([
                 'transaction_id' =>  $transaction_id,
@@ -76,8 +78,9 @@ class Order extends Model
                 'customer_phone' => Session::get('customer_phone'),
                 'customer_address' => Session::get('customer_address'),
                 'payment_method_id' => reset( $payment_method_id ),
-                'subtotal' => Session::get('grand_total') + DeliveryMethod::SHIPPING_FEE,
-                'grand_total' => Session::get('grand_total'),
+                'sub_total' => Session::get('sub_total'),
+                'shipping_fee' => Session::get('shipping_fee'),
+                'grand_total' => $grand_total,
                 'payment_status' => Order::PAYMENT_COMPLETED,
             ]);
 
@@ -88,7 +91,6 @@ class Order extends Model
                 $ordered_item = Product::where('fullNumber', $item['fullNumber'])->select('price','quantity');
                 $data[] = [
                     'product_fullNumber'=> $item['fullNumber'],
-                    //'order_id' => 
                     'unit_price' => $item['price'],
                     'order_quantity' => $item['quantity'],
                     'order_amount' => $item['price'] * $item['quantity'],

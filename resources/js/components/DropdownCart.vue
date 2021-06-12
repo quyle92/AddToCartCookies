@@ -5,7 +5,7 @@
 		<div class="shopping-item">
 			<div class="dropdown-cart-header">
 				<span> {{totalQuantity}} Items</span>
-				<a href="#">View Cart</a>
+				<a href="/cart">View Cart</a>
 			</div>
 			<ul class="shopping-list">
 				<li v-for="item in products">

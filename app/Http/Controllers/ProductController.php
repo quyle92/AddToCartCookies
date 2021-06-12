@@ -11,6 +11,7 @@ use Faker\Generator as Faker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Input;
 
 class ProductController extends Controller
 {	
@@ -175,8 +176,9 @@ class ProductController extends Controller
     {
         if( ! $request->products ) return; 
         
-        Session::flash('grand_total', $request->grandTotal );
-        Session::flash('products', $request->products);
+        Session::flash('sub_total', $request->subTotal );
+        Session::flash('products', $request->products );
+        Session::keep(['shippingFee']);
         
         $products =  $request->products;
         $out_of_stock = [];
@@ -220,6 +222,12 @@ class ProductController extends Controller
         return response()->json([
             'message' => 'success'
         ]);
+    }
+
+    public function saveShippingFee(Request $request) 
+    {
+
+        Session::flash('shipping_fee', intval( Input::get('shipping_fee') ) );
     }
 
 

@@ -41518,7 +41518,7 @@ var render = function() {
       _c("div", { staticClass: "dropdown-cart-header" }, [
         _c("span", [_vm._v(" " + _vm._s(_vm.totalQuantity) + " Items")]),
         _vm._v(" "),
-        _c("a", { attrs: { href: "#" } }, [_vm._v("View Cart")])
+        _c("a", { attrs: { href: "/cart" } }, [_vm._v("View Cart")])
       ]),
       _vm._v(" "),
       _c(
@@ -55589,12 +55589,11 @@ __webpack_require__.r(__webpack_exports__);
  * building robust, powerful web applications using Vue and Laravel.
  * eslint-env node
  */
-$.ajaxSetup({
-  headers: {
-    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-  }
-});
-
+// $.ajaxSetup({
+//     headers: {
+//         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+//     }
+// });
 __webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js");
 
 window.Vue = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.common.js");
