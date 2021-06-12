@@ -41562,11 +41562,9 @@ var render = function() {
           ])
         ]),
         _vm._v(" "),
-        _c(
-          "a",
-          { staticClass: "btn animate", attrs: { href: "checkout.html" } },
-          [_vm._v("Checkout")]
-        )
+        _c("a", { staticClass: "btn animate", attrs: { href: "/checkout" } }, [
+          _vm._v("Checkout")
+        ])
       ])
     ])
   ])

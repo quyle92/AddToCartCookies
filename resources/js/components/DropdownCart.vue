@@ -21,7 +21,7 @@
 					<span>Total</span>
 					<span class="total-amount">${{totalAmount}}</span>
 				</div>
-				<a href="checkout.html" class="btn animate">Checkout</a>
+				<a href="/checkout" class="btn animate">Checkout</a>
 			</div>
 		</div>
 	</div>

@@ -233,7 +233,9 @@ $(function() {
 		  	});
 		  	
 		}
-
+		else {
+			alert('Please choose your preferred payment method!')
+		}
 
 	});
 
