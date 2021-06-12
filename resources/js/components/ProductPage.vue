@@ -238,6 +238,7 @@ import { mapGetters } from 'vuex'
               //khi size + color cùng đc tick 
                   if( this.sizeColor.size.length !== 0 && this.sizeColor.color.length !== 0 )
                   {
+                    this.$store.state.selectedProduct = {};
                     this.bothSizeColor( );
                   }
 

@@ -59,7 +59,6 @@
 									<td class="price" data-title="Price" ref="mySecondLevelRefName">
 										<span >${{item.price}} </span> 
 		
-					<!-- 					<span v-else>${{selectedPrice}} </span> </td> -->
 									<td class="qty" data-title="Qty"><!-- Input Order -->
 										<div class="input-group">
 											<div class="button minus">
@@ -168,7 +167,6 @@ export default {
   		'totalQuantity'  ,
 			'selectedFullNumber'  ,
 			'priceRange' , 
-			'selectedPrice'  ,
 			'selectedStyleSet' ,
 			'productsOnCart',
 			'maxQuantityArr'
@@ -361,12 +359,21 @@ export default {
 							products = _.orderBy(products, ['fullNumber'], ['asc']);
 							maxQuantityArr = _.orderBy(maxQuantityArr, ['fullNumber'], ['asc']);
 
-							for (var i = 0; i < maxQuantityArr.length; i++) {
+							for (var i = 0; i < maxQuantityArr.length; i++) 
+							{
+
 								products[i].maxQuantity = maxQuantityArr[i].quantity;
+
+								if( products[i].quantity > maxQuantityArr[i].quantity ) 
+								{
+									products[i].quantity = maxQuantityArr[i].quantity
+								}
+
 							}
 
 							products = _.orderBy(products, ['style_id', 'date'], ['asc', 'asc']);
 							this.$store.state.productsOnCart =  products;
+							this.updateLocalStorage();
 
 
 					})	

@@ -74,19 +74,19 @@ export default {
 					{	
 						if( this.$Helper.isObjEmpty(this.selectedProduct) )
 						{
-							// this.selectedProduct = item;
+							//TH này là cho productPage
 							this.$store.commit('SET_SELECTED_PRODUCT', item);
-							
+							this.$store.commit('SET_TOTAL_QUANTITY', this.selectedProduct.quantity);
+							this.$store.commit('SET_SELECTED_PRICE', this.selectedProduct.price);
 						}
 						else
-						{
+						{	
+							//TH này là cho cartPage
 							this.selectedProduct.size = item.size;
 							this.selectedProduct.color = item.color;
 							this.selectedProduct.price = item.price;
 							this.selectedProduct.fullNumber = item.fullNumber;
 							this.selectedProduct.maxQuantity = item.quantity;
-							
-
 						}
 						
 
@@ -94,8 +94,7 @@ export default {
 					
 				});
 
-				this.$store.commit('SET_TOTAL_QUANTITY', this.selectedProduct.quantity);
-				this.$store.commit('SET_SELECTED_PRICE', this.selectedProduct.price);
+				
 
 				//$on at ProductPage
 				vm.$emit('getSelectedPriceOriginal', this.selectedProduct.price );
@@ -144,7 +143,7 @@ export default {
                 //cho selectedPrice = '' để priceRange đc render trên template
                 this.$store.commit('SET_SELECTED_PRICE', '');
            	},
-           	updateLocalStorage( ){
+           	updateLocalStorage(){
 
 	        	if( ! localStorage.getItem('products') ) return;
 

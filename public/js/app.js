@@ -2058,7 +2058,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 //
 //
 //
-//
 
  //import clickOutside from '../directive';
 
@@ -2075,7 +2074,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       oldQuantity: ''
     };
   },
-  computed: _objectSpread(_objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['totalQuantity', 'selectedFullNumber', 'priceRange', 'selectedPrice', 'selectedStyleSet', 'productsOnCart', 'maxQuantityArr'])), {}, {
+  computed: _objectSpread(_objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['totalQuantity', 'selectedFullNumber', 'priceRange', 'selectedStyleSet', 'productsOnCart', 'maxQuantityArr'])), {}, {
     totalQty: function totalQty() {
       var result = 0;
       if (!this.productsOnCart) return;
@@ -2237,10 +2236,16 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
       for (var i = 0; i < maxQuantityArr.length; i++) {
         products[i].maxQuantity = maxQuantityArr[i].quantity;
+
+        if (products[i].quantity > maxQuantityArr[i].quantity) {
+          products[i].quantity = maxQuantityArr[i].quantity;
+        }
       }
 
       products = _.orderBy(products, ['style_id', 'date'], ['asc', 'asc']);
       _this3.$store.state.productsOnCart = products;
+
+      _this3.updateLocalStorage();
     })["catch"](function (error) {
       console.log(error);
     });
@@ -2415,7 +2420,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
     };
   },
-  computed: _objectSpread(_objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['selectedProduct', 'outOfStockSize', 'outOfStockColor', 'sizeColor', 'sizeList', 'colorList', 'selectedPrice', 'selectedStyle', 'maxQuantityArr', 'lastSelectedProduct'])), {}, {
+  computed: _objectSpread(_objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['selectedProduct', 'outOfStockSize', 'outOfStockColor', 'sizeColor', 'sizeList', 'colorList', 'selectedStyle', 'maxQuantityArr', 'lastSelectedProduct'])), {}, {
     hightlightSize: function hightlightSize() {
       var sizeList = _objectSpread({}, this.sizeList);
 
@@ -2753,6 +2758,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 
       if (this.sizeColor.size.length !== 0 && this.sizeColor.color.length !== 0) {
+        this.$store.state.selectedProduct = {};
         this.bothSizeColor();
       } //khi size + color button cùng ko đc tick
 
@@ -55791,9 +55797,14 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       this.selectedStyleSet.forEach(function (item) {
         if (item.size === _this2.sizeColor.size && item.color === _this2.sizeColor.color) {
           if (_this2.$Helper.isObjEmpty(_this2.selectedProduct)) {
-            // this.selectedProduct = item;
+            //TH này là cho productPage
             _this2.$store.commit('SET_SELECTED_PRODUCT', item);
+
+            _this2.$store.commit('SET_TOTAL_QUANTITY', _this2.selectedProduct.quantity);
+
+            _this2.$store.commit('SET_SELECTED_PRICE', _this2.selectedProduct.price);
           } else {
+            //TH này là cho cartPage
             _this2.selectedProduct.size = item.size;
             _this2.selectedProduct.color = item.color;
             _this2.selectedProduct.price = item.price;
@@ -55801,9 +55812,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
             _this2.selectedProduct.maxQuantity = item.quantity;
           }
         }
-      });
-      this.$store.commit('SET_TOTAL_QUANTITY', this.selectedProduct.quantity);
-      this.$store.commit('SET_SELECTED_PRICE', this.selectedProduct.price); //$on at ProductPage
+      }); //$on at ProductPage
 
       vm.$emit('getSelectedPriceOriginal', this.selectedProduct.price); //size: xem colors nào bị 0 quantity thì disabled nó
 
