@@ -148,12 +148,14 @@ $(function() {
 	let products =  JSON.parse( localStorage.getItem('products') ) ?? [];
 	let itemList = '';
 	let subTotal = 0;
+
 	products.forEach( e => {
 		let amount = +e.price * +e.quantity;
 		itemList += `<li>${e.style} | ${e.fullNumber}<span>$${amount.toFixed(2)}</span><br><small>${e.quantity} x $${e.price}</small></li>`;
 		subTotal += amount;
 		
 	});
+
 	let subTotalFormat = subTotal.toFixed(2);
 	document.getElementById('subTotal').innerText = `$${subTotalFormat}`;
 	window.subTotal = subTotal;
@@ -188,8 +190,8 @@ $(function() {
 		//check if any required field is missing
 		let required_info = ['customer_name', 'customer_email', 'customer_phone', 'customer_address'];
 		let formData = Object.fromEntries( new URLSearchParams( $('form').serialize() )  );
-		let missingFields = []
-		for(let item in formData){
+		let missingFields = [];
+		for( let item in formData ){
 			if(required_info.includes(item) && ! formData[item]  ){
 			    missingFields.push(item)
 			}
@@ -213,14 +215,13 @@ $(function() {
 		let isChecked = inputChecked.length > 0;
 		if(isChecked) 
 		{	
-			var clientInfo= form.serialize();
-		  	const searchParams = new URLSearchParams(clientInfo);
+			let clientInfo= form.serialize();
+		  	let searchParams = new URLSearchParams(clientInfo);
 		  	clientInfo = Object.fromEntries(searchParams);
 		  	$.ajax({
 		  		method: 'post',
 		  		url: '{{route('app.checkProducts')}}',
 		  		data: {
-		  			// clientInfo:  clientInfo,
 		  			products: products,
 		  			subTotal: subTotal
 		  		},
@@ -476,6 +477,7 @@ $(function() {
 
 	window.onbeforeunload = closingCode;
 	function closingCode(){
+
 	    return confirm("Do you really want to close?") ; 
 	}
 

@@ -178,8 +178,8 @@ class ProductController extends Controller
         
         Session::flash('sub_total', $request->subTotal );
         Session::flash('products', $request->products );
-        Session::keep(['shippingFee']);
-        
+        Session::keep(['shipping_fee']);
+
         $products =  $request->products;
         $out_of_stock = [];
         foreach( $products as &$item )
@@ -211,9 +211,9 @@ class ProductController extends Controller
         if( count($out_of_stock) > 0 )
         {
             return response()->json([
-                    'message' => [
-                        'out_of_stock' =>  $out_of_stock
-                    ],
+                'message' => [
+                    'out_of_stock' =>  $out_of_stock
+                ],
                    
             ]);
 
@@ -226,9 +226,11 @@ class ProductController extends Controller
 
     public function saveShippingFee(Request $request) 
     {
+        $shipping_fee = (float)  Input::get('shippingFee') ;
+        Session::flash('shipping_fee', $shipping_fee );
 
-        Session::flash('shipping_fee', intval( Input::get('shipping_fee') ) );
     }
+
 
 
 }
