@@ -9,6 +9,20 @@
 						<h2>Make Your Checkout Here</h2>
 						<p>Please register in order to checkout more quickly</p>
 						<!-- Form -->
+						@if(\Session::has("msg"))
+						<div class="col-md3">
+							<div class="alert alert-danger">
+								<h4>Fields missing:</h4>
+								<ul>
+						@foreach(  request()->session()->get("msg") as $msg )
+									<li>
+										{{ $msg }}
+									</li>
+						@endforeach
+								</ul>
+							</div>
+						</div>
+						@endif
 						<form class="form" method="post" action="/checkout/payment/paypal" id="checkoutForm" onsubmit="window.onbeforeunload=null;">
 							{{csrf_field()}}
 							<div class="row">
@@ -120,25 +134,15 @@
 				</div>
 			</div>
 		</div>
-<!-- <form action="/checkout/payment/paypal" method="post">
-	{{csrf_field()}}
-    <input type="text" name="amount" value="20.00" />
-    <input type="submit" name="submit" value="Pay Now">
-</form> -->
+
 	</section>
 
 @endsection 
 
 @push('scripts')
 <script>
-
+	
 $(function() {
-
-	$.ajaxSetup({
-    headers: {
-        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-    }
-});
 
 	const form = $('#checkoutForm');
 	let products =  JSON.parse( localStorage.getItem('products') ) ?? [];
@@ -168,15 +172,45 @@ $(function() {
 
 	//submit 
 	$('.button').click( function(e) {
+		 //$('#grandTotal span').text('$10');
 		e.preventDefault();
 		if( $('#grandTotal span').text().length === 0 ){
 			alert('Please select your location!');
 			return;
 		} 
 
+		let products =  JSON.parse( localStorage.getItem('products') );
+		if( products === null ) {
+			alert('You\'ve not selected any products!');
+			return;
+		};
+		
+		//check if any required field is missing
+		let required_info = ['customer_name', 'customer_email', 'customer_phone', 'customer_address'];
+		let formData = Object.fromEntries( new URLSearchParams( $('form').serialize() )  );
+		let missingFields = []
+		for(let item in formData){
+			if(required_info.includes(item) && ! formData[item]  ){
+			    missingFields.push(item)
+			}
+		}
+
+		missingFields.forEach( e => {
+			let field = $(`input[name=${e}]`);
+			if($( field ).next().length === 0) {
+				field.after("<small style='color:red'>You must fill out this form.</small>");
+ 				field.css('border', '2px solid red');
+			}
+		});
+
+		if(missingFields.length > 0){
+			return;
+		}
+
+
+		//finally submit
 		let inputChecked = $('.checkbox input:checkbox:checked');
 		let isChecked = inputChecked.length > 0;
-
 		if(isChecked) 
 		{	
 			var clientInfo= form.serialize();
@@ -192,6 +226,7 @@ $(function() {
 		  		},
 		  		success: function(response) {
 		  			let result = response?.message.product_not_available ?? undefined;
+
 		  			//if( response.message.hasOwnProperty('product_not_available') ) (1)
 		  			if( result !== undefined ) 
 		  			{
@@ -241,9 +276,8 @@ $(function() {
 
 
 	//calculate shipping
-	var $selectDistrict, $selectWard;
-
-	var $selectProvince = $('#select-province').selectize({
+	var $selectProvince , $selectDistrict, $selectWard;
+	$selectProvince = $('#select-province').selectize({
 		plugins: ['remove_button'],
 		options: [],
 		maxItems: 1,

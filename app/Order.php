@@ -54,12 +54,12 @@ class Order extends Model
     public static function order_process( $payment_method )
     { 
         try
-        {
-            $payment_method_id =  PaymentMethod::where('payment_type', 'paypal')->pluck('id') ;
+        { 
+            $payment_method_id =  PaymentMethod::where('payment_type', $payment_method )->pluck('id') ;
             $payment_method_id = reset( $payment_method_id );
 
             if( $payment_method === 'cod')
-            {   
+            {  
                $transaction_id = Str::generateCODTransactionID();
             }
             
@@ -67,7 +67,7 @@ class Order extends Model
             {
                 $transaction_id = 'PPL_' . Session::get('transaction_id');
             }
-           
+          
             $grand_total = Session::get('sub_total') + Session::get('shipping_fee');
             Session::flash('grand_total', $grand_total );
 

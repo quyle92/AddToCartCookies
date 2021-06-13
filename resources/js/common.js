@@ -9,7 +9,7 @@ export default {
 	},
 	computed: {
 		...mapState([
-			'selectedFullNumber'  ,
+			'selectedFullNumber',
 			'priceRange' , 
 			'productsOnCart',
 			'selectedPrice'  ,
@@ -20,7 +20,8 @@ export default {
 			'outOfStockColorAll',
 			'outOfStockSizeAll',
 			'selectedProduct',
-			'lastSelectedProduct'
+			'lastSelectedProduct',
+			
 			]),
 	},
 	methods: {
