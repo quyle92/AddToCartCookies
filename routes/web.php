@@ -20,11 +20,20 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
+Auth::routes();
+Auth::routes(['verify' => true]);
 
-Route::get('/test',function() {
-    return response()->view('thankyou', ['transaction_id' => 111]);
+Route::get('/register', 'Auth\RegisterController@showRegistrationForm');
 
-});
+Route::post('/register', 'Auth\RegisterController@register')->name('register');
+Route::get('/emailVerification', function() {
+    return view('auth.veirfy');
+})->name('emailVerification');
+
+/*
+**E-commerce**
+ */
+
 Route::get('/','ProductController@getAllProducts');
 Route::get('/home', 'ProductController@getAllProducts');
 Route::get('/product/{id}', 'ProductController@getSelectedStyle');
@@ -80,5 +89,19 @@ Route::post('/checkout/payment/cod', [
     'as' => 'app.codCheckOut',
     'uses' =>'CODController@codCheckOut'
 ]);
+
+/*
+**Admin**
+ */
+// Route::get('/dashboard','Admin\AdminController@index');
+
+// Route::group( ['prefix' => 'admin', 'namespace' => 'Admin' ], function () {
+//    Route::resources([
+//     'users' => UserController::class,
+
+//     ]);
+// });
+
+Route::get('/admin/{slug}','Admin\AdminController@index');
 
 
