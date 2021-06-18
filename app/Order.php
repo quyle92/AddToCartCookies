@@ -3,6 +3,7 @@
 namespace App;
 
 use App\DeliveryMethod;
+use App\Events\OrderCreated;
 use App\Order;
 use App\PaymentMethod;
 use App\Product;
@@ -103,6 +104,8 @@ class Order extends Model
 
             $order->order_details()->createMany($data);
 
+            event( new OrderCreated($order) );
+           
             return $transaction_id;
 
             

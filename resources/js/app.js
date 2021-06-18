@@ -15,6 +15,9 @@ require('./bootstrap');
 
 window.Vue = require('vue');
 
+import VueChatScroll from 'vue-chat-scroll'
+Vue.use(VueChatScroll)
+
 import store from './store';
 Vue.prototype.$store = store;
 
@@ -27,6 +30,15 @@ Vue.mixin(common)
 
 window.vm = new Vue();
 
+import Echo from "laravel-echo";
+
+
+window.Pusher = require('pusher-js');
+
+window.Echo = new Echo({
+    broadcaster: 'pusher',
+    key: '0004ac5a6265f2b52e4e'
+});
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue
@@ -42,6 +54,7 @@ Vue.component('product-page', require('./components/ProductPage.vue').default);
 Vue.component('cart', require('./components/Cart.vue').default);
 Vue.component('popover', require('./components/Popover.vue').default);
 Vue.component('dropdown-cart', require('./components/DropdownCart.vue').default);
+Vue.component('chat', require('./components/Chat.vue').default);
 
 const getCookieValue = (name) => (
   document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)')?.pop() || ''

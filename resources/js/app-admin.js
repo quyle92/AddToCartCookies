@@ -15,12 +15,8 @@ Vue.prototype.$store = store;
 
 import router from './router';
 
-//helper.js
-import Helper from './helper';
-Vue.prototype.$Helper = new Helper();
-
-import common from './common';
-Vue.mixin(common)
+import VueChatScroll from 'vue-chat-scroll'
+Vue.use(VueChatScroll)
 
 window.vm = new Vue();
 
@@ -47,17 +43,21 @@ Vue.component(AlertSuccess.name, AlertSuccess)
  * Eg. ./components/ExampleComponent.vue -> <example-component></example-component>
  */
 
-// const files = require.context('./', true, /\.vue$/i);
-// files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default));
-
-Vue.component('Content', require('./AdminComponents/Content.vue').default);
-Vue.component('Dashboard', require('./AdminComponents/Dashboard.vue').default);
-Vue.component('Users', require('./AdminComponents/Users.vue').default);
-
 
 window.vm = new Vue();
 
+import Echo from "laravel-echo";
 
+window.Pusher = require('pusher-js');
+
+window.Echo = new Echo({
+    broadcaster: 'pusher',
+    key: '0004ac5a6265f2b52e4e',
+    cluster: 'ap1',
+    forceTLS: true,
+    encrypted: true
+
+});
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application

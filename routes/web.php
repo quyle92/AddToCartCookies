@@ -20,15 +20,16 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+
 Auth::routes();
 Auth::routes(['verify' => true]);
 
 Route::get('/register', 'Auth\RegisterController@showRegistrationForm');
 
 Route::post('/register', 'Auth\RegisterController@register')->name('register');
-Route::get('/emailVerification', function() {
-    return view('auth.veirfy');
-})->name('emailVerification');
+
+Route::get('/broadcast', 'Admin\AdminController@test');
 
 /*
 **E-commerce**
@@ -55,6 +56,9 @@ Route::get('/saveShippingFee', [
     'uses' =>'ProductController@saveShippingFee'
 ]);
 
+Route::post('/sendMessage', [
+    'uses' =>'BroadcastController@sendMessage'
+]);
 
 /*
 Paypal Omnipay
@@ -102,6 +106,6 @@ Route::post('/checkout/payment/cod', [
 //     ]);
 // });
 
-Route::get('/admin/{slug}','Admin\AdminController@index');
 
+Route::get('/admin/{slug}','Admin\AdminController@index');
 

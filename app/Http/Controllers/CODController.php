@@ -13,6 +13,19 @@ class CODController extends Controller
     public function codCheckOut(Request $request)
     {   
         if( ! $request->post() ) return;
+
+        $this->processMissingFields($request);
+
+        $transaction_id = Order::order_process('cod');
+
+        return response()->view('thankyou', [
+            'transaction_id' => $transaction_id,
+            'products' => Session::get('products')
+        ]);
+    }
+
+    protected function processMissingFields( Request $request ) 
+    {
         $missing_field = [];
         $customer_info = $request->post();
         array_shift($customer_info);
@@ -33,13 +46,8 @@ class CODController extends Controller
         if( count($missing_field) > 0 ) {  
             Session::flash('msg', ($missing_field) );
             return redirect()->back();
+            
         }
 
-        $transaction_id = Order::order_process('cod');
-
-        return response()->view('thankyou', [
-            'transaction_id' => $transaction_id,
-            'products' => Session::get('products')
-        ]);
     }
 }

@@ -108,8 +108,6 @@
 									 	{{Str::title($item['payment_type'])}}
 									</label>
 									@endforeach
-									<!-- <label class="checkbox-inline" for="2"><input name="paymentMethod[]" id="2" type="checkbox" value="cod"> Cash On Delivery</label>
-									<label class="checkbox-inline" for="3"><input name="paymentMethod[]" id="3" type="checkbox" value="paypal"> PayPal</label> -->
 								</div>
 							</div>
 						</div>

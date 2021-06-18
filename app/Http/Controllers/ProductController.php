@@ -14,12 +14,12 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Input;
 
 class ProductController extends Controller
-{	
-	private $cookie_name = 'shopping_cart';
+{   
+    private $cookie_name = 'shopping_cart';
 
     public function getAllProducts()
     {   
-    	$products = Style::with([
+        $products = Style::with([
             'colorsForOneStyleOnly' => function ($query) {     
                 $query->select('colors.id', 'color')->where('colors.id', 1); 
         },
@@ -27,14 +27,13 @@ class ProductController extends Controller
                 $query->select('sizes.id', 'size')->where('sizes.id', 1); 
         }
         ])->get();
-  	 
-
-    	return view('home')->with( compact('products') );
+     
+        return view('home')->with( compact('products') );
     }
 
     public function getSelectedStyle($id)
     {   
-    	$product = Style::with([
+        $product = Style::with([
             'colorsForOneStyleOnly' => function ($query) {     
                 $query->select('colors.id', 'color')->where('colors.id', 1); 
         },
@@ -58,7 +57,7 @@ class ProductController extends Controller
                     ->sum('quantity') 
         );
         $style_id = $id;
-    	return view('product', compact('style_id'));
+        return view('product', compact('style_id'));
         //->with( compact('product',  'priceRange', 'sizes', 'colors', 'totalQuantity') );
     }
 
@@ -98,41 +97,40 @@ class ProductController extends Controller
     }
 
     public function addToCart(Request $request)
-    {	
-    	$item_data = json_encode( $request->all() );//dd( $item_data );
-    	
-    	//$cookie_value = [];
-    	
-    	if( ! isset ( $_COOKIE[$this->cookie_name] ) )
-    	{	
-    		//$cookie_value[] = json_decode( $item_data );
-    		setcookie($this->cookie_name."[" . $request->fullNumber . "]", $item_data , time() + (86400 * 30), "/");
-    	}
-    	else
-    	{	//dd(json_decode( $_COOKIE[$this->cookie_name] ) );
-    		foreach ($_COOKIE[$this->cookie_name] as $name => $value) {
-    			
-    			if( $name == $request->fullNumber)
-    			{
-    				setcookie($this->cookie_name."[" . $name . "]", $item_data , time() + (86400 * 30), "/");
-    				break;
-    			}
-    			else
-    			{
-    				setcookie($this->cookie_name."[" . $request->fullNumber . "]", $item_data , time() + (86400 * 30), "/");
-    				break;
-    			}
+    {   
+        $item_data = json_encode( $request->all() );//dd( $item_data );
+        
+        //$cookie_value = [];
+        
+        if( ! isset ( $_COOKIE[$this->cookie_name] ) )
+        {   
+            //$cookie_value[] = json_decode( $item_data );
+            setcookie($this->cookie_name."[" . $request->fullNumber . "]", $item_data , time() + (86400 * 30), "/");
+        }
+        else
+        {   //dd(json_decode( $_COOKIE[$this->cookie_name] ) );
+            foreach ($_COOKIE[$this->cookie_name] as $name => $value) {
+                
+                if( $name == $request->fullNumber)
+                {
+                    setcookie($this->cookie_name."[" . $name . "]", $item_data , time() + (86400 * 30), "/");
+                    break;
+                }
+                else
+                {
+                    setcookie($this->cookie_name."[" . $request->fullNumber . "]", $item_data , time() + (86400 * 30), "/");
+                    break;
+                }
 
-    		}
-    	}	
-    	dd( ( $_COOKIE[$this->cookie_name] ) );
-    	
-    	
+            }
+        }   
+        dd( ( $_COOKIE[$this->cookie_name] ) );
+        
     }
 
     public function showCart()
     {   
-    	return view('cart');
+        return view('cart');
     }
 
     public function getVariationSet( Request $request )
@@ -231,10 +229,7 @@ class ProductController extends Controller
 
     }
 
-
-
 }
-
 
 /*
 Note

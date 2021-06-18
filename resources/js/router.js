@@ -4,6 +4,7 @@ Vue.use(Router)
 import Content from './AdminComponents/Content'
 import Dashboard from './AdminComponents/Dashboard'
 import Users from './AdminComponents/Users'
+import ChatAdmin from './AdminComponents/ChatAdmin'
 
 const routes = [
 	{
@@ -21,6 +22,10 @@ const routes = [
           // when /user/:id/posts is matched
           path: 'users',
           component: Users
+        },
+        {
+          path: 'chat',
+          component: ChatAdmin
         }
       ]
 	}

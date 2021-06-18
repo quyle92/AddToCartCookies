@@ -159,9 +159,17 @@
             </li>
             <li class="nav-item">
                <router-link to="/admin/users" class="nav-link" tag="a" >
-                <i class="fas fa-users-cog"></i>
+                <i class="nav-icon fas fa-users-cog"></i>
                 <p>
                   Users
+                </p>
+                </router-link>
+            </li>
+            <li class="nav-item">
+               <router-link to="/admin/chat" class="nav-link" tag="a" >
+                <i class="nav-icon fas fa-comment-dots"></i>
+                <p>
+                  Chat
                 </p>
                 </router-link>
             </li>

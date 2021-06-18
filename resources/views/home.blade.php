@@ -63,6 +63,7 @@
 			</div>
 		</div>
     </div>
+    <chat></chat>
 </div>
 
 @endsection 
