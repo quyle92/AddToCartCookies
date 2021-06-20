@@ -6,11 +6,46 @@ use Illuminate\Http\Request;
 
 class BroadcastController extends Controller
 {
-    public function sendMessage(Request $request) 
+    public function guestSentMessage(Request $request) 
     {
-        //dump($request->post());
-        return response()->json([
-            'status' => 'success'
-        ]);
+        try 
+        {   
+            $message = $request->message;
+            $guest    = $request->guest;
+
+            event( new \App\Events\ChatEvent($message, $guest) );
+
+            return response()->json([
+                'msg' => 'success'
+            ]);
+        }
+        catch(\Exception $err) 
+        {  
+            return response()->json([
+                'msg' => $err->getMessage()
+            ]);
+        }
+        
+    }
+
+    public function adminSentMessage(Request $request) 
+    {
+        try 
+        {   
+            $message = $request->message;
+            $guest    = $request->guest;
+            event( new \App\Events\AdminSentMessage($message, $guest) );
+
+            return response()->json([
+                'msg' => 'success'
+            ]);
+        }
+        catch(\Exception $err) 
+        {  
+            return response()->json([
+                'msg' => $err->getMessage()
+            ]);
+        }
+        
     }
 }

@@ -2345,6 +2345,9 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: {},
   data: function data() {
@@ -2355,46 +2358,78 @@ __webpack_require__.r(__webpack_exports__);
       showChat: true,
       guest: '',
       message: '',
-      OutgoingMessages: []
+      messages: [{
+        user: 'admin',
+        msg: 'Hi there, may I help you?'
+      }, {
+        user: 'guest',
+        msg: 'Yes, I need help'
+      }]
     };
+  },
+  computed: {
+    getGuest: function getGuest(guest) {
+      return guest;
+    }
   },
   methods: {
     submit: function submit() {
-      this.isPreChat = false;
+      var _this = this;
+
+      this.isPreChat = false; //get incoming messages
+
+      Echo.channel("AdminSentMessageTo_".concat(this.guest)).listen('AdminSentMessage', function (result) {
+        console.log(result);
+
+        _this.messages.push({
+          user: 'admin',
+          msg: result.message
+        });
+
+        Vue.nextTick(function () {
+          vueChatScroll();
+        });
+      });
     },
     toggle: function toggle() {
       this.showChat = !this.showChat;
     },
     send: function send() {
-      var _this = this;
-
-      this.OutgoingMessages.push(this.message);
-      Vue.nextTick(function () {
-        var div = document.getElementById('chatMsg');
-        div.scrollTop = div.scrollHeight;
-        console.log(div.scrollTop, div.scrollHeight);
+      this.messages.push({
+        user: 'guest',
+        msg: this.message
       });
-      axios.post('/sendMessage', {
+      Vue.nextTick(function () {
+        vueChatScroll();
+      });
+      axios.post('/guestSentMessage', {
         guest: this.guest,
         message: this.message
-      }).then(function (response) {
-        _this.message = '';
-      })["catch"](function (error) {
+      }).then(function (response) {})["catch"](function (error) {
         console.log(error);
       });
+      this.message = '';
     }
   },
-  mounted: function mounted() {
-    var messages = document.getElementById('chatMsg');
-    var shouldScroll = messages.scrollTop + messages.clientHeight === messages.scrollHeight;
-
-    if (!shouldScroll) {
-      scrollToBottom(messages);
-    }
+  mounted: function mounted() {},
+  updated: function updated() {
+    Vue.nextTick(function () {
+      vueChatScroll();
+    });
   },
   created: function created() {},
-  watch: {}
+  watch: {
+    IncomingMessages: function IncomingMessages() {
+      vueChatScroll();
+    },
+    guest: function guest(val) {}
+  }
 });
+
+function vueChatScroll() {
+  var div = document.getElementById('chatMsg');
+  div.scrollTop = div.scrollHeight;
+}
 
 /***/ }),
 
@@ -7465,7 +7500,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.chat-widget[data-v-0d66c37a] {\r\n\tposition: fixed;\r\n\tbottom: 1px;\r\n\tleft: 1px;\r\n\tz-index: 9999;\n}\n.chat[data-v-0d66c37a]\r\n{\r\n    list-style: none;\r\n    margin: 0;\r\n    padding: 0;\n}\n.chat li[data-v-0d66c37a]\r\n{\r\n    margin-bottom: 10px;\r\n    padding-bottom: 5px;\r\n    border-bottom: 1px dotted #B3A9A9;\n}\n.chat li.left .chat-body[data-v-0d66c37a]\r\n{\r\n    margin-left: 60px;\n}\n.chat li.right .chat-body[data-v-0d66c37a]\r\n{\r\n    margin-right: 60px;\n}\n.chat li .chat-body p[data-v-0d66c37a]\r\n{\r\n    margin: 0;\r\n    color: #777777;\n}\n.card .slidedown .glyphicon[data-v-0d66c37a], .chat .glyphicon[data-v-0d66c37a]\r\n{\r\n    margin-right: 5px;\n}\n.card-body[data-v-0d66c37a]\r\n{\r\n    overflow-y: scroll;\r\n    height: 250px;\n}\n[data-v-0d66c37a]::-webkit-scrollbar-track\r\n{\r\n    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);\r\n    background-color: #F5F5F5;\n}\n[data-v-0d66c37a]::-webkit-scrollbar\r\n{\r\n    width: 12px;\r\n    background-color: #F5F5F5;\n}\n[data-v-0d66c37a]::-webkit-scrollbar-thumb\r\n{\r\n    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);\r\n    background-color: #555;\n}\n.btn.submit[data-v-0d66c37a]:hover, .card-header[data-v-0d66c37a]:hover{\r\n\tbackground: #CDCDCD;\n}\n.card-header[data-v-0d66c37a]{\r\n\tcursor: pointer;\n}\n.showIt[data-v-0d66c37a] {\r\n\tdisplay: block;\n}\n.hideIt[data-v-0d66c37a] {\r\n\tdisplay: none;\n}\n#collapseOne[data-v-0d66c37a] {\r\n\tbackground-color: #fff;\n}\r\n", ""]);
+exports.push([module.i, "\n.chat-widget[data-v-0d66c37a] {\r\n\tposition: fixed;\r\n\tbottom: 1px;\r\n\tleft: 1px;\r\n\tz-index: 9999;\n}\n.chat[data-v-0d66c37a]\r\n{\r\n    list-style: none;\r\n    margin: 0;\r\n    padding: 0;\n}\n.chat li[data-v-0d66c37a]\r\n{\r\n    margin-bottom: 10px;\r\n    padding-bottom: 5px;\r\n    border-bottom: 1px dotted #B3A9A9;\n}\n.chat li .left .chat-body[data-v-0d66c37a]\r\n{\r\n    margin-left: 60px;\n}\n.chat li .right .chat-body[data-v-0d66c37a]\r\n{\r\n    margin-right: 60px;\n}\n.chat li .chat-body p[data-v-0d66c37a]\r\n{\r\n    margin: 0;\r\n    color: #777777;\n}\n.card .slidedown .glyphicon[data-v-0d66c37a], .chat .glyphicon[data-v-0d66c37a]\r\n{\r\n    margin-right: 5px;\n}\n.card-body[data-v-0d66c37a]\r\n{\r\n    overflow-y: scroll;\r\n    height: 250px;\n}\n[data-v-0d66c37a]::-webkit-scrollbar-track\r\n{\r\n    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);\r\n    background-color: #F5F5F5;\n}\n[data-v-0d66c37a]::-webkit-scrollbar\r\n{\r\n    width: 12px;\r\n    background-color: #F5F5F5;\n}\n[data-v-0d66c37a]::-webkit-scrollbar-thumb\r\n{\r\n    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);\r\n    background-color: #555;\n}\n.btn.submit[data-v-0d66c37a]:hover, .card-header[data-v-0d66c37a]:hover{\r\n\tbackground: #CDCDCD;\n}\n.card-header[data-v-0d66c37a]{\r\n\tcursor: pointer;\n}\n.showIt[data-v-0d66c37a] {\r\n\tdisplay: block;\n}\n.hideIt[data-v-0d66c37a] {\r\n\tdisplay: none;\n}\n#collapseOne[data-v-0d66c37a] {\r\n\tbackground-color: #fff;\n}\r\n", ""]);
 
 // exports
 
@@ -47940,7 +47975,7 @@ var render = function() {
                 [
                   _c("i", { staticClass: "fas fa-lg fa-comment-dots" }),
                   _vm._v(
-                    "  Fill in the form below to start chatting\n\t                "
+                    "  Fill in the form below to start chatting\n\t\t                "
                   )
                 ]
               ),
@@ -47953,32 +47988,19 @@ var render = function() {
                 },
                 [
                   _c("i", { staticClass: "fas fa-lg fa-comment-dots" }),
-                  _vm._v(" Chat\n                \t")
+                  _vm._v(" Chat\n\t                \t")
                 ]
               ),
               _vm._v(" "),
               _c("div", { staticClass: "btn-group pull-right" }, [
-                _c(
-                  "a",
-                  {
-                    staticClass: "btn btn-default btn-xs",
-                    attrs: {
-                      type: "button",
-                      "data-parent": "#accordion",
-                      href: "#collapseOne"
-                    }
-                  },
-                  [
-                    _c("i", {
-                      staticClass: "fas  fa-lg",
-                      class: [
-                        _vm.showChat
-                          ? "fa-arrow-alt-circle-down"
-                          : "fa-arrow-alt-circle-up"
-                      ]
-                    })
+                _c("i", {
+                  staticClass: "fas  fa-lg",
+                  class: [
+                    _vm.showChat
+                      ? "fa-arrow-alt-circle-down"
+                      : "fa-arrow-alt-circle-up"
                   ]
-                )
+                })
               ])
             ]
           ),
@@ -48070,26 +48092,86 @@ var render = function() {
                   "div",
                   { staticClass: "card-body", attrs: { id: "chatMsg" } },
                   [
-                    _vm._m(0),
-                    _vm._v(" "),
                     _c(
                       "ul",
-                      { staticClass: "chat outgoing_msg" },
-                      _vm._l(_vm.OutgoingMessages, function(msg) {
-                        return _c("li", { staticClass: "right clearfix" }, [
-                          _vm._m(1, true),
-                          _vm._v(" "),
-                          _c("div", { staticClass: "chat-body clearfix" }, [
-                            _vm._m(2, true),
-                            _vm._v(" "),
-                            _c("p", [
-                              _vm._v(
-                                "\n                                    " +
-                                  _vm._s(msg) +
-                                  "\n                              \t"
+                      { staticClass: "chat incoming_msg" },
+                      _vm._l(_vm.messages, function(item) {
+                        return _c("li", { staticClass: " clearfix" }, [
+                          item.user === "admin"
+                            ? _c(
+                                "div",
+                                {
+                                  class: [item.user === "admin" ? "left" : ""]
+                                },
+                                [
+                                  _vm._m(0, true),
+                                  _vm._v(" "),
+                                  _c(
+                                    "div",
+                                    { staticClass: "chat-body clearfix" },
+                                    [
+                                      _c("div", { staticClass: "header" }, [
+                                        _c(
+                                          "strong",
+                                          { staticClass: "primary-font" },
+                                          [_vm._v(_vm._s(item.user))]
+                                        ),
+                                        _vm._v(" "),
+                                        _vm._m(1, true)
+                                      ]),
+                                      _vm._v(" "),
+                                      _c("p", [
+                                        _vm._v(
+                                          "\n\t\t                                    " +
+                                            _vm._s(item.msg) +
+                                            "\n\t\t                                "
+                                        )
+                                      ])
+                                    ]
+                                  )
+                                ]
                               )
-                            ])
-                          ])
+                            : _vm._e(),
+                          _vm._v(" "),
+                          item.user !== "admin"
+                            ? _c(
+                                "div",
+                                {
+                                  class: [item.user !== "admin" ? "right" : ""]
+                                },
+                                [
+                                  _vm._m(2, true),
+                                  _vm._v(" "),
+                                  _c(
+                                    "div",
+                                    { staticClass: "chat-body clearfix" },
+                                    [
+                                      _c("div", { staticClass: "header" }, [
+                                        _vm._m(3, true),
+                                        _vm._v(" "),
+                                        _c(
+                                          "strong",
+                                          {
+                                            staticClass:
+                                              "pull-right primary-font",
+                                            attrs: { id: "guestName" }
+                                          },
+                                          [_vm._v(_vm._s(item.user))]
+                                        )
+                                      ]),
+                                      _vm._v(" "),
+                                      _c("p", [
+                                        _vm._v(
+                                          "\n\t\t                                   " +
+                                            _vm._s(item.msg) +
+                                            "\n\t\t                              \t"
+                                        )
+                                      ])
+                                    ]
+                                  )
+                                ]
+                              )
+                            : _vm._e()
                         ])
                       }),
                       0
@@ -48153,7 +48235,7 @@ var render = function() {
                             }
                           }
                         },
-                        [_vm._v("\n                                Send")]
+                        [_vm._v("\n\t                                Send")]
                       )
                     ])
                   ])
@@ -48170,35 +48252,23 @@ var staticRenderFns = [
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
-    return _c("ul", { staticClass: "chat incoming_msg" }, [
-      _c("li", { staticClass: "left clearfix" }, [
-        _c("span", { staticClass: "chat-img pull-left" }, [
-          _c("img", {
-            staticClass: "img-circle",
-            attrs: {
-              src: "http://placehold.it/50/55C1E7/fff&text=U",
-              alt: "User Avatar"
-            }
-          })
-        ]),
-        _vm._v(" "),
-        _c("div", { staticClass: "chat-body clearfix" }, [
-          _c("div", { staticClass: "header" }, [
-            _c("strong", { staticClass: "primary-font" }, [_vm._v("Admin")]),
-            _vm._v(" "),
-            _c("small", { staticClass: "pull-right text-muted" }, [
-              _c("span", { staticClass: "glyphicon glyphicon-time" }),
-              _vm._v("12 mins ago")
-            ])
-          ]),
-          _vm._v(" "),
-          _c("p", [
-            _vm._v(
-              "\n                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare\n                                    dolor, quis ullamcorper ligula sodales.\n                                "
-            )
-          ])
-        ])
-      ])
+    return _c("span", { staticClass: "chat-img pull-left" }, [
+      _c("img", {
+        staticClass: "img-circle",
+        attrs: {
+          src: "http://placehold.it/50/55C1E7/fff&text=U",
+          alt: "User Avatar"
+        }
+      })
+    ])
+  },
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("small", { staticClass: "pull-right text-muted" }, [
+      _c("span", { staticClass: "glyphicon glyphicon-time" }),
+      _vm._v("12 mins ago\n\t\t                                    ")
     ])
   },
   function() {
@@ -48219,13 +48289,9 @@ var staticRenderFns = [
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "header" }, [
-      _c("small", { staticClass: " text-muted" }, [
-        _c("span", { staticClass: "glyphicon glyphicon-time" }),
-        _vm._v("13 mins ago")
-      ]),
-      _vm._v(" "),
-      _c("strong", { staticClass: "pull-right primary-font" }, [_vm._v("You")])
+    return _c("small", { staticClass: " text-muted" }, [
+      _c("span", { staticClass: "glyphicon glyphicon-time" }),
+      _vm._v("13 mins ago\n\t\t                                    ")
     ])
   }
 ]
@@ -62360,8 +62426,12 @@ window.vm = new Vue();
 window.Pusher = __webpack_require__(/*! pusher-js */ "./node_modules/pusher-js/dist/web/pusher.js");
 window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_4__["default"]({
   broadcaster: 'pusher',
-  key: '0004ac5a6265f2b52e4e'
+  key: '0004ac5a6265f2b52e4e',
+  cluster: 'ap1',
+  forceTLS: true,
+  encrypted: true
 });
+window.Pusher.logToConsole = true;
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue

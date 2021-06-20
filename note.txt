@@ -45,3 +45,18 @@ ref: https://stackoverflow.com/a/61538886/11297747
 
 3/ Create product search box:
 https://maxoffsky.com/code-blog/laravel-shop-tutorial-3-implementing-smart-search/
+
+4/ Broadcast:
+1/ remember implements ShouldBroadcast in Event
+2/ .env:  must be "pusher" at Broadcast_driver
+3/ in app.js:
+check if the info is as follow:
+window.Echo = new Echo({
+    broadcaster: 'pusher',
+    key: '0004ac5a6265f2b52e4e',
+    cluster: 'ap1',
+    forceTLS: true,//optional
+    encrypted: true//optional
+
+});
+window.Pusher.logToConsole = true //to debug

@@ -11,22 +11,23 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 
-class ChatEvent implements ShouldBroadcastNow
+class AdminSentMessage implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $message;
     public $guest;
-
     /**
      * Create a new event instance.
      *
      * @return void
      */
+    
     public function __construct($message, $guest)
     {
         $this->message = $message;
         $this->guest = $guest;
+        
     }
 
     /**
@@ -36,6 +37,7 @@ class ChatEvent implements ShouldBroadcastNow
      */
     public function broadcastOn()
     {   
-        return new Channel("chat-room");
+            
+        return new Channel('AdminSentMessageTo_' . $this->guest);
     }
 }

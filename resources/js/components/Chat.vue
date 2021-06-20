@@ -11,11 +11,9 @@
 		                    <i class="fas fa-lg fa-comment-dots"></i> Chat
 	                	</div>
 	                	<div class="btn-group pull-right">
-		                        <a type="button" class="btn btn-default btn-xs" data-parent="#accordion" href="#collapseOne">
-		                            <i class="fas  fa-lg" 
-		                            	:class="[showChat ? 'fa-arrow-alt-circle-down' : 'fa-arrow-alt-circle-up' ]">
-		                            </i>
-		                        </a>
+                            <i class="fas  fa-lg" 
+                            	:class="[showChat ? 'fa-arrow-alt-circle-down' : 'fa-arrow-alt-circle-up' ]">
+                            </i>
 		                </div>
 	                </div>
 
@@ -30,37 +28,42 @@
 	            <div class="card-collapse collapse show" id="collapseOne" v-bind:class="[isPreChat ? hideIt : showIt]" v-if="showChat">
 
 	                <div class="card-body" id="chatMsg">
-	                    <ul class="chat incoming_msg">
-	                        <li class="left clearfix">
-	                        	<span class="chat-img pull-left">
-	                            	<img src="http://placehold.it/50/55C1E7/fff&text=U" alt="User Avatar" class="img-circle" />
-	                        	</span>
-	                            <div class="chat-body clearfix">
-	                                <div class="header">
-	                                    <strong class="primary-font">Admin</strong> <small class="pull-right text-muted">
-	                                        <span class="glyphicon glyphicon-time"></span>12 mins ago</small>
-	                                </div>
-	                                <p>
-	                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare
-	                                    dolor, quis ullamcorper ligula sodales.
-	                                </p>
-	                            </div>
-	                        </li>
-	                    </ul>
-	                    <ul class="chat outgoing_msg" >
-	                        <li class="right clearfix" v-for="msg in OutgoingMessages" >
-	                        	<span class="chat-img pull-right">
-	                            	<img src="http://placehold.it/50/FA6F57/fff&text=ME" alt="User Avatar" class="img-circle" />
-	                        	</span>
-	                            <div class="chat-body clearfix">
-	                                <div class="header">
-	                                    <small class=" text-muted"><span class="glyphicon glyphicon-time"></span>13 mins ago</small>
-	                                    <strong class="pull-right primary-font">You</strong>
-	                                </div>
-	                                <p>
-	                                    {{msg}}
-	                              	</p>
-	                            </div >
+	                	<ul class="chat incoming_msg">
+	                        <li class=" clearfix" v-for="item in messages" >
+	                        	<div :class="[item.user==='admin' ? 'left' : '']" v-if="item.user==='admin'">
+		                        	<span class="chat-img pull-left" >
+		                            	<img src="http://placehold.it/50/55C1E7/fff&text=U" alt="User Avatar" class="img-circle" />
+		                        	</span>
+		                            <div class="chat-body clearfix" >
+		                                <div class="header">
+		                                    <strong class="primary-font">{{item.user}}</strong> 
+		                                    <small class="pull-right text-muted">
+		                                        <span class="glyphicon glyphicon-time"></span>12 mins ago
+		                                    </small>
+		                                </div>
+		                                <p>
+		                                    {{item.msg}}
+		                                </p>
+		                            </div>
+	                        	</div>
+
+	                        	<div :class="[item.user!=='admin' ? 'right' : '']" v-if="item.user!=='admin'">
+		                            <span class="chat-img pull-right" >
+		                            	<img src="http://placehold.it/50/FA6F57/fff&text=ME" alt="User Avatar" class="img-circle" />
+		                        	</span>
+		                            <div class="chat-body clearfix" >
+		                                <div class="header">
+		                                    <small class=" text-muted">
+		                                    	<span class="glyphicon glyphicon-time"></span>13 mins ago
+		                                    </small>
+		                                    <strong class="pull-right primary-font" id="guestName">{{item.user}}</strong>
+		                                </div>
+		                                <p>
+		                                   {{item.msg}}
+		                              	</p>
+		                            </div >
+	                        	</div>
+
 	                        </li>
 	                    </ul>
 	                </div>
@@ -93,56 +96,99 @@ export default {
  		showChat: true,
  		guest:'',
  		message:'',
- 		OutgoingMessages: []
+ 		messages:[
+ 			{
+ 				user: 'admin',
+ 				msg:'Hi there, may I help you?'
+ 			},
+ 			{
+ 				user: 'guest',
+ 				msg:'Yes, I need help'
+ 			},
+ 		]
+
  	  }
   },
+  computed: {
+    getGuest(guest) {
+            return guest
+        }
+    },
   methods: {
   	submit(){
   		this.isPreChat = false;
+
+  		//get incoming messages
+		Echo.channel(`AdminSentMessageTo_${this.guest}`)
+	    	.listen('AdminSentMessage', (result) => {
+    			console.log(result);
+    			this.messages.push({
+    				user: 'admin',
+ 					msg: result.message
+    			});
+
+    			Vue.nextTick(function () {
+				    vueChatScroll();
+				});
+		    	
+	    });
   		
   	},
   	toggle() {
   		this.showChat = ! this.showChat;
   	},
   	send() {
-  		this.OutgoingMessages.push(this.message);
+  		this.messages.push({
+  			user: 'guest',
+ 			msg: this.message
+  		});
 
   		Vue.nextTick(function () {
-		    const div = document.getElementById('chatMsg');
-		    div.scrollTop = div.scrollHeight;
-		    console.log(div.scrollTop, div.scrollHeight)
+		    vueChatScroll();
 		});
+  		
 
-  		axios.post('/sendMessage', {
+
+  		axios.post('/guestSentMessage', {
 		    guest: this.guest,
 		    message: this.message,
 		  })
 		  .then( (response) => {
-		  
-		    this.message = '';
+		    
 		  })
 		  .catch( (error) => {
 		    console.log(error);
 		});
-		  
+
+		this.message = ''; 
   	}
   }, 
   mounted() {
-  		const messages = document.getElementById('chatMsg');
-	  	let shouldScroll = messages.scrollTop + messages.clientHeight === messages.scrollHeight;
-	  	if (!shouldScroll) {
-		    scrollToBottom( messages );
-		}
+	   
   },
+   updated() {
+  		 Vue.nextTick(function () {
+	    	   	
+		    vueChatScroll();
+		});
+   },
   created() {
   
   },
   watch: {
-
+  	IncomingMessages() {
+  		vueChatScroll();
+  	},
+  	guest(val) {
+  		
+  	}
   }
 }
 
-
+function vueChatScroll() {
+	const div = document.getElementById('chatMsg');
+	div.scrollTop = div.scrollHeight;
+}
 
 </script>
 
@@ -167,12 +213,12 @@ export default {
     border-bottom: 1px dotted #B3A9A9;
 }
 
-.chat li.left .chat-body
+.chat li .left .chat-body
 {
     margin-left: 60px;
 }
 
-.chat li.right .chat-body
+.chat li .right .chat-body
 {
     margin-right: 60px;
 }

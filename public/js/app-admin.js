@@ -2007,26 +2007,69 @@ __webpack_require__.r(__webpack_exports__);
     return {
       guestList: [{
         name: 'Adam',
-        msg: ['I am Adam', 'How\'re you?', 'Smile...'],
+        msg: [{
+          user: 'guest',
+          content: 'hi there,'
+        }, {
+          user: 'admin',
+          content: 'Hey bro!'
+        }, {
+          user: 'guest',
+          content: 'how are you?'
+        }, {
+          user: 'admin',
+          content: 'Great! I am glad to see you too!'
+        }],
         isShown: true,
         active: true
       }, {
         name: 'Bob',
-        msg: ['Bob here!!!', 'Are you there?', 'Phew...'],
+        msg: [{
+          user: 'guest',
+          content: 'I am Bob'
+        }, {
+          user: 'admin',
+          content: 'hi there'
+        }, {
+          user: 'guest',
+          content: 'Nice to meet you!'
+        }, {
+          user: 'admin',
+          content: 'how are you?'
+        }],
         isShown: false,
         active: false
-      }]
+      }],
+      message: '',
+      selectedGuest: '',
+      selectedGuestIndex: '',
+      msgReceived: true
     };
   },
   computed: {},
   methods: {
-    selectGuest: function selectGuest(index) {
+    selectGuest: function selectGuest(guest, index) {
+      this.selectedGuest = guest;
+      this.selectedGuestIndex = index;
       this.guestList.map(function (e) {
         e.isShown = false;
         e.active = false;
       });
       this.guestList[index].isShown = true;
       this.guestList[index].active = true;
+    },
+    send: function send() {
+      this.guestList[this.selectedGuestIndex].msg.push({
+        user: 'admin',
+        content: this.message
+      });
+      axios.post('/adminSentMessage', {
+        guest: this.selectedGuest.name,
+        message: this.message
+      }).then(function (response) {})["catch"](function (error) {
+        console.log(error);
+      });
+      this.message = '';
     }
   },
   mounted: function mounted() {
@@ -2039,11 +2082,17 @@ __webpack_require__.r(__webpack_exports__);
       if (checkGuest.isOldGuest === true) {
         var currentGuestIndex = checkGuest.index;
 
-        _this.guestList[currentGuestIndex].msg.push(result.message);
+        _this.guestList[currentGuestIndex].msg.push({
+          user: 'guest',
+          content: result.message
+        });
       } else {
         var newGuest = {
-          name: result.user,
-          msg: [result.message],
+          name: result.guest,
+          msg: [{
+            user: 'guest',
+            content: result.message
+          }],
           isShown: false,
           active: false
         };
@@ -2053,15 +2102,38 @@ __webpack_require__.r(__webpack_exports__);
     });
   },
   created: function created() {
-    var i = 0; // 	setInterval( ( ) => {
-    // 		if( i % 2 === 0  ) {
-    // 			this.guestList[0].msg.push( randomStr(10) ); 
-    // 			i++;
-    // 		} else if( i % 2 !== 0) {
-    // 			this.guestList[1].msg.push( randomStr(10) );
-    // 			i++;
-    // 		}
-    // 	}, 10, i);
+    var _this2 = this;
+
+    var i = 0;
+    setInterval(function () {
+      if (i % 2 === 0 && i < 5) {
+        _this2.guestList[0].msg.push({
+          user: 'guest',
+          content: randomStr(10)
+        });
+
+        i++;
+      } else if (i % 2 !== 0 && i < 5) {
+        _this2.guestList[1].msg.push({
+          user: 'guest',
+          content: randomStr(10)
+        });
+
+        i++;
+      }
+    }, 10, i);
+  },
+  watch: {
+    guestList: {
+      deep: true,
+      handler: function handler() {
+        Vue.nextTick(function () {
+          var div = document.getElementsByClassName('msg_history')[0];
+          div.scrollTop = div.scrollHeight;
+          console.log(div.scrollTop, div.scrollHeight);
+        });
+      }
+    }
   }
 });
 
@@ -2079,7 +2151,7 @@ function randomStr(length) {
 
 function containsGuest(guestList, obj) {
   for (var i = 0; i < guestList.length; i++) {
-    if (guestList[i].name === obj.user) {
+    if (guestList[i].name === obj.guest) {
       return {
         isOldGuest: true,
         index: i
@@ -6739,7 +6811,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\n\r\n/*---------chat window---------------*/\n.inbox_people[data-v-e7418c82] {\r\n\tbackground: #fff;\r\n\t/*float: left;*/\r\n\toverflow: hidden;\r\n\twidth: 30%;\r\n\tborder-right: 1px solid #ddd;\r\n\tdisplay: table-cell;\n}\n.inbox_msg[data-v-e7418c82] {\r\n\tborder: 1px solid #ddd;\r\n\tclear: both;\r\n\toverflow: hidden;\r\n\tdisplay: table-row;\n}\n.top_spac[data-v-e7418c82] {\r\n\tmargin: 20px 0 0;\n}\n.recent_heading[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 40%;\n}\n.srch_bar[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\ttext-align: right;\r\n\twidth: 60%;\r\n\tpadding:\n}\n.headind_srch[data-v-e7418c82] {\r\n\tpadding: 10px 29px 10px 20px;\r\n\toverflow: hidden;\r\n\tborder-bottom: 1px solid #c4c4c4;\n}\n.recent_heading h4[data-v-e7418c82] {\r\n\tcolor: #0465ac;\r\n    font-size: 16px;\r\n    margin: auto;\r\n    line-height: 29px;\n}\n.srch_bar input[data-v-e7418c82] {\r\n\toutline: none;\r\n\tborder: 1px solid #cdcdcd;\r\n\tborder-width: 0 0 1px 0;\r\n\twidth: 80%;\r\n\tpadding: 2px 0 4px 6px;\r\n\tbackground: none;\n}\n.srch_bar .input-group-addon button[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tpadding: 0;\r\n\tcolor: #707070;\r\n\tfont-size: 18px;\n}\n.srch_bar .input-group-addon[data-v-e7418c82] {\r\n\tmargin: 0 0 0 -27px;\n}\n.chat_ib h5[data-v-e7418c82] {\r\n\tfont-size: 15px;\r\n\tcolor: #464646;\r\n\tmargin: 0 0 8px 0;\n}\n.chat_ib h5 span[data-v-e7418c82] {\r\n\tfont-size: 13px;\r\n\tfloat: right;\n}\n.chat_ib p[data-v-e7418c82] {\r\n    font-size: 12px;\r\n    color: #989898;\r\n    margin: auto;\r\n    display: inline-block;\r\n    white-space: nowrap;\r\n    overflow: hidden;\r\n    text-overflow: ellipsis;\n}\n.chat_img[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 11%;\n}\n.chat_img img[data-v-e7418c82] {\r\n\twidth: 100%\n}\n.chat_ib[data-v-e7418c82] {\r\n\tfloat: left;\r\n\tpadding: 0 0 0 15px;\r\n\twidth: 88%;\n}\n.chat_people[data-v-e7418c82] {\r\n\tborder-bottom: 1px solid #ddd;\r\n\tmargin: 0;\r\n\tpadding: 18px 16px 10px;\r\n\toverflow: hidden;\r\n\tclear: both;\n}\n.chat_list[data-v-e7418c82] {\r\n\t/*border-bottom: 1px solid #ddd;*/\r\n\t/*margin: 0;\r\n\tpadding: 18px 16px 10px;*/\r\n\tcursor: pointer;\n}\n.inbox_chat[data-v-e7418c82] {\r\n\t/*height: 550px;\r\n\toverflow-y: scroll;*/\n}\n.active_chat[data-v-e7418c82] {\r\n\tbackground: #e8f6ff;\n}\n.incoming_msg_img[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\twidth: 6%;\n}\n.incoming_msg_img img[data-v-e7418c82] {\r\n\twidth: 100%;\n}\n.received_msg[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\tpadding: 0 0 0 10px;\r\n\tvertical-align: top;\r\n\twidth: 92%;\n}\n.received_withd_msg p[data-v-e7418c82] {\r\n\tbackground: #ebebeb none repeat scroll 0 0;\r\n\tborder-radius: 0 15px 15px 15px;\r\n\tcolor: #646464;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.time_date[data-v-e7418c82] {\r\n\tcolor: #747474;\r\n\tdisplay: block;\r\n\tfont-size: 12px;\r\n\tmargin: 8px 0 0;\n}\n.received_withd_msg[data-v-e7418c82] {\r\n\twidth: 57%;\n}\n.mesgs[data-v-e7418c82]{\r\n\t/*float: left;*/\r\n\tpadding: 30px 15px 0 25px;\r\n\twidth:70%;\r\n\tdisplay: table-cell;\r\n\t/*max-height: 600px;\r\n\toverflow-y: scroll;*/\n}\n.sent_msg p[data-v-e7418c82] {\r\n\tbackground:#0465ac;\r\n\tborder-radius: 12px 15px 15px 0;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tcolor: #fff;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.outgoing_msg[data-v-e7418c82] {\r\n\toverflow: hidden;\r\n\tmargin: 26px 0 26px;\n}\n.sent_msg[data-v-e7418c82] {\r\n\tfloat: right;\r\n\twidth: 46%;\n}\n.input_msg_write input[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tcolor: #4c4c4c;\r\n\tfont-size: 15px;\r\n\tmin-height: 48px;\r\n\twidth: 100%;\r\n\toutline:none;\n}\n.type_msg[data-v-e7418c82] {\r\n\tborder-top: 1px solid #c4c4c4;\r\n\tposition: relative;\n}\n.msg_send_btn[data-v-e7418c82] {\r\n\tbackground: #05728f none repeat scroll 0 0;\r\n\tborder:none;\r\n\tborder-radius: 50%;\r\n\tcolor: #fff;\r\n\tcursor: pointer;\r\n\tfont-size: 15px;\r\n\theight: 33px;\r\n\tposition: absolute;\r\n\tright: 0;\r\n\ttop: 11px;\r\n\twidth: 33px;\n}\n.messaging[data-v-e7418c82] {\r\n\tpadding: 0 0 50px 0;\r\n\tdisplay: table;\n}\r\n\r\n/*.msg_history {\r\n\theight: inherit;\r\n\toverflow-y: scroll;\r\n\r\n}*/\r\n", ""]);
+exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\n\r\n/*---------chat window---------------*/\n.inbox_people[data-v-e7418c82] {\r\n\tbackground: #fff;\r\n\t/*float: left;*/\r\n\toverflow: hidden;\r\n\twidth: 30%;\r\n\tborder-right: 1px solid #ddd;\r\n\tdisplay: table-cell;\n}\n.inbox_msg[data-v-e7418c82] {\r\n\tborder: 1px solid #ddd;\r\n\tclear: both;\r\n\toverflow: hidden;\r\n\tdisplay: table-row;\n}\n.top_spac[data-v-e7418c82] {\r\n\tmargin: 20px 0 0;\n}\n.recent_heading[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 40%;\n}\n.srch_bar[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\ttext-align: right;\r\n\twidth: 60%;\r\n\tpadding:\n}\n.headind_srch[data-v-e7418c82] {\r\n\tpadding: 10px 29px 10px 20px;\r\n\toverflow: hidden;\r\n\tborder-bottom: 1px solid #c4c4c4;\n}\n.recent_heading h4[data-v-e7418c82] {\r\n\tcolor: #0465ac;\r\n    font-size: 16px;\r\n    margin: auto;\r\n    line-height: 29px;\n}\n.srch_bar input[data-v-e7418c82] {\r\n\toutline: none;\r\n\tborder: 1px solid #cdcdcd;\r\n\tborder-width: 0 0 1px 0;\r\n\twidth: 80%;\r\n\tpadding: 2px 0 4px 6px;\r\n\tbackground: none;\n}\n.srch_bar .input-group-addon button[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tpadding: 0;\r\n\tcolor: #707070;\r\n\tfont-size: 18px;\n}\n.srch_bar .input-group-addon[data-v-e7418c82] {\r\n\tmargin: 0 0 0 -27px;\n}\n.chat_ib h5[data-v-e7418c82] {\r\n\tfont-size: 15px;\r\n\tcolor: #464646;\r\n\tmargin: 0 0 8px 0;\n}\n.chat_ib h5 span[data-v-e7418c82] {\r\n\tfont-size: 13px;\r\n\tfloat: right;\n}\n.chat_ib p[data-v-e7418c82] {\r\n    font-size: 12px;\r\n    color: #989898;\r\n    margin: auto;\r\n    display: inline-block;\r\n    white-space: nowrap;\r\n    overflow: hidden;\r\n    text-overflow: ellipsis;\n}\n.chat_img[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 11%;\n}\n.chat_img img[data-v-e7418c82] {\r\n\twidth: 100%\n}\n.chat_ib[data-v-e7418c82] {\r\n\tfloat: left;\r\n\tpadding: 0 0 0 15px;\r\n\twidth: 88%;\n}\n.chat_people[data-v-e7418c82] {\r\n\tborder-bottom: 1px solid #ddd;\r\n\tmargin: 0;\r\n\tpadding: 18px 16px 10px;\r\n\toverflow: hidden;\r\n\tclear: both;\n}\n.chat_list[data-v-e7418c82] {\r\n\t/*border-bottom: 1px solid #ddd;*/\r\n\t/*margin: 0;\r\n\tpadding: 18px 16px 10px;*/\r\n\tcursor: pointer;\n}\n.inbox_chat[data-v-e7418c82] {\r\n\t/*height: 550px;\r\n\toverflow-y: scroll;*/\n}\n.active_chat[data-v-e7418c82] {\r\n\tbackground: #e8f6ff;\n}\n.incoming_msg_img[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\twidth: 6%;\n}\n.incoming_msg_img img[data-v-e7418c82] {\r\n\twidth: 100%;\n}\n.received_msg[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\tpadding: 0 0 0 10px;\r\n\tvertical-align: top;\r\n\twidth: 92%;\n}\n.received_withd_msg p[data-v-e7418c82] {\r\n\tbackground: #ebebeb none repeat scroll 0 0;\r\n\tborder-radius: 0 15px 15px 15px;\r\n\tcolor: #646464;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.time_date[data-v-e7418c82] {\r\n\tcolor: #747474;\r\n\tdisplay: block;\r\n\tfont-size: 12px;\r\n\tmargin: 8px 0 0;\n}\n.received_withd_msg[data-v-e7418c82] {\r\n\twidth: 57%;\n}\n.mesgs[data-v-e7418c82]{\r\n\t/*float: left;*/\r\n\tpadding: 30px 15px 0 25px;\r\n\twidth:70%;\r\n\tdisplay: table-cell;\r\n\t/*max-height: 600px;\r\n\toverflow-y: scroll;*/\n}\n.sent_msg p[data-v-e7418c82] {\r\n\tbackground:#0465ac;\r\n\tborder-radius: 12px 15px 15px 0;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tcolor: #fff;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.outgoing_msg[data-v-e7418c82] {\r\n\toverflow: hidden;\r\n\tmargin: 26px 0 26px;\n}\n.sent_msg[data-v-e7418c82] {\r\n\tfloat: right;\r\n\twidth: 46%;\n}\n.input_msg_write input[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tcolor: #4c4c4c;\r\n\tfont-size: 15px;\r\n\tmin-height: 48px;\r\n\twidth: 100%;\r\n\toutline:none;\n}\n.type_msg[data-v-e7418c82] {\r\n\tborder-top: 1px solid #c4c4c4;\r\n\tposition: relative;\n}\n.msg_send_btn[data-v-e7418c82] {\r\n\tbackground: #05728f none repeat scroll 0 0;\r\n\tborder:none;\r\n\tborder-radius: 50%;\r\n\tcolor: #fff;\r\n\tcursor: pointer;\r\n\tfont-size: 15px;\r\n\theight: 33px;\r\n\tposition: absolute;\r\n\tright: 0;\r\n\ttop: 11px;\r\n\twidth: 33px;\n}\n.messaging[data-v-e7418c82] {\r\n\tpadding: 0 0 50px 0;\r\n\tdisplay: table;\n}\r\n\r\n\r\n", ""]);
 
 // exports
 
@@ -48387,7 +48459,7 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("div", [
-    _c("div", { staticClass: "messaging col-md-9 offset-md-1" }, [
+    _c("div", { staticClass: "messaging col-md-9 offset-md-1 pt-5" }, [
       _c(
         "div",
         { staticClass: "inbox_msg" },
@@ -48396,51 +48468,46 @@ var render = function() {
             _vm._m(0),
             _vm._v(" "),
             _c("div", { staticClass: "inbox_chat" }, [
-              _c(
-                "div",
-                {
-                  staticStyle: { "max-height": "600px", "overflow-y": "scroll" }
-                },
-                [
-                  _c(
-                    "div",
-                    { staticClass: "chat_list " },
-                    _vm._l(_vm.guestList, function(guest, index) {
-                      return _c(
-                        "div",
-                        {
-                          staticClass: "chat_people",
-                          class: { active_chat: guest.active },
-                          on: {
-                            click: function($event) {
-                              return _vm.selectGuest(index)
-                            }
+              _c("div", [
+                _c(
+                  "div",
+                  { staticClass: "chat_list" },
+                  _vm._l(_vm.guestList, function(guest, index) {
+                    return _c(
+                      "div",
+                      {
+                        staticClass: "chat_people",
+                        class: { active_chat: guest.active },
+                        on: {
+                          click: function($event) {
+                            return _vm.selectGuest(guest, index)
                           }
-                        },
-                        [
-                          _vm._m(1, true),
-                          _vm._v(" "),
-                          _c("div", { staticClass: "chat_ib" }, [
-                            _c("h5", [
-                              _vm._v(_vm._s(guest.name)),
-                              _c("span", { staticClass: "chat_date" }, [
-                                _vm._v("Dec 25")
-                              ])
-                            ]),
-                            _vm._v(" "),
-                            _c("p", [
-                              _vm._v(
-                                _vm._s(guest.msg[guest.msg.length - 1]) + "."
-                              )
+                        }
+                      },
+                      [
+                        _vm._m(1, true),
+                        _vm._v(" "),
+                        _c("div", { staticClass: "chat_ib" }, [
+                          _c("h5", [
+                            _vm._v(_vm._s(guest.name)),
+                            _c("span", { staticClass: "chat_date" }, [
+                              _vm._v("Dec 25")
                             ])
+                          ]),
+                          _vm._v(" "),
+                          _c("p", [
+                            _vm._v(
+                              _vm._s(guest.msg[guest.msg.length - 1].content) +
+                                "."
+                            )
                           ])
-                        ]
-                      )
-                    }),
-                    0
-                  )
-                ]
-              )
+                        ])
+                      ]
+                    )
+                  }),
+                  0
+                )
+              ])
             ])
           ]),
           _vm._v(" "),
@@ -48450,39 +48517,118 @@ var render = function() {
                   _c(
                     "div",
                     {
-                      directives: [
-                        { name: "chat-scroll", rawName: "v-chat-scroll" }
-                      ],
-                      staticStyle: {
-                        "max-height": "600px",
-                        "overflow-y": "scroll"
-                      }
+                      staticClass: "msg_history",
+                      staticStyle: { height: "600px", "overflow-y": "scroll" }
                     },
-                    _vm._l(guest.msg, function(item, indexMsg) {
-                      return _c(
-                        "div",
-                        { key: indexMsg, staticClass: "msg_history" },
-                        [
-                          _c("div", { staticClass: "incoming_msg" }, [
-                            _vm._m(2, true),
-                            _vm._v(" "),
-                            _c("div", { staticClass: "received_msg" }, [
-                              _c("div", { staticClass: "received_withd_msg" }, [
-                                _c("p", [_vm._v(_vm._s(item))]),
+                    _vm._l(guest.msg, function(item) {
+                      return _c("div", [
+                        item.user === "guest"
+                          ? _c("div", { staticClass: "incoming_msg" }, [
+                              _vm._m(2, true),
+                              _vm._v(" "),
+                              _c("div", { staticClass: "received_msg" }, [
+                                _c(
+                                  "div",
+                                  { staticClass: "received_withd_msg" },
+                                  [
+                                    _c("p", [_vm._v(_vm._s(item.content))]),
+                                    _vm._v(" "),
+                                    _c("span", { staticClass: "time_date" }, [
+                                      _vm._v(" 11:01 AM    |    June 9")
+                                    ])
+                                  ]
+                                )
+                              ])
+                            ])
+                          : _vm._e(),
+                        _vm._v(" "),
+                        item.user === "admin"
+                          ? _c("div", { staticClass: "outgoing_msg" }, [
+                              _c("div", { staticClass: "sent_msg" }, [
+                                _c("p", [_vm._v(_vm._s(item.content))]),
                                 _vm._v(" "),
                                 _c("span", { staticClass: "time_date" }, [
                                   _vm._v(" 11:01 AM    |    June 9")
                                 ])
                               ])
                             ])
-                          ])
-                        ]
-                      )
+                          : _vm._e()
+                      ])
                     }),
                     0
                   ),
                   _vm._v(" "),
-                  _vm._m(3, true)
+                  _c("div", { staticClass: "type_msg" }, [
+                    _c("div", { staticClass: "input_msg_write" }, [
+                      _c("input", {
+                        directives: [
+                          {
+                            name: "model",
+                            rawName: "v-model",
+                            value: _vm.message,
+                            expression: "message"
+                          }
+                        ],
+                        staticClass: "write_msg",
+                        attrs: { type: "text", placeholder: "Type a message" },
+                        domProps: { value: _vm.message },
+                        on: {
+                          keyup: function($event) {
+                            if (
+                              !$event.type.indexOf("key") &&
+                              _vm._k(
+                                $event.keyCode,
+                                "enter",
+                                13,
+                                $event.key,
+                                "Enter"
+                              )
+                            ) {
+                              return null
+                            }
+                            return _vm.send($event)
+                          },
+                          input: function($event) {
+                            if ($event.target.composing) {
+                              return
+                            }
+                            _vm.message = $event.target.value
+                          }
+                        }
+                      }),
+                      _vm._v(" "),
+                      _c(
+                        "button",
+                        {
+                          staticClass: "msg_send_btn",
+                          attrs: { type: "button" },
+                          on: {
+                            keyup: function($event) {
+                              if (
+                                !$event.type.indexOf("key") &&
+                                _vm._k(
+                                  $event.keyCode,
+                                  "enter",
+                                  13,
+                                  $event.key,
+                                  "Enter"
+                                )
+                              ) {
+                                return null
+                              }
+                              return _vm.send($event)
+                            }
+                          }
+                        },
+                        [
+                          _c("i", {
+                            staticClass: "fa fa-paper-plane",
+                            attrs: { "aria-hidden": "true" }
+                          })
+                        ]
+                      )
+                    ])
+                  ])
                 ])
               : _vm._e()
           })
@@ -48536,30 +48682,6 @@ var staticRenderFns = [
           alt: "sunil"
         }
       })
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "type_msg" }, [
-      _c("div", { staticClass: "input_msg_write" }, [
-        _c("input", {
-          staticClass: "write_msg",
-          attrs: { type: "text", placeholder: "Type a message" }
-        }),
-        _vm._v(" "),
-        _c(
-          "button",
-          { staticClass: "msg_send_btn", attrs: { type: "button" } },
-          [
-            _c("i", {
-              staticClass: "fa fa-paper-plane",
-              attrs: { "aria-hidden": "true" }
-            })
-          ]
-        )
-      ])
     ])
   }
 ]
@@ -65935,10 +66057,9 @@ window.Pusher = __webpack_require__(/*! pusher-js */ "./node_modules/pusher-js/d
 window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_4__["default"]({
   broadcaster: 'pusher',
   key: '0004ac5a6265f2b52e4e',
-  cluster: 'ap1',
-  forceTLS: true,
-  encrypted: true
+  cluster: 'ap1'
 });
+window.Pusher.logToConsole = true;
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application

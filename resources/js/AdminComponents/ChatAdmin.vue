@@ -1,7 +1,7 @@
 <template>
 	<div>
-		<div class="messaging col-md-9 offset-md-1">
-		  <div class="inbox_msg">
+		<div class="messaging col-md-9 offset-md-1 pt-5" >
+		  <div class="inbox_msg" >
 				<div class="inbox_people">
 				  	<div class="headind_srch">
 								<div class="recent_heading">
@@ -14,46 +14,46 @@
 								</div>
 				  	</div>
 						<div class="inbox_chat">
-							<div style="max-height: 600px; overflow-y: scroll;">
-									<div class="chat_list " >
-									  	<div class="chat_people" :class="{active_chat:guest.active}" v-for="(guest, index) in guestList" @click="selectGuest(index)">
+							<div >
+									<div class="chat_list" >
+									  	<div class="chat_people" :class="{active_chat:guest.active}" v-for="(guest, index) in guestList" @click="selectGuest(guest, index)">
 												<div class="chat_img"> 
 													<img src="https://ptetutorials.com/images/user-profile.png" alt="sunil">
 												</div>
 												<div class="chat_ib">
 												  <h5>{{guest.name}}<span class="chat_date">Dec 25</span></h5>
-												  <p>{{guest.msg[guest.msg.length -1 ]}}.</p>
+												  <p>{{guest.msg[guest.msg.length -1 ].content}}.</p>
 												</div>
 									  	</div>
 									</div>
 							</div>
 				  	</div>
 				</div>
-				<div class="mesgs"   v-for="(guest, index) in guestList" :key='index' v-if="guest.isShown">
-					<div style="max-height: 600px; overflow-y: scroll;" v-chat-scroll>
-						  <div class="msg_history"  v-for='(item, indexMsg) in guest.msg' :key='indexMsg'  >
-									<div class="incoming_msg">
+				<div class="mesgs"  v-for="(guest, index) in guestList" :key='index' v-if="guest.isShown" 
+				>
+					<div  class="msg_history" style="height: 600px; overflow-y: scroll;">
+						<div   v-for='(item) in guest.msg' >
+						  <div class="incoming_msg"  v-if="item.user ==='guest'" >
 									  <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> 
 									  </div>
 									  <div class="received_msg">
 											<div class="received_withd_msg">
-											  <p>{{item}}</p>
+											  <p>{{item.content}}</p>
 											  <span class="time_date"> 11:01 AM    |    June 9</span>
 											</div>
 									  </div>
-									</div>
-									<!-- <div class="outgoing_msg">
-									  <div class="sent_msg">
-										<p>Test which is a new approach to have all
-										  solutions</p>
-										<span class="time_date"> 11:01 AM    |    June 9</span> </div>
-									</div> -->
 						  </div>
+						  <div class="outgoing_msg"  v-if="item.user ==='admin'" >
+									  <div class="sent_msg">
+										<p>{{item.content}}</p>
+										<span class="time_date"> 11:01 AM    |    June 9</span> </div>
+							</div>
+						</div>
 					</div>
 				  <div class="type_msg">
 							<div class="input_msg_write">
-							  <input type="text" class="write_msg" placeholder="Type a message" />
-							  <button class="msg_send_btn" type="button"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
+							  <input type="text" class="write_msg" placeholder="Type a message" @keyup.enter="send" v-model="message"/>
+							  <button class="msg_send_btn" type="button"  @keyup.enter="send"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
 							</div>
 				  </div>
 				</div>
@@ -72,25 +72,64 @@ export default {
 		 		guestList:[
 			  	{
 			  		name: 'Adam',
-			  		msg: ['I am Adam', 'How\'re you?', 'Smile...'],
+			  		msg: [
+				  		{
+				  			user: 'guest',
+				  			content: 'hi there,'
+				  		},
+				  		{
+				  			user: 'admin',
+				  			content: 'Hey bro!'
+				  		},
+				  		{
+				  			user: 'guest',
+				  			content: 'how are you?'
+				  		},
+				  		{
+				  			user: 'admin',
+				  			content: 'Great! I am glad to see you too!'
+				  		}
+			  		],
 			  		isShown: true,
 			  		active: true
 			  	},
 			  	{
 			  		name: 'Bob',
-			  		msg: ['Bob here!!!', 'Are you there?', 'Phew...'],
+			  		msg: [
+			  			{
+				  			user: 'guest',
+				  			content: 'I am Bob'
+				  		},
+				  		{
+				  			user: 'admin',
+				  			content: 'hi there'
+				  		},
+				  		{
+				  			user: 'guest',
+				  			content: 'Nice to meet you!'
+				  		},
+				  		{
+				  			user: 'admin',
+				  			content: 'how are you?'
+				  		}
+				  	],
 			  		isShown: false,
 			  		active: false
 			  	}
 		  	],
+		  	message:'',
+		  	selectedGuest: '',
+		  	selectedGuestIndex:'',
+		  	msgReceived:true
  	  }
   },
   computed: {
 
   },
   methods: {
-  		selectGuest(index) {
-  		
+  		selectGuest(guest, index) {
+  			this.selectedGuest = guest;
+  			this.selectedGuestIndex = index;
   			this.guestList.map( e => {
   				 e.isShown = false;
   				 e.active = false;
@@ -99,9 +138,30 @@ export default {
   			this.guestList[index].isShown = true;
   			this.guestList[index].active = true;
 
+  		},
+  		send() {
+  			this.guestList[this.selectedGuestIndex].msg.push({
+				  			user: 'admin',
+				  			content: this.message
+				  		});
+
+  			axios.post('/adminSentMessage', {
+			    guest: this.selectedGuest.name,
+			    message: this.message,
+				})
+				.then( (response) => {
+				    
+				})
+				.catch( (error) => {
+				    console.log(error);
+				});
+
+				this.message = '';
+
   		}
   },
   mounted() {
+  	
   	Echo.channel('chat-room')
     .listen('ChatEvent', (result) => {
         console.log(result);
@@ -110,37 +170,67 @@ export default {
       	if( checkGuest.isOldGuest === true ) 
       	{
       		let currentGuestIndex = checkGuest.index;
-      		this.guestList[ currentGuestIndex ].msg.push(result.message);
+      		this.guestList[ currentGuestIndex ].msg.push({
+      			user: 'guest',
+      			content: result.message
+      		});
       	} 
       	else 
       	{		
       			let newGuest = {
-      				name: result.user,
-				  		msg: [result.message],
+      				name: result.guest,
+				  		msg: [{
+      					user: 'guest',
+      					content: result.message
+      				}],
 				  		isShown: false,
 				  		active: false
       			}
 
       			this.guestList.push(newGuest)
       	}
+
+      	
     });
 
   },
   created() {
 	  	let i = 0;
-	  // 	setInterval( ( ) => {
-	  // 		if( i % 2 === 0  ) {
-	  // 			this.guestList[0].msg.push( randomStr(10) ); 
-	  // 			i++;
-	  // 		} else if( i % 2 !== 0) {
-	  // 			this.guestList[1].msg.push( randomStr(10) );
-	  // 			i++;
-	  // 		}
-	  // 	}, 10, i);
+	  	setInterval( ( ) => {
+	  		if( i % 2 === 0 && i < 5 ) {
+	  			this.guestList[0].msg.push( {
+	  				user: 'guest',
+				  	content: randomStr(10)
+	  			} ); 
+	  			i++;
+	  		} else if( i % 2 !== 0 && i < 5) {
+	  			this.guestList[1].msg.push( {
+	  				user: 'guest',
+				  	content: randomStr(10)
+	  			} );
+	  			i++;
+	  		}
+
+	  	}, 10, i);
   	
 
+   },
+   watch: {
+   		guestList: {
+   			deep: true,
+   			handler() {
+	   			Vue.nextTick(function () {
+					    const div = document.getElementsByClassName('msg_history')[0];
+					    div.scrollTop = div.scrollHeight;
+					    console.log(div.scrollTop,div.scrollHeight)
+					});
+   			}
+   		}
    }
 }
+
+
+
 
 function randomStr(length) {
     var result           = '';
@@ -156,7 +246,7 @@ function randomStr(length) {
 function containsGuest(guestList, obj) 
 {
 	for( let i = 0; i < guestList.length; i ++ ) {
-			if(guestList[i].name === obj.user) {
+			if(guestList[i].name === obj.guest) {
 				return {
 					isOldGuest: true,
 					index: i
@@ -401,9 +491,5 @@ function containsGuest(guestList, obj)
 	display: table;
 }
 
-/*.msg_history {
-	height: inherit;
-	overflow-y: scroll;
 
-}*/
 </style>

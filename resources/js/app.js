@@ -37,8 +37,13 @@ window.Pusher = require('pusher-js');
 
 window.Echo = new Echo({
     broadcaster: 'pusher',
-    key: '0004ac5a6265f2b52e4e'
+    key: '0004ac5a6265f2b52e4e',
+    cluster: 'ap1',
+    forceTLS: true,
+    encrypted: true
+
 });
+window.Pusher.logToConsole = true
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue
