@@ -2001,6 +2001,7 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: {},
   data: function data() {
@@ -2043,12 +2044,15 @@ __webpack_require__.r(__webpack_exports__);
       message: '',
       selectedGuest: '',
       selectedGuestIndex: '',
-      msgReceived: true
+      msgReceived: true,
+      isTyping: false
     };
   },
   computed: {},
   methods: {
     selectGuest: function selectGuest(guest, index) {
+      var _this = this;
+
       this.selectedGuest = guest;
       this.selectedGuestIndex = index;
       this.guestList.map(function (e) {
@@ -2057,6 +2061,15 @@ __webpack_require__.r(__webpack_exports__);
       });
       this.guestList[index].isShown = true;
       this.guestList[index].active = true;
+      Echo["private"]("AdminSentMessageTo_".concat(this.selectedGuest.name)).listenForWhisper('typing', function (e) {
+        console.log(e.message);
+
+        if (e.message.length > 0) {
+          _this.isTyping = true;
+        } else {
+          _this.isTyping = false;
+        }
+      });
     },
     send: function send() {
       this.guestList[this.selectedGuestIndex].msg.push({
@@ -2069,20 +2082,29 @@ __webpack_require__.r(__webpack_exports__);
       }).then(function (response) {})["catch"](function (error) {
         console.log(error);
       });
-      this.message = '';
+      this.message = ''; //remove typing notification on guest side 
+
+      this.type();
+    },
+    type: function type() {
+      //Echo.private(`AdminSentMessage_${this.selectedGuest.name}`)
+      Echo["private"]("GuestSentMessage").whisper('typing', {
+        name: 'admin',
+        message: this.message
+      });
     }
   },
   mounted: function mounted() {
-    var _this = this;
+    var _this2 = this;
 
-    Echo.channel('chat-room').listen('ChatEvent', function (result) {
+    Echo["private"]("GuestSentMessage").listen('GuestSentMessage', function (result) {
       console.log(result);
-      var checkGuest = containsGuest(_this.guestList, result);
+      var checkGuest = containsGuest(_this2.guestList, result);
 
       if (checkGuest.isOldGuest === true) {
         var currentGuestIndex = checkGuest.index;
 
-        _this.guestList[currentGuestIndex].msg.push({
+        _this2.guestList[currentGuestIndex].msg.push({
           user: 'guest',
           content: result.message
         });
@@ -2097,24 +2119,24 @@ __webpack_require__.r(__webpack_exports__);
           active: false
         };
 
-        _this.guestList.push(newGuest);
+        _this2.guestList.push(newGuest);
       }
     });
   },
   created: function created() {
-    var _this2 = this;
+    var _this3 = this;
 
     var i = 0;
     setInterval(function () {
       if (i % 2 === 0 && i < 5) {
-        _this2.guestList[0].msg.push({
+        _this3.guestList[0].msg.push({
           user: 'guest',
           content: randomStr(10)
         });
 
         i++;
       } else if (i % 2 !== 0 && i < 5) {
-        _this2.guestList[1].msg.push({
+        _this3.guestList[1].msg.push({
           user: 'guest',
           content: randomStr(10)
         });
@@ -2130,7 +2152,6 @@ __webpack_require__.r(__webpack_exports__);
         Vue.nextTick(function () {
           var div = document.getElementsByClassName('msg_history')[0];
           div.scrollTop = div.scrollHeight;
-          console.log(div.scrollTop, div.scrollHeight);
         });
       }
     }
@@ -6811,7 +6832,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\n\r\n/*---------chat window---------------*/\n.inbox_people[data-v-e7418c82] {\r\n\tbackground: #fff;\r\n\t/*float: left;*/\r\n\toverflow: hidden;\r\n\twidth: 30%;\r\n\tborder-right: 1px solid #ddd;\r\n\tdisplay: table-cell;\n}\n.inbox_msg[data-v-e7418c82] {\r\n\tborder: 1px solid #ddd;\r\n\tclear: both;\r\n\toverflow: hidden;\r\n\tdisplay: table-row;\n}\n.top_spac[data-v-e7418c82] {\r\n\tmargin: 20px 0 0;\n}\n.recent_heading[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 40%;\n}\n.srch_bar[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\ttext-align: right;\r\n\twidth: 60%;\r\n\tpadding:\n}\n.headind_srch[data-v-e7418c82] {\r\n\tpadding: 10px 29px 10px 20px;\r\n\toverflow: hidden;\r\n\tborder-bottom: 1px solid #c4c4c4;\n}\n.recent_heading h4[data-v-e7418c82] {\r\n\tcolor: #0465ac;\r\n    font-size: 16px;\r\n    margin: auto;\r\n    line-height: 29px;\n}\n.srch_bar input[data-v-e7418c82] {\r\n\toutline: none;\r\n\tborder: 1px solid #cdcdcd;\r\n\tborder-width: 0 0 1px 0;\r\n\twidth: 80%;\r\n\tpadding: 2px 0 4px 6px;\r\n\tbackground: none;\n}\n.srch_bar .input-group-addon button[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tpadding: 0;\r\n\tcolor: #707070;\r\n\tfont-size: 18px;\n}\n.srch_bar .input-group-addon[data-v-e7418c82] {\r\n\tmargin: 0 0 0 -27px;\n}\n.chat_ib h5[data-v-e7418c82] {\r\n\tfont-size: 15px;\r\n\tcolor: #464646;\r\n\tmargin: 0 0 8px 0;\n}\n.chat_ib h5 span[data-v-e7418c82] {\r\n\tfont-size: 13px;\r\n\tfloat: right;\n}\n.chat_ib p[data-v-e7418c82] {\r\n    font-size: 12px;\r\n    color: #989898;\r\n    margin: auto;\r\n    display: inline-block;\r\n    white-space: nowrap;\r\n    overflow: hidden;\r\n    text-overflow: ellipsis;\n}\n.chat_img[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 11%;\n}\n.chat_img img[data-v-e7418c82] {\r\n\twidth: 100%\n}\n.chat_ib[data-v-e7418c82] {\r\n\tfloat: left;\r\n\tpadding: 0 0 0 15px;\r\n\twidth: 88%;\n}\n.chat_people[data-v-e7418c82] {\r\n\tborder-bottom: 1px solid #ddd;\r\n\tmargin: 0;\r\n\tpadding: 18px 16px 10px;\r\n\toverflow: hidden;\r\n\tclear: both;\n}\n.chat_list[data-v-e7418c82] {\r\n\t/*border-bottom: 1px solid #ddd;*/\r\n\t/*margin: 0;\r\n\tpadding: 18px 16px 10px;*/\r\n\tcursor: pointer;\n}\n.inbox_chat[data-v-e7418c82] {\r\n\t/*height: 550px;\r\n\toverflow-y: scroll;*/\n}\n.active_chat[data-v-e7418c82] {\r\n\tbackground: #e8f6ff;\n}\n.incoming_msg_img[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\twidth: 6%;\n}\n.incoming_msg_img img[data-v-e7418c82] {\r\n\twidth: 100%;\n}\n.received_msg[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\tpadding: 0 0 0 10px;\r\n\tvertical-align: top;\r\n\twidth: 92%;\n}\n.received_withd_msg p[data-v-e7418c82] {\r\n\tbackground: #ebebeb none repeat scroll 0 0;\r\n\tborder-radius: 0 15px 15px 15px;\r\n\tcolor: #646464;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.time_date[data-v-e7418c82] {\r\n\tcolor: #747474;\r\n\tdisplay: block;\r\n\tfont-size: 12px;\r\n\tmargin: 8px 0 0;\n}\n.received_withd_msg[data-v-e7418c82] {\r\n\twidth: 57%;\n}\n.mesgs[data-v-e7418c82]{\r\n\t/*float: left;*/\r\n\tpadding: 30px 15px 0 25px;\r\n\twidth:70%;\r\n\tdisplay: table-cell;\r\n\t/*max-height: 600px;\r\n\toverflow-y: scroll;*/\n}\n.sent_msg p[data-v-e7418c82] {\r\n\tbackground:#0465ac;\r\n\tborder-radius: 12px 15px 15px 0;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tcolor: #fff;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.outgoing_msg[data-v-e7418c82] {\r\n\toverflow: hidden;\r\n\tmargin: 26px 0 26px;\n}\n.sent_msg[data-v-e7418c82] {\r\n\tfloat: right;\r\n\twidth: 46%;\n}\n.input_msg_write input[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tcolor: #4c4c4c;\r\n\tfont-size: 15px;\r\n\tmin-height: 48px;\r\n\twidth: 100%;\r\n\toutline:none;\n}\n.type_msg[data-v-e7418c82] {\r\n\tborder-top: 1px solid #c4c4c4;\r\n\tposition: relative;\n}\n.msg_send_btn[data-v-e7418c82] {\r\n\tbackground: #05728f none repeat scroll 0 0;\r\n\tborder:none;\r\n\tborder-radius: 50%;\r\n\tcolor: #fff;\r\n\tcursor: pointer;\r\n\tfont-size: 15px;\r\n\theight: 33px;\r\n\tposition: absolute;\r\n\tright: 0;\r\n\ttop: 11px;\r\n\twidth: 33px;\n}\n.messaging[data-v-e7418c82] {\r\n\tpadding: 0 0 50px 0;\r\n\tdisplay: table;\n}\r\n\r\n\r\n", ""]);
+exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\n\r\n/*---------chat window---------------*/\n.inbox_people[data-v-e7418c82] {\r\n\tbackground: #fff;\r\n\t/*float: left;*/\r\n\toverflow: hidden;\r\n\twidth: 30%;\r\n\tborder-right: 1px solid #ddd;\r\n\tdisplay: table-cell;\n}\n.inbox_msg[data-v-e7418c82] {\r\n\tborder: 1px solid #ddd;\r\n\tclear: both;\r\n\toverflow: hidden;\r\n\tdisplay: table-row;\n}\n.top_spac[data-v-e7418c82] {\r\n\tmargin: 20px 0 0;\n}\n.recent_heading[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 40%;\n}\n.srch_bar[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\ttext-align: right;\r\n\twidth: 60%;\r\n\tpadding:\n}\n.headind_srch[data-v-e7418c82] {\r\n\tpadding: 10px 29px 10px 20px;\r\n\toverflow: hidden;\r\n\tborder-bottom: 1px solid #c4c4c4;\n}\n.recent_heading h4[data-v-e7418c82] {\r\n\tcolor: #0465ac;\r\n    font-size: 16px;\r\n    margin: auto;\r\n    line-height: 29px;\n}\n.srch_bar input[data-v-e7418c82] {\r\n\toutline: none;\r\n\tborder: 1px solid #cdcdcd;\r\n\tborder-width: 0 0 1px 0;\r\n\twidth: 80%;\r\n\tpadding: 2px 0 4px 6px;\r\n\tbackground: none;\n}\n.srch_bar .input-group-addon button[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tpadding: 0;\r\n\tcolor: #707070;\r\n\tfont-size: 18px;\n}\n.srch_bar .input-group-addon[data-v-e7418c82] {\r\n\tmargin: 0 0 0 -27px;\n}\n.chat_ib h5[data-v-e7418c82] {\r\n\tfont-size: 15px;\r\n\tcolor: #464646;\r\n\tmargin: 0 0 8px 0;\n}\n.chat_ib h5 span[data-v-e7418c82] {\r\n\tfont-size: 13px;\r\n\tfloat: right;\n}\n.chat_ib p[data-v-e7418c82] {\r\n    font-size: 12px;\r\n    color: #989898;\r\n    margin: auto;\r\n    display: inline-block;\r\n    white-space: nowrap;\r\n    overflow: hidden;\r\n    text-overflow: ellipsis;\n}\n.chat_img[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 11%;\n}\n.chat_img img[data-v-e7418c82] {\r\n\twidth: 100%\n}\n.chat_ib[data-v-e7418c82] {\r\n\tfloat: left;\r\n\tpadding: 0 0 0 15px;\r\n\twidth: 88%;\n}\n.chat_people[data-v-e7418c82] {\r\n\tborder-bottom: 1px solid #ddd;\r\n\tmargin: 0;\r\n\tpadding: 18px 16px 10px;\r\n\toverflow: hidden;\r\n\tclear: both;\n}\n.chat_list[data-v-e7418c82] {\r\n\t/*border-bottom: 1px solid #ddd;*/\r\n\t/*margin: 0;\r\n\tpadding: 18px 16px 10px;*/\r\n\tcursor: pointer;\n}\n.inbox_chat[data-v-e7418c82] {\r\n\t/*height: 550px;\r\n\toverflow-y: scroll;*/\n}\n.active_chat[data-v-e7418c82] {\r\n\tbackground: #e8f6ff;\n}\n.incoming_msg_img[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\twidth: 6%;\n}\n.incoming_msg_img img[data-v-e7418c82] {\r\n\twidth: 100%;\n}\n.received_msg[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\tpadding: 0 0 0 10px;\r\n\tvertical-align: top;\r\n\twidth: 92%;\n}\n.received_withd_msg p[data-v-e7418c82] {\r\n\tbackground: #ebebeb none repeat scroll 0 0;\r\n\tborder-radius: 0 15px 15px 15px;\r\n\tcolor: #646464;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.time_date[data-v-e7418c82] {\r\n\tcolor: #747474;\r\n\tdisplay: block;\r\n\tfont-size: 12px;\r\n\tmargin: 8px 0 0;\n}\n.received_withd_msg[data-v-e7418c82] {\r\n\twidth: 57%;\n}\n.mesgs[data-v-e7418c82]{\r\n\t/*float: left;*/\r\n\tpadding: 30px 15px 0 25px;\r\n\twidth:70%;\r\n\tdisplay: table-cell;\r\n\t/*max-height: 600px;\r\n\toverflow-y: scroll;*/\n}\n.sent_msg p[data-v-e7418c82] {\r\n\tbackground:#0465ac;\r\n\tborder-radius: 12px 15px 15px 0;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tcolor: #fff;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.outgoing_msg[data-v-e7418c82] {\r\n\toverflow: hidden;\r\n\tmargin: 26px 0 26px;\n}\n.sent_msg[data-v-e7418c82] {\r\n\tfloat: right;\r\n\twidth: 46%;\n}\n.input_msg_write input[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tcolor: #4c4c4c;\r\n\tfont-size: 15px;\r\n\tmin-height: 48px;\r\n\twidth: 100%;\r\n\toutline:none;\n}\n.type_msg[data-v-e7418c82] {\r\n\tborder-top: 1px solid #c4c4c4;\r\n\tposition: relative;\n}\n.msg_send_btn[data-v-e7418c82] {\r\n\tbackground: #05728f none repeat scroll 0 0;\r\n\tborder:none;\r\n\tborder-radius: 50%;\r\n\tcolor: #fff;\r\n\tcursor: pointer;\r\n\tfont-size: 15px;\r\n\theight: 33px;\r\n\tposition: absolute;\r\n\tright: 0;\r\n\ttop: 11px;\r\n\twidth: 33px;\n}\n.messaging[data-v-e7418c82] {\r\n\tpadding: 0 0 50px 0;\r\n\tdisplay: table;\n}\r\n\r\n\r\n", ""]);
 
 // exports
 
@@ -48558,6 +48579,15 @@ var render = function() {
                     0
                   ),
                   _vm._v(" "),
+                  _vm.isTyping
+                    ? _c("small", [
+                        _c("i", {
+                          staticClass: "fas fa-pen-nib fa-fw fa-spin"
+                        }),
+                        _vm._v("guest is typing...")
+                      ])
+                    : _vm._e(),
+                  _vm._v(" "),
                   _c("div", { staticClass: "type_msg" }, [
                     _c("div", { staticClass: "input_msg_write" }, [
                       _c("input", {
@@ -48588,12 +48618,15 @@ var render = function() {
                             }
                             return _vm.send($event)
                           },
-                          input: function($event) {
-                            if ($event.target.composing) {
-                              return
-                            }
-                            _vm.message = $event.target.value
-                          }
+                          input: [
+                            function($event) {
+                              if ($event.target.composing) {
+                                return
+                              }
+                              _vm.message = $event.target.value
+                            },
+                            _vm.type
+                          ]
                         }
                       }),
                       _vm._v(" "),
@@ -66057,7 +66090,10 @@ window.Pusher = __webpack_require__(/*! pusher-js */ "./node_modules/pusher-js/d
 window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_4__["default"]({
   broadcaster: 'pusher',
   key: '0004ac5a6265f2b52e4e',
-  cluster: 'ap1'
+  cluster: 'ap1',
+  forceTLS: true,
+  encrypted: true,
+  authEndpoint: "/broadcasting/auth/admin"
 });
 window.Pusher.logToConsole = true;
 /**
@@ -66127,8 +66163,10 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 //     broadcaster: 'pusher',
 //     key: process.env.MIX_PUSHER_APP_KEY,
 //     cluster: process.env.MIX_PUSHER_APP_CLUSTER,
-//     encrypted: true
+//     encrypted: true,
+//    // auth: { headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr('content') } },
 // });
+// window.Pusher.logToConsole = true
 
 /***/ }),
 

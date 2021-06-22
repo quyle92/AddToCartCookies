@@ -11,7 +11,7 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 
-class ChatEvent implements ShouldBroadcastNow
+class GuestSentMessage implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -24,9 +24,11 @@ class ChatEvent implements ShouldBroadcastNow
      * @return void
      */
     public function __construct($message, $guest)
-    {
+    {   
         $this->message = $message;
         $this->guest = $guest;
+
+        $this->dontBroadcastToCurrentUser();
     }
 
     /**
@@ -35,7 +37,7 @@ class ChatEvent implements ShouldBroadcastNow
      * @return \Illuminate\Broadcasting\Channel|array
      */
     public function broadcastOn()
-    {   
-        return new Channel("chat-room");
+    {  
+        return new PrivateChannel("GuestSentMessage");
     }
 }

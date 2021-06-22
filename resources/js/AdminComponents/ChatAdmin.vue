@@ -50,9 +50,10 @@
 							</div>
 						</div>
 					</div>
+					<small v-if="isTyping"><i class="fas fa-pen-nib fa-fw fa-spin"></i>guest is typing...</small>
 				  <div class="type_msg">
 							<div class="input_msg_write">
-							  <input type="text" class="write_msg" placeholder="Type a message" @keyup.enter="send" v-model="message"/>
+							  <input type="text" class="write_msg" placeholder="Type a message" @keyup.enter="send" v-model="message" @input="type"/>
 							  <button class="msg_send_btn" type="button"  @keyup.enter="send"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
 							</div>
 				  </div>
@@ -120,7 +121,8 @@ export default {
 		  	message:'',
 		  	selectedGuest: '',
 		  	selectedGuestIndex:'',
-		  	msgReceived:true
+		  	msgReceived:true,
+		  	isTyping: false
  	  }
   },
   computed: {
@@ -138,12 +140,23 @@ export default {
   			this.guestList[index].isShown = true;
   			this.guestList[index].active = true;
 
+  			Echo.private(`AdminSentMessageTo_${this.selectedGuest.name}`)
+		    	.listenForWhisper('typing', (e) => {
+		    		console.log(e.message);
+		       		if(e.message.length > 0){
+		       			this.isTyping = true;
+		       		} else
+		       		{
+		       			this.isTyping = false
+		       		}
+	   		 });
+
   		},
   		send() {
   			this.guestList[this.selectedGuestIndex].msg.push({
-				  			user: 'admin',
-				  			content: this.message
-				  		});
+	  			user: 'admin',
+	  			content: this.message
+	  		});
 
   			axios.post('/adminSentMessage', {
 			    guest: this.selectedGuest.name,
@@ -158,40 +171,50 @@ export default {
 
 				this.message = '';
 
+				//remove typing notification on guest side 
+				this.type();
+  		},
+  		type() {
+  			//Echo.private(`AdminSentMessage_${this.selectedGuest.name}`)
+  			Echo.private(`GuestSentMessage`)
+				    .whisper('typing', {
+				        name: 'admin',
+				        message: this.message
+				});
   		}
   },
   mounted() {
   	
-  	Echo.channel('chat-room')
-    .listen('ChatEvent', (result) => {
-        console.log(result);
-      	let checkGuest = containsGuest(this.guestList, result) ;
+  	Echo.private(`GuestSentMessage`)
+	    .listen('GuestSentMessage', (result) => {
+	        console.log(result);
+	      	let checkGuest = containsGuest(this.guestList, result) ;
 
-      	if( checkGuest.isOldGuest === true ) 
-      	{
-      		let currentGuestIndex = checkGuest.index;
-      		this.guestList[ currentGuestIndex ].msg.push({
-      			user: 'guest',
-      			content: result.message
-      		});
-      	} 
-      	else 
-      	{		
-      			let newGuest = {
-      				name: result.guest,
-				  		msg: [{
-      					user: 'guest',
-      					content: result.message
-      				}],
-				  		isShown: false,
-				  		active: false
-      			}
+	      	if( checkGuest.isOldGuest === true ) 
+	      	{
+	      		let currentGuestIndex = checkGuest.index;
+	      		this.guestList[ currentGuestIndex ].msg.push({
+	      			user: 'guest',
+	      			content: result.message
+	      		});
+	      	} 
+	      	else 
+	      	{		
+	      			let newGuest = {
+	      				name: result.guest,
+					  		msg: [{
+	      					user: 'guest',
+	      					content: result.message
+	      				}],
+					  		isShown: false,
+					  		active: false
+	      			}
 
-      			this.guestList.push(newGuest)
-      	}
+	      			this.guestList.push(newGuest)
+	      	}
+	  });
 
-      	
-    });
+	  
 
   },
   created() {
@@ -222,7 +245,6 @@ export default {
 	   			Vue.nextTick(function () {
 					    const div = document.getElementsByClassName('msg_history')[0];
 					    div.scrollTop = div.scrollHeight;
-					    console.log(div.scrollTop,div.scrollHeight)
 					});
    			}
    		}

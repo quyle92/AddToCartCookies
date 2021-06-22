@@ -2348,6 +2348,7 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: {},
   data: function data() {
@@ -2364,7 +2365,8 @@ __webpack_require__.r(__webpack_exports__);
       }, {
         user: 'guest',
         msg: 'Yes, I need help'
-      }]
+      }],
+      isTyping: false
     };
   },
   computed: {
@@ -2378,7 +2380,7 @@ __webpack_require__.r(__webpack_exports__);
 
       this.isPreChat = false; //get incoming messages
 
-      Echo.channel("AdminSentMessageTo_".concat(this.guest)).listen('AdminSentMessage', function (result) {
+      Echo["private"]("AdminSentMessageTo_".concat(this.guest)).listen('AdminSentMessage', function (result) {
         console.log(result);
 
         _this.messages.push({
@@ -2389,6 +2391,21 @@ __webpack_require__.r(__webpack_exports__);
         Vue.nextTick(function () {
           vueChatScroll();
         });
+      });
+      Echo["private"]("GuestSentMessage").listenForWhisper('typing', function (e) {
+        console.log(e.message);
+
+        if (e.message.length > 0) {
+          _this.isTyping = true;
+        } else {
+          _this.isTyping = false;
+        }
+      });
+    },
+    type: function type() {
+      Echo["private"]("AdminSentMessageTo_".concat(this.guest)).whisper('typing', {
+        name: 'guest',
+        message: this.message
       });
     },
     toggle: function toggle() {
@@ -2408,7 +2425,9 @@ __webpack_require__.r(__webpack_exports__);
       }).then(function (response) {})["catch"](function (error) {
         console.log(error);
       });
-      this.message = '';
+      this.message = ''; //remove typing notification on admin side 
+
+      this.type();
     }
   },
   mounted: function mounted() {},
@@ -48179,6 +48198,13 @@ var render = function() {
                   ]
                 ),
                 _vm._v(" "),
+                _vm.isTyping
+                  ? _c("small", [
+                      _c("i", { staticClass: "fas fa-pen-nib fa-fw fa-spin" }),
+                      _vm._v("admin is typing...")
+                    ])
+                  : _vm._e(),
+                _vm._v(" "),
                 _c("div", { staticClass: "card-footer" }, [
                   _c("div", { staticClass: "input-group" }, [
                     _c("input", {
@@ -48213,12 +48239,15 @@ var render = function() {
                           }
                           return _vm.send($event)
                         },
-                        input: function($event) {
-                          if ($event.target.composing) {
-                            return
-                          }
-                          _vm.message = $event.target.value
-                        }
+                        input: [
+                          function($event) {
+                            if ($event.target.composing) {
+                              return
+                            }
+                            _vm.message = $event.target.value
+                          },
+                          _vm.type
+                        ]
                       }
                     }),
                     _vm._v(" "),
@@ -62429,7 +62458,8 @@ window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_4__["default"]({
   key: '0004ac5a6265f2b52e4e',
   cluster: 'ap1',
   forceTLS: true,
-  encrypted: true
+  encrypted: true,
+  authEndpoint: "/broadcasting/auth/guest"
 });
 window.Pusher.logToConsole = true;
 /**
@@ -62535,8 +62565,10 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 //     broadcaster: 'pusher',
 //     key: process.env.MIX_PUSHER_APP_KEY,
 //     cluster: process.env.MIX_PUSHER_APP_CLUSTER,
-//     encrypted: true
+//     encrypted: true,
+//    // auth: { headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr('content') } },
 // });
+// window.Pusher.logToConsole = true
 
 /***/ }),
 

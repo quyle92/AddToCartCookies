@@ -54,6 +54,9 @@ window.Echo = new Echo({
     broadcaster: 'pusher',
     key: '0004ac5a6265f2b52e4e',
     cluster: 'ap1',
+    forceTLS: true,
+    encrypted: true,
+    authEndpoint: "/broadcasting/auth/admin",
 
 });
 window.Pusher.logToConsole = true

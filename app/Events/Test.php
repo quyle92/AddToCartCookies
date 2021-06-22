@@ -9,13 +9,11 @@ use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 
-class AdminSentMessage implements ShouldBroadcastNow
+class Test
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $message;
     public $guest;
     /**
      * Create a new event instance.
@@ -38,6 +36,7 @@ class AdminSentMessage implements ShouldBroadcastNow
     public function broadcastOn()
     {   
             
-        return new PrivateChannel('AdminSentMessageTo_' . $this->guest);
+        return new PrivateChannel('test_');
     }
+
 }

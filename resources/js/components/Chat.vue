@@ -67,9 +67,10 @@
 	                        </li>
 	                    </ul>
 	                </div>
+	                <small v-if="isTyping"><i class="fas fa-pen-nib fa-fw fa-spin"></i>admin is typing...</small>
 	                <div class="card-footer">
 	                    <div class="input-group">
-	                        <input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." @keyup.enter="send" v-model="message"/>
+	                        <input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." @keyup.enter="send" v-model="message" @input="type"/>
 	                        <span class="input-group-btn">
 	                            <button class="btn btn-warning btn-sm" id="btn-chat" @click.prevent="send">
 	                                Send</button>
@@ -105,7 +106,8 @@ export default {
  				user: 'guest',
  				msg:'Yes, I need help'
  			},
- 		]
+ 		],
+ 		isTyping: false
 
  	  }
   },
@@ -119,7 +121,7 @@ export default {
   		this.isPreChat = false;
 
   		//get incoming messages
-		Echo.channel(`AdminSentMessageTo_${this.guest}`)
+		Echo.private(`AdminSentMessageTo_${this.guest}`)
 	    	.listen('AdminSentMessage', (result) => {
     			console.log(result);
     			this.messages.push({
@@ -132,7 +134,25 @@ export default {
 				});
 		    	
 	    });
+
+	    Echo.private(`GuestSentMessage`)
+	    	.listenForWhisper('typing', (e) => {
+	       		console.log(e.message);
+	       		if(e.message.length > 0){
+	       			this.isTyping = true;
+	       		} else
+	       		{
+	       			this.isTyping = false
+	       		}
+	    });
   		
+  	},
+  	type() {
+  		Echo.private(`AdminSentMessageTo_${this.guest}`)
+		    .whisper('typing', {
+		        name: 'guest',
+		        message: this.message
+		});
   	},
   	toggle() {
   		this.showChat = ! this.showChat;
@@ -160,11 +180,14 @@ export default {
 		    console.log(error);
 		});
 
-		this.message = ''; 
+		this.message = '';
+
+		//remove typing notification on admin side 
+		this.type();
   	}
   }, 
   mounted() {
-	   
+	
   },
    updated() {
   		 Vue.nextTick(function () {

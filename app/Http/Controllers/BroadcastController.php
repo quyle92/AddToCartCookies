@@ -12,8 +12,8 @@ class BroadcastController extends Controller
         {   
             $message = $request->message;
             $guest    = $request->guest;
-
-            event( new \App\Events\ChatEvent($message, $guest) );
+     
+            event( new \App\Events\GuestSentMessage($message, $guest) );
 
             return response()->json([
                 'msg' => 'success'

@@ -32,7 +32,6 @@ window.vm = new Vue();
 
 import Echo from "laravel-echo";
 
-
 window.Pusher = require('pusher-js');
 
 window.Echo = new Echo({
@@ -40,7 +39,9 @@ window.Echo = new Echo({
     key: '0004ac5a6265f2b52e4e',
     cluster: 'ap1',
     forceTLS: true,
-    encrypted: true
+    encrypted: true,
+    authEndpoint: "/broadcasting/auth/guest",
+
 
 });
 window.Pusher.logToConsole = true
