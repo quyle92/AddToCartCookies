@@ -10,13 +10,10 @@ require('admin-lte');
 
 window.Vue = require('vue');
 
-import store from './store-admin';
+import store from './store';
 Vue.prototype.$store = store;
 
 import router from './router';
-
-import VueChatScroll from 'vue-chat-scroll'
-Vue.use(VueChatScroll)
 
 window.vm = new Vue();
 

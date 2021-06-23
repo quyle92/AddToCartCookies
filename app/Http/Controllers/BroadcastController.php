@@ -12,8 +12,9 @@ class BroadcastController extends Controller
         {   
             $message = $request->message;
             $guest    = $request->guest;
-     
-            event( new \App\Events\GuestSentMessage($message, $guest) );
+        
+            
+            event( new \App\Events\GuestSentMessage( $message, $guest ) );
 
             return response()->json([
                 'msg' => 'success'
@@ -47,5 +48,23 @@ class BroadcastController extends Controller
             ]);
         }
         
+    }
+
+    public function guestUpdate(Request $request) 
+    {   
+        try 
+        {  
+            event( new \App\Events\GuestUpdate( $request->guest) );
+
+            return response()->json([
+                'msg' => 'success'
+            ]);
+        }
+        catch(\Exception $err) 
+        {  
+            return response()->json([
+                'msg' => $err->getMessage()
+            ]);
+        }
     }
 }

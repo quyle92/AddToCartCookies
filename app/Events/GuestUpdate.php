@@ -9,8 +9,9 @@ use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 
-class Test
+class GuestUpdate implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -20,12 +21,11 @@ class Test
      *
      * @return void
      */
-    
-    public function __construct($message, $guest)
-    {   
-        $this->message = $message;
-        $this->guest = $guest;
-        
+    public function __construct($guest)
+    {
+         $this->guest = $guest;
+
+         $this->dontBroadcastToCurrentUser();
     }
 
     /**
@@ -35,8 +35,7 @@ class Test
      */
     public function broadcastOn()
     {   
-            
-        return new PrivateChannel('test_');
+        
+        return new Channel('guest-update');
     }
-
 }

@@ -38,6 +38,6 @@ class GuestSentMessage implements ShouldBroadcastNow
      */
     public function broadcastOn()
     {  
-        return new PrivateChannel("GuestSentMessage");
+        return new PrivateChannel("guest-sent-message");
     }
 }

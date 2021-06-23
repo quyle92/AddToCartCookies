@@ -15,9 +15,6 @@ require('./bootstrap');
 
 window.Vue = require('vue');
 
-import VueChatScroll from 'vue-chat-scroll'
-Vue.use(VueChatScroll)
-
 import store from './store';
 Vue.prototype.$store = store;
 
@@ -45,6 +42,11 @@ window.Echo = new Echo({
 
 });
 window.Pusher.logToConsole = true
+
+Date.prototype.addHours = function(h) {
+  this.setTime(this.getTime() + (h*60*60*1000));
+  return this;
+}
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue
@@ -60,7 +62,7 @@ Vue.component('product-page', require('./components/ProductPage.vue').default);
 Vue.component('cart', require('./components/Cart.vue').default);
 Vue.component('popover', require('./components/Popover.vue').default);
 Vue.component('dropdown-cart', require('./components/DropdownCart.vue').default);
-Vue.component('chat', require('./components/Chat.vue').default);
+Vue.component('chat', require('./components/ChatX.vue').default);
 
 const getCookieValue = (name) => (
   document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)')?.pop() || ''
@@ -74,7 +76,7 @@ window.vm = new Vue();
 global.getVueObject = obj => {
   return JSON.parse(JSON.stringify( obj ));
 };
-//ProductPage = require('./components/ProductPage.vue').default;
+
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to

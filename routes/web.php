@@ -87,6 +87,10 @@ Route::post('/adminSentMessage', [
 Route::post('/guestSentMessage', [
     'uses' =>'BroadcastController@guestSentMessage'
 ]);
+Route::post('/guest-update', [
+    'uses' =>'BroadcastController@guestUpdate'
+]);
+
 
 /*
 Paypal Omnipay

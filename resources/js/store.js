@@ -1,10 +1,13 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 Vue.use(Vuex);
+import createMultiTabState from 'vuex-multi-tab-state';
 
 import Helper from './helper';
 let _helper = new Helper()
-
+import createPersistedState from "vuex-persistedstate";
+import SecureLS from "secure-ls";
+const ls = new SecureLS({ isCompression: false });
 
 export default  new Vuex.Store({
 	state:
@@ -28,6 +31,17 @@ export default  new Vuex.Store({
         maxQuantityArr:[],
         lastSelectedProduct: {},
       	productsOnCart: [],
+      	listOfGuests: [],
+      	messages:[
+ 			{
+ 				user: 'admin',
+ 				msg:'Hi there, may I help you?'
+ 			},
+ 			{
+ 				user: 'guest',
+ 				msg:'Yes, I need help'
+ 			},
+ 		],
 
 
 	},
@@ -100,6 +114,17 @@ export default  new Vuex.Store({
 
 		SET_LAST_SELECTED_PRODUCT( state, payload ){
 			this.state.lastSelectedProduct = payload;
+		},
+
+		ADD_MESSAGES( state, payload ) {
+			this.state.messages.push( payload );
+		},
+		REMOVE_MESSAGES( state ) {
+			let defaultMessage = this.state.messages.shift();
+			this.state.messages = [];
+			this.state.messages.push( defaultMessage );
+			ls.remove('vuex')
+			alert('expire');
 		}
 
 	},
@@ -114,7 +139,14 @@ export default  new Vuex.Store({
 				console.log(error);
 			})
 		}
-	}
+	},
+	plugins: [createPersistedState({
+		 storage: {
+	        getItem: (key) => ls.get(key),
+	        setItem: (key, value) => ls.set(key, value),
+	        removeItem: (key) => ls.remove(key)
+	      },
+		paths:['messages']
+	})],
 });
-
 

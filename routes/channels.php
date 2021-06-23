@@ -21,29 +21,37 @@ Route::post('/broadcasting/auth/admin', function (Illuminate\Http\Request $req) 
 
     $user = User::findOrFail(27);
     
-       Auth::login( $user );
-// dd(Auth::check());
+    Auth::login( $user );
+
     return Broadcast::auth($req);
     
 
-})->middleware('guest');
+});
 
 Route::post('/broadcasting/auth/guest', function (Illuminate\Http\Request $req) {
-    
+
     return Broadcast::auth($req);
 
 })->middleware('guest');
 
-Broadcast::channel('GuestSentMessage', function ($user) {
+Broadcast::channel('guest-sent-message', function ($user) {
     // dD($user);
     return 'admin';
 });
 
-Broadcast::channel('AdminSentMessageTo_{guest}', function ($user, $guest) {
+Broadcast::channel('admin-sent-message_{guest}', function ($user, $guest) {
     // dump($user);
     // dd($guest);
     return $guest;
 });
+
+// Broadcast::channel('chat_with_{guest}', function ($user, $guest) {
+   
+//     return true;
+// });
+
+
+
 
 /*
 Note

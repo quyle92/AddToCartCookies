@@ -122,8 +122,7 @@ export default {
 		  	selectedGuest: '',
 		  	selectedGuestIndex:'',
 		  	msgReceived:true,
-		  	isTyping: false,
-		  	guests:[]
+		  	isTyping: false
  	  }
   },
   computed: {
@@ -141,7 +140,7 @@ export default {
   			this.guestList[index].isShown = true;
   			this.guestList[index].active = true;
 
-  			Echo.private(`chat_with_${this.selectedGuest.name}`)
+  			Echo.private(`admin-sent-message_${this.selectedGuest.name}`)
 		    	.listenForWhisper('typing', (e) => {
 		    		console.log(e.message);
 		       		if(e.message.length > 0){
@@ -176,7 +175,7 @@ export default {
 				this.type();
   		},
   		type() {
-  			Echo.private(`chat_with_${this.selectedGuest.name}`)
+  			Echo.private(`guest-sent-message`)
 				    .whisper('typing', {
 				        name: 'admin',
 				        message: this.message
@@ -185,24 +184,36 @@ export default {
   },
   mounted() {
   	
-  	Echo.channel('guest-update')
-  		.listen('GuestUpdate', (result) => {
-  				console.log(result)
-  				this.guestList.push({
-  					name: result.guest,
-			  		msg: [{
-			  			user: 'guest',
-				  		content: ''
-			  		}],
-			  		isShown: false,
-			  		active: false
-  					
-  				});
-  				Echo.private(`chat_with_${result.guest}`)
-  					.listen(`chat`, (e) => {
-		    		console.log(e.message);
-	   		 });
-  	});
+	  	Echo.private(`guest-sent-message`)
+		    .listen('GuestSentMessage', (result) => {
+		        console.log(result);
+		      	let checkGuest = containsGuest(this.guestList, result) ;
+
+		      	if( checkGuest.isOldGuest === true ) 
+		      	{
+		      		let currentGuestIndex = checkGuest.index;
+		      		this.guestList[ currentGuestIndex ].msg.push({
+		      			user: 'guest',
+		      			content: result.message
+		      		});
+		      	} 
+		      	else 
+		      	{		
+		      			let newGuest = {
+		      				name: result.guest,
+						  		msg: [{
+		      					user: 'guest',
+		      					content: result.message
+		      				}],
+						  		isShown: false,
+						  		active: false
+		      			}
+
+		      			this.guestList.push(newGuest)
+		      	}
+		  });
+
+	  
 
   },
   created() {
@@ -229,49 +240,13 @@ export default {
    watch: {
    		guestList: {
    			deep: true,
-   			handler() {console.log(this.guestList);
-   				for (var i = 0; i < this.guestList.length; i++) {
-	   					Echo.private(`chat_with_${this.guestList[i].guest}`)
-			  					.listen(`chat`, (e) => {
-					    		console.log(e.message);
-				   		});
-   				}
+   			handler() {
 	   			Vue.nextTick(function () {
 					    const div = document.getElementsByClassName('msg_history')[0];
 					    div.scrollTop = div.scrollHeight;
 					});
    			}
-   		},
-   		// guests(oldVal, newVal) {console.log(oldVal, newVal)
-   		// 		Echo.private(`chat_with_${newVal}`)
-					//     .listen(`chat`, (result) => {
-					//         console.log(result);
-					//       	let checkGuest = containsGuest(this.guestList, result) ;
-
-					//       	if( checkGuest.isOldGuest === true ) 
-					//       	{
-					//       		let currentGuestIndex = checkGuest.index;
-					//       		this.guestList[ currentGuestIndex ].msg.push({
-					//       			user: 'guest',
-					//       			content: result.message
-					//       		});
-					//       	} 
-					//       	else 
-					//       	{		
-					//       			let newGuest = {
-					//       				name: result.guest,
-					// 				  		msg: [{
-					//       					user: 'guest',
-					//       					content: result.message
-					//       				}],
-					// 				  		isShown: false,
-					// 				  		active: false
-					//       			}
-
-					//       			this.guestList.push(newGuest)
-					//       	}
-				 //  });
-   		// }
+   		}
    }
 }
 

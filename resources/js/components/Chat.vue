@@ -95,7 +95,7 @@ export default {
  		showIt: 'showIt',
  		hideIt: 'hideIt',
  		showChat: true,
- 		guest:'',
+ 		guest:'nam',
  		message:'',
  		messages:[
  			{
@@ -120,35 +120,46 @@ export default {
   	submit(){
   		this.isPreChat = false;
 
-  		//get incoming messages
-		Echo.private(`AdminSentMessageTo_${this.guest}`)
-	    	.listen('AdminSentMessage', (result) => {
-    			console.log(result);
-    			this.messages.push({
-    				user: 'admin',
- 					msg: result.message
-    			});
+  		//axios call to trigger guest-update
+  		axios.post('/guest-update', {
+		    guest: this.guest,
+		  })
+		  .then( (response) => {
+		    	//get incoming messages
+				Echo.private(`chat_with_${this.guest}`)
+			    	.listen(`chat`, (result) => {
+		    			console.log(result);
+		    			this.messages.push({
+		    				user: 'admin',
+		 					msg: result.message
+		    			});
 
-    			Vue.nextTick(function () {
-				    vueChatScroll();
-				});
-		    	
-	    });
+		    			Vue.nextTick(function () {
+						    vueChatScroll();
+						});
+				    	
+			    })
+			    	.listenForWhisper('typing', (e) => {
+			       		console.log(e.message);
+			       		if(e.message.length > 0){
+			       			this.isTyping = true;
+			       		} else
+			       		{
+			       			this.isTyping = false
+			       		}
+			    });
+		  })
+		  .catch( (error) => {
+		    console.log(error);
+		});
 
-	    Echo.private(`GuestSentMessage`)
-	    	.listenForWhisper('typing', (e) => {
-	       		console.log(e.message);
-	       		if(e.message.length > 0){
-	       			this.isTyping = true;
-	       		} else
-	       		{
-	       			this.isTyping = false
-	       		}
-	    });
+
   		
+
+
   	},
   	type() {
-  		Echo.private(`AdminSentMessageTo_${this.guest}`)
+  		Echo.private(`chat_with_${this.guest}`)
 		    .whisper('typing', {
 		        name: 'guest',
 		        message: this.message

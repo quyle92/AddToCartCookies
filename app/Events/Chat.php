@@ -9,25 +9,23 @@ use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 
-class AdminSentMessage implements ShouldBroadcastNow
+class Chat implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $message;
     public $guest;
+
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    
     public function __construct($message, $guest)
-    {   
+    {
         $this->message = $message;
         $this->guest = $guest;
-        
     }
 
     /**
@@ -36,8 +34,8 @@ class AdminSentMessage implements ShouldBroadcastNow
      * @return \Illuminate\Broadcasting\Channel|array
      */
     public function broadcastOn()
-    {   
-            
-        return new PrivateChannel('admin-sent-message_' . $this->guest);
+    {  
+
+        return new PrivateChannel('chat_with_' . $this->guest);
     }
 }
