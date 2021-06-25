@@ -64,60 +64,15 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
   props:{
   	
   },
   data: function() {
     return {
-		 		guestList:[
-			  	{
-			  		name: 'Adam',
-			  		msg: [
-				  		{
-				  			user: 'guest',
-				  			content: 'hi there,'
-				  		},
-				  		{
-				  			user: 'admin',
-				  			content: 'Hey bro!'
-				  		},
-				  		{
-				  			user: 'guest',
-				  			content: 'how are you?'
-				  		},
-				  		{
-				  			user: 'admin',
-				  			content: 'Great! I am glad to see you too!'
-				  		}
-			  		],
-			  		isShown: true,
-			  		active: true
-			  	},
-			  	{
-			  		name: 'Bob',
-			  		msg: [
-			  			{
-				  			user: 'guest',
-				  			content: 'I am Bob'
-				  		},
-				  		{
-				  			user: 'admin',
-				  			content: 'hi there'
-				  		},
-				  		{
-				  			user: 'guest',
-				  			content: 'Nice to meet you!'
-				  		},
-				  		{
-				  			user: 'admin',
-				  			content: 'how are you?'
-				  		}
-				  	],
-			  		isShown: false,
-			  		active: false
-			  	}
-		  	],
+		 		
 		  	message:'',
 		  	selectedGuest: '',
 		  	selectedGuestIndex:'',
@@ -126,8 +81,10 @@ export default {
  	  }
   },
   computed: {
-
-  },
+	  	...mapState([
+	  	'guestList'
+	  ])
+	},
   methods: {
   		selectGuest(guest, index) {
   			this.selectedGuest = guest;
@@ -149,7 +106,14 @@ export default {
 		       		{
 		       			this.isTyping = false
 		       		}
-	   		 });
+	   		 }).listenForWhisper('ChatEnd', (response) => {
+				  	console.log(response);
+				  	let checkGuest = containsGuest(this.guestList, response) ;
+				  	console.log(checkGuest);
+				  	let currentGuestIndex = checkGuest.index;
+				  	document.getElementsByClassName('chat_people')[currentGuestIndex].classList.add("guest-leave-chat");
+				  	alert('ChatEnd')
+			  });;
 
   		},
   		send() {
@@ -211,7 +175,8 @@ export default {
 
 		      			this.guestList.push(newGuest)
 		      	}
-		  });
+			  })
+
 
 	  
 
@@ -512,5 +477,7 @@ function containsGuest(guestList, obj)
 	display: table;
 }
 
-
+.guest-leave-chat{
+	background-color: cyan;
+}
 </style>

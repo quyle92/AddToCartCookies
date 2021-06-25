@@ -27,6 +27,7 @@
         "@fortawesome/fontawesome-free": "^5.15.3",
         "admin-lte": "^3.1.0",
         "jquery-ui": "^1.12.1",
+        "js-cookie": "^2.2.1",
         "laravel-echo": "^1.10.0",
         "laravel-vue-pagination": "^2.3.1",
         "owl-carousel": "^1.0.0",

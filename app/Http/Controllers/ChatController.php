@@ -2,10 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Guest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
 
-class BroadcastController extends Controller
-{
+class ChatController extends Controller
+{   
+    public function joinChat(Request $request) 
+    {
+        try 
+        {   
+            $guest = new Guest();
+            $guest->guest_name = $request->guest;
+            $guest->save();
+
+            Auth::login( $guest );
+            
+            return response()->json([
+                'msg' => 'success'
+            ]);
+        }
+        catch(\Exception $err) 
+        {  
+            return response()->json([
+                'msg' => $err->getMessage()
+            ]);
+        }
+    }
+
     public function guestSentMessage(Request $request) 
     {
         try 
@@ -50,21 +75,5 @@ class BroadcastController extends Controller
         
     }
 
-    public function guestUpdate(Request $request) 
-    {   
-        try 
-        {  
-            event( new \App\Events\GuestUpdate( $request->guest) );
 
-            return response()->json([
-                'msg' => 'success'
-            ]);
-        }
-        catch(\Exception $err) 
-        {  
-            return response()->json([
-                'msg' => $err->getMessage()
-            ]);
-        }
-    }
 }

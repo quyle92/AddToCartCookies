@@ -37,7 +37,8 @@ class GuestSentMessage implements ShouldBroadcastNow
      * @return \Illuminate\Broadcasting\Channel|array
      */
     public function broadcastOn()
-    {  
+    {   
+        // dd($this->guest);
         return new PrivateChannel("guest-sent-message");
     }
 }

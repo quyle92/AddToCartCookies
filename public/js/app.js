@@ -2397,21 +2397,28 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
- //import { mapGetters } from 'vuex'
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: {},
   data: function data() {
     return {
-      isPreChat: true,
       showIt: 'showIt',
       hideIt: 'hideIt',
-      showChat: true,
-      guest: '',
       message: '',
       isTyping: false,
-      isExpire: false,
-      timer: null
+      timer: null,
+      showChatToggle: true,
+      disabled: false
     };
   },
   computed: Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])({
@@ -2423,12 +2430,26 @@ __webpack_require__.r(__webpack_exports__);
     submit: function submit() {
       var _this = this;
 
-      this.isPreChat = false; //get incoming messages
+      axios.post('/joinChat', {
+        guest: this.$store.state.guest
+      }).then(function (response) {
+        console.log(response.data);
 
-      Echo["private"]("admin-sent-message_".concat(this.guest)).listen('AdminSentMessage', function (result) {
+        _this.registerGuest();
+      })["catch"](function (error) {
+        console.log(error);
+      });
+    },
+    registerGuest: function registerGuest() {
+      var _this2 = this;
+
+      this.disabled = false;
+      this.$store.commit('TOGGLE_IS_PRECHAT', false); //get incoming messages
+
+      Echo["private"]("admin-sent-message_".concat(this.$store.state.guest)).listen('AdminSentMessage', function (result) {
         console.log(result);
 
-        _this.$store.state.messages.push({
+        _this2.$store.state.messages.push({
           user: 'admin',
           msg: result.message
         });
@@ -2440,20 +2461,20 @@ __webpack_require__.r(__webpack_exports__);
       Echo["private"]("guest-sent-message").listenForWhisper('typing', function (e) {
         //console.log(e.message);
         if (e.message.length > 0) {
-          _this.isTyping = true;
+          _this2.isTyping = true;
         } else {
-          _this.isTyping = false;
+          _this2.isTyping = false;
         }
       });
     },
     type: function type() {
-      Echo["private"]("admin-sent-message_".concat(this.guest)).whisper('typing', {
+      Echo["private"]("admin-sent-message_".concat(this.$store.state.guest)).whisper('typing', {
         name: 'guest',
         message: this.message
       });
     },
     toggle: function toggle() {
-      this.showChat = !this.showChat;
+      this.showChatToggle = !this.showChatToggle;
     },
     send: function send() {
       if (this.message.length === 0) return;
@@ -2466,7 +2487,7 @@ __webpack_require__.r(__webpack_exports__);
         vueChatScroll();
       });
       axios.post('/guestSentMessage', {
-        guest: this.guest,
+        guest: this.$store.state.guest,
         message: this.message
       }).then(function (response) {})["catch"](function (error) {
         console.log(error);
@@ -2474,9 +2495,18 @@ __webpack_require__.r(__webpack_exports__);
       this.message = ''; //remove typing notification on admin side 
 
       this.type();
+    },
+    closeChatEnd: function closeChatEnd() {
+      this.$store.commit('REMOVE_MESSAGES');
+      this.$store.commit('TOGGLE_IS_CHAT_END', false);
+      this.$store.commit('TOGGLE_IS_PRECHAT', true);
+      this.showChatToggle = true;
     }
   },
-  mounted: function mounted() {},
+  mounted: function mounted() {
+    //if(this.$store.state.guest.length > 0)
+    this.submit();
+  },
   updated: function updated() {
     Vue.nextTick(function () {
       vueChatScroll();
@@ -2490,7 +2520,9 @@ __webpack_require__.r(__webpack_exports__);
     messages: {
       deep: true,
       handler: function handler() {
-        var _this2 = this;
+        var _this3 = this;
+
+        console.log(this.messages);
 
         if (this.timer) {
           clearTimeout(this.timer); //cancel the previous timer.
@@ -2499,8 +2531,16 @@ __webpack_require__.r(__webpack_exports__);
         }
 
         this.timer = setTimeout(function () {
-          if (_this2.messages.length > 1) {
-            _this2.$store.commit('REMOVE_MESSAGES');
+          if (_this3.messages.length > 1) {
+            // this.$store.state.isChatEnd =  true;
+            _this3.$store.commit('TOGGLE_IS_CHAT_END', true);
+
+            _this3.disabled = true; // Echo.private(`admin-sent-message_${this.$store.state.guest}`).stopListening('AdminSentMessage')
+
+            Echo["private"]("admin-sent-message_".concat(_this3.$store.state.guest)).whisper('ChatEnd', {
+              guest: _this3.$store.state.guest
+            });
+            Echo.leave("admin-sent-message_".concat(_this3.$store.state.guest)); //(1)
           }
         }, 3000);
       }
@@ -2509,8 +2549,10 @@ __webpack_require__.r(__webpack_exports__);
 });
 
 function vueChatScroll() {
-  var div = document.getElementById('chatMsg');
-  div.scrollTop = div.scrollHeight;
+  var _document$getElementB;
+
+  var div = (_document$getElementB = document.getElementById('chatMsg')) !== null && _document$getElementB !== void 0 ? _document$getElementB : null;
+  if (div !== null) div.scrollTop = div.scrollHeight;
 }
 
 /***/ }),
@@ -7710,603 +7752,6 @@ function toComment(sourceMap) {
 
 	return '/*# ' + data + ' */';
 }
-
-
-/***/ }),
-
-/***/ "./node_modules/dot-object/index.js":
-/*!******************************************!*\
-  !*** ./node_modules/dot-object/index.js ***!
-  \******************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-function _process (v, mod) {
-  var i
-  var r
-
-  if (typeof mod === 'function') {
-    r = mod(v)
-    if (r !== undefined) {
-      v = r
-    }
-  } else if (Array.isArray(mod)) {
-    for (i = 0; i < mod.length; i++) {
-      r = mod[i](v)
-      if (r !== undefined) {
-        v = r
-      }
-    }
-  }
-
-  return v
-}
-
-function parseKey (key, val) {
-  // detect negative index notation
-  if (key[0] === '-' && Array.isArray(val) && /^-\d+$/.test(key)) {
-    return val.length + parseInt(key, 10)
-  }
-  return key
-}
-
-function isIndex (k) {
-  return /^\d+$/.test(k)
-}
-
-function isObject (val) {
-  return Object.prototype.toString.call(val) === '[object Object]'
-}
-
-function isArrayOrObject (val) {
-  return Object(val) === val
-}
-
-function isEmptyObject (val) {
-  return Object.keys(val).length === 0
-}
-
-var blacklist = ['__proto__', 'prototype', 'constructor']
-var blacklistFilter = function (part) { return blacklist.indexOf(part) === -1 }
-
-function parsePath (path, sep) {
-  if (path.indexOf('[') >= 0) {
-    path = path.replace(/\[/g, sep).replace(/]/g, '')
-  }
-
-  var parts = path.split(sep)
-
-  var check = parts.filter(blacklistFilter)
-
-  if (check.length !== parts.length) {
-    throw Error('Refusing to update blacklisted property ' + path)
-  }
-
-  return parts
-}
-
-var hasOwnProperty = Object.prototype.hasOwnProperty
-
-function DotObject (separator, override, useArray, useBrackets) {
-  if (!(this instanceof DotObject)) {
-    return new DotObject(separator, override, useArray, useBrackets)
-  }
-
-  if (typeof override === 'undefined') override = false
-  if (typeof useArray === 'undefined') useArray = true
-  if (typeof useBrackets === 'undefined') useBrackets = true
-  this.separator = separator || '.'
-  this.override = override
-  this.useArray = useArray
-  this.useBrackets = useBrackets
-  this.keepArray = false
-
-  // contains touched arrays
-  this.cleanup = []
-}
-
-var dotDefault = new DotObject('.', false, true, true)
-function wrap (method) {
-  return function () {
-    return dotDefault[method].apply(dotDefault, arguments)
-  }
-}
-
-DotObject.prototype._fill = function (a, obj, v, mod) {
-  var k = a.shift()
-
-  if (a.length > 0) {
-    obj[k] = obj[k] || (this.useArray && isIndex(a[0]) ? [] : {})
-
-    if (!isArrayOrObject(obj[k])) {
-      if (this.override) {
-        obj[k] = {}
-      } else {
-        if (!(isArrayOrObject(v) && isEmptyObject(v))) {
-          throw new Error(
-            'Trying to redefine `' + k + '` which is a ' + typeof obj[k]
-          )
-        }
-
-        return
-      }
-    }
-
-    this._fill(a, obj[k], v, mod)
-  } else {
-    if (!this.override && isArrayOrObject(obj[k]) && !isEmptyObject(obj[k])) {
-      if (!(isArrayOrObject(v) && isEmptyObject(v))) {
-        throw new Error("Trying to redefine non-empty obj['" + k + "']")
-      }
-
-      return
-    }
-
-    obj[k] = _process(v, mod)
-  }
-}
-
-/**
- *
- * Converts an object with dotted-key/value pairs to it's expanded version
- *
- * Optionally transformed by a set of modifiers.
- *
- * Usage:
- *
- *   var row = {
- *     'nr': 200,
- *     'doc.name': '  My Document  '
- *   }
- *
- *   var mods = {
- *     'doc.name': [_s.trim, _s.underscored]
- *   }
- *
- *   dot.object(row, mods)
- *
- * @param {Object} obj
- * @param {Object} mods
- */
-DotObject.prototype.object = function (obj, mods) {
-  var self = this
-
-  Object.keys(obj).forEach(function (k) {
-    var mod = mods === undefined ? null : mods[k]
-    // normalize array notation.
-    var ok = parsePath(k, self.separator).join(self.separator)
-
-    if (ok.indexOf(self.separator) !== -1) {
-      self._fill(ok.split(self.separator), obj, obj[k], mod)
-      delete obj[k]
-    } else {
-      obj[k] = _process(obj[k], mod)
-    }
-  })
-
-  return obj
-}
-
-/**
- * @param {String} path dotted path
- * @param {String} v value to be set
- * @param {Object} obj object to be modified
- * @param {Function|Array} mod optional modifier
- */
-DotObject.prototype.str = function (path, v, obj, mod) {
-  var ok = parsePath(path, this.separator).join(this.separator)
-
-  if (path.indexOf(this.separator) !== -1) {
-    this._fill(ok.split(this.separator), obj, v, mod)
-  } else {
-    obj[path] = _process(v, mod)
-  }
-
-  return obj
-}
-
-/**
- *
- * Pick a value from an object using dot notation.
- *
- * Optionally remove the value
- *
- * @param {String} path
- * @param {Object} obj
- * @param {Boolean} remove
- */
-DotObject.prototype.pick = function (path, obj, remove, reindexArray) {
-  var i
-  var keys
-  var val
-  var key
-  var cp
-
-  keys = parsePath(path, this.separator)
-  for (i = 0; i < keys.length; i++) {
-    key = parseKey(keys[i], obj)
-    if (obj && typeof obj === 'object' && key in obj) {
-      if (i === keys.length - 1) {
-        if (remove) {
-          val = obj[key]
-          if (reindexArray && Array.isArray(obj)) {
-            obj.splice(key, 1)
-          } else {
-            delete obj[key]
-          }
-          if (Array.isArray(obj)) {
-            cp = keys.slice(0, -1).join('.')
-            if (this.cleanup.indexOf(cp) === -1) {
-              this.cleanup.push(cp)
-            }
-          }
-          return val
-        } else {
-          return obj[key]
-        }
-      } else {
-        obj = obj[key]
-      }
-    } else {
-      return undefined
-    }
-  }
-  if (remove && Array.isArray(obj)) {
-    obj = obj.filter(function (n) {
-      return n !== undefined
-    })
-  }
-  return obj
-}
-/**
- *
- * Delete value from an object using dot notation.
- *
- * @param {String} path
- * @param {Object} obj
- * @return {any} The removed value
- */
-DotObject.prototype.delete = function (path, obj) {
-  return this.remove(path, obj, true)
-}
-
-/**
- *
- * Remove value from an object using dot notation.
- *
- * Will remove multiple items if path is an array.
- * In this case array indexes will be retained until all
- * removals have been processed.
- *
- * Use dot.delete() to automatically  re-index arrays.
- *
- * @param {String|Array<String>} path
- * @param {Object} obj
- * @param {Boolean} reindexArray
- * @return {any} The removed value
- */
-DotObject.prototype.remove = function (path, obj, reindexArray) {
-  var i
-
-  this.cleanup = []
-  if (Array.isArray(path)) {
-    for (i = 0; i < path.length; i++) {
-      this.pick(path[i], obj, true, reindexArray)
-    }
-    if (!reindexArray) {
-      this._cleanup(obj)
-    }
-    return obj
-  } else {
-    return this.pick(path, obj, true, reindexArray)
-  }
-}
-
-DotObject.prototype._cleanup = function (obj) {
-  var ret
-  var i
-  var keys
-  var root
-  if (this.cleanup.length) {
-    for (i = 0; i < this.cleanup.length; i++) {
-      keys = this.cleanup[i].split('.')
-      root = keys.splice(0, -1).join('.')
-      ret = root ? this.pick(root, obj) : obj
-      ret = ret[keys[0]].filter(function (v) {
-        return v !== undefined
-      })
-      this.set(this.cleanup[i], ret, obj)
-    }
-    this.cleanup = []
-  }
-}
-
-/**
- * Alias method  for `dot.remove`
- *
- * Note: this is not an alias for dot.delete()
- *
- * @param {String|Array<String>} path
- * @param {Object} obj
- * @param {Boolean} reindexArray
- * @return {any} The removed value
- */
-DotObject.prototype.del = DotObject.prototype.remove
-
-/**
- *
- * Move a property from one place to the other.
- *
- * If the source path does not exist (undefined)
- * the target property will not be set.
- *
- * @param {String} source
- * @param {String} target
- * @param {Object} obj
- * @param {Function|Array} mods
- * @param {Boolean} merge
- */
-DotObject.prototype.move = function (source, target, obj, mods, merge) {
-  if (typeof mods === 'function' || Array.isArray(mods)) {
-    this.set(target, _process(this.pick(source, obj, true), mods), obj, merge)
-  } else {
-    merge = mods
-    this.set(target, this.pick(source, obj, true), obj, merge)
-  }
-
-  return obj
-}
-
-/**
- *
- * Transfer a property from one object to another object.
- *
- * If the source path does not exist (undefined)
- * the property on the other object will not be set.
- *
- * @param {String} source
- * @param {String} target
- * @param {Object} obj1
- * @param {Object} obj2
- * @param {Function|Array} mods
- * @param {Boolean} merge
- */
-DotObject.prototype.transfer = function (
-  source,
-  target,
-  obj1,
-  obj2,
-  mods,
-  merge
-) {
-  if (typeof mods === 'function' || Array.isArray(mods)) {
-    this.set(
-      target,
-      _process(this.pick(source, obj1, true), mods),
-      obj2,
-      merge
-    )
-  } else {
-    merge = mods
-    this.set(target, this.pick(source, obj1, true), obj2, merge)
-  }
-
-  return obj2
-}
-
-/**
- *
- * Copy a property from one object to another object.
- *
- * If the source path does not exist (undefined)
- * the property on the other object will not be set.
- *
- * @param {String} source
- * @param {String} target
- * @param {Object} obj1
- * @param {Object} obj2
- * @param {Function|Array} mods
- * @param {Boolean} merge
- */
-DotObject.prototype.copy = function (source, target, obj1, obj2, mods, merge) {
-  if (typeof mods === 'function' || Array.isArray(mods)) {
-    this.set(
-      target,
-      _process(
-        // clone what is picked
-        JSON.parse(JSON.stringify(this.pick(source, obj1, false))),
-        mods
-      ),
-      obj2,
-      merge
-    )
-  } else {
-    merge = mods
-    this.set(target, this.pick(source, obj1, false), obj2, merge)
-  }
-
-  return obj2
-}
-
-/**
- *
- * Set a property on an object using dot notation.
- *
- * @param {String} path
- * @param {any} val
- * @param {Object} obj
- * @param {Boolean} merge
- */
-DotObject.prototype.set = function (path, val, obj, merge) {
-  var i
-  var k
-  var keys
-  var key
-
-  // Do not operate if the value is undefined.
-  if (typeof val === 'undefined') {
-    return obj
-  }
-  keys = parsePath(path, this.separator)
-
-  for (i = 0; i < keys.length; i++) {
-    key = keys[i]
-    if (i === keys.length - 1) {
-      if (merge && isObject(val) && isObject(obj[key])) {
-        for (k in val) {
-          if (hasOwnProperty.call(val, k)) {
-            obj[key][k] = val[k]
-          }
-        }
-      } else if (merge && Array.isArray(obj[key]) && Array.isArray(val)) {
-        for (var j = 0; j < val.length; j++) {
-          obj[keys[i]].push(val[j])
-        }
-      } else {
-        obj[key] = val
-      }
-    } else if (
-      // force the value to be an object
-      !hasOwnProperty.call(obj, key) ||
-      (!isObject(obj[key]) && !Array.isArray(obj[key]))
-    ) {
-      // initialize as array if next key is numeric
-      if (/^\d+$/.test(keys[i + 1])) {
-        obj[key] = []
-      } else {
-        obj[key] = {}
-      }
-    }
-    obj = obj[key]
-  }
-  return obj
-}
-
-/**
- *
- * Transform an object
- *
- * Usage:
- *
- *   var obj = {
- *     "id": 1,
- *    "some": {
- *      "thing": "else"
- *    }
- *   }
- *
- *   var transform = {
- *     "id": "nr",
- *    "some.thing": "name"
- *   }
- *
- *   var tgt = dot.transform(transform, obj)
- *
- * @param {Object} recipe Transform recipe
- * @param {Object} obj Object to be transformed
- * @param {Array} mods modifiers for the target
- */
-DotObject.prototype.transform = function (recipe, obj, tgt) {
-  obj = obj || {}
-  tgt = tgt || {}
-  Object.keys(recipe).forEach(
-    function (key) {
-      this.set(recipe[key], this.pick(key, obj), tgt)
-    }.bind(this)
-  )
-  return tgt
-}
-
-/**
- *
- * Convert object to dotted-key/value pair
- *
- * Usage:
- *
- *   var tgt = dot.dot(obj)
- *
- *   or
- *
- *   var tgt = {}
- *   dot.dot(obj, tgt)
- *
- * @param {Object} obj source object
- * @param {Object} tgt target object
- * @param {Array} path path array (internal)
- */
-DotObject.prototype.dot = function (obj, tgt, path) {
-  tgt = tgt || {}
-  path = path || []
-  var isArray = Array.isArray(obj)
-
-  Object.keys(obj).forEach(
-    function (key) {
-      var index = isArray && this.useBrackets ? '[' + key + ']' : key
-      if (
-        isArrayOrObject(obj[key]) &&
-        ((isObject(obj[key]) && !isEmptyObject(obj[key])) ||
-          (Array.isArray(obj[key]) && !this.keepArray && obj[key].length !== 0))
-      ) {
-        if (isArray && this.useBrackets) {
-          var previousKey = path[path.length - 1] || ''
-          return this.dot(
-            obj[key],
-            tgt,
-            path.slice(0, -1).concat(previousKey + index)
-          )
-        } else {
-          return this.dot(obj[key], tgt, path.concat(index))
-        }
-      } else {
-        if (isArray && this.useBrackets) {
-          tgt[path.join(this.separator).concat('[' + key + ']')] = obj[key]
-        } else {
-          tgt[path.concat(index).join(this.separator)] = obj[key]
-        }
-      }
-    }.bind(this)
-  )
-  return tgt
-}
-
-DotObject.pick = wrap('pick')
-DotObject.move = wrap('move')
-DotObject.transfer = wrap('transfer')
-DotObject.transform = wrap('transform')
-DotObject.copy = wrap('copy')
-DotObject.object = wrap('object')
-DotObject.str = wrap('str')
-DotObject.set = wrap('set')
-DotObject.delete = wrap('delete')
-DotObject.del = DotObject.remove = wrap('remove')
-DotObject.dot = wrap('dot');
-['override', 'overwrite'].forEach(function (prop) {
-  Object.defineProperty(DotObject, prop, {
-    get: function () {
-      return dotDefault.override
-    },
-    set: function (val) {
-      dotDefault.override = !!val
-    }
-  })
-});
-['useArray', 'keepArray', 'useBrackets'].forEach(function (prop) {
-  Object.defineProperty(DotObject, prop, {
-    get: function () {
-      return dotDefault[prop]
-    },
-    set: function (val) {
-      dotDefault[prop] = val
-    }
-  })
-})
-
-DotObject._process = _process
-
-module.exports = DotObject
 
 
 /***/ }),
@@ -21048,6 +20493,184 @@ if ( typeof noGlobal === "undefined" ) {
 
 return jQuery;
 } );
+
+
+/***/ }),
+
+/***/ "./node_modules/js-cookie/src/js.cookie.js":
+/*!*************************************************!*\
+  !*** ./node_modules/js-cookie/src/js.cookie.js ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+ * JavaScript Cookie v2.2.1
+ * https://github.com/js-cookie/js-cookie
+ *
+ * Copyright 2006, 2015 Klaus Hartl & Fagner Brack
+ * Released under the MIT license
+ */
+;(function (factory) {
+	var registeredInModuleLoader;
+	if (true) {
+		!(__WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) :
+				__WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		registeredInModuleLoader = true;
+	}
+	if (true) {
+		module.exports = factory();
+		registeredInModuleLoader = true;
+	}
+	if (!registeredInModuleLoader) {
+		var OldCookies = window.Cookies;
+		var api = window.Cookies = factory();
+		api.noConflict = function () {
+			window.Cookies = OldCookies;
+			return api;
+		};
+	}
+}(function () {
+	function extend () {
+		var i = 0;
+		var result = {};
+		for (; i < arguments.length; i++) {
+			var attributes = arguments[ i ];
+			for (var key in attributes) {
+				result[key] = attributes[key];
+			}
+		}
+		return result;
+	}
+
+	function decode (s) {
+		return s.replace(/(%[0-9A-Z]{2})+/g, decodeURIComponent);
+	}
+
+	function init (converter) {
+		function api() {}
+
+		function set (key, value, attributes) {
+			if (typeof document === 'undefined') {
+				return;
+			}
+
+			attributes = extend({
+				path: '/'
+			}, api.defaults, attributes);
+
+			if (typeof attributes.expires === 'number') {
+				attributes.expires = new Date(new Date() * 1 + attributes.expires * 864e+5);
+			}
+
+			// We're using "expires" because "max-age" is not supported by IE
+			attributes.expires = attributes.expires ? attributes.expires.toUTCString() : '';
+
+			try {
+				var result = JSON.stringify(value);
+				if (/^[\{\[]/.test(result)) {
+					value = result;
+				}
+			} catch (e) {}
+
+			value = converter.write ?
+				converter.write(value, key) :
+				encodeURIComponent(String(value))
+					.replace(/%(23|24|26|2B|3A|3C|3E|3D|2F|3F|40|5B|5D|5E|60|7B|7D|7C)/g, decodeURIComponent);
+
+			key = encodeURIComponent(String(key))
+				.replace(/%(23|24|26|2B|5E|60|7C)/g, decodeURIComponent)
+				.replace(/[\(\)]/g, escape);
+
+			var stringifiedAttributes = '';
+			for (var attributeName in attributes) {
+				if (!attributes[attributeName]) {
+					continue;
+				}
+				stringifiedAttributes += '; ' + attributeName;
+				if (attributes[attributeName] === true) {
+					continue;
+				}
+
+				// Considers RFC 6265 section 5.2:
+				// ...
+				// 3.  If the remaining unparsed-attributes contains a %x3B (";")
+				//     character:
+				// Consume the characters of the unparsed-attributes up to,
+				// not including, the first %x3B (";") character.
+				// ...
+				stringifiedAttributes += '=' + attributes[attributeName].split(';')[0];
+			}
+
+			return (document.cookie = key + '=' + value + stringifiedAttributes);
+		}
+
+		function get (key, json) {
+			if (typeof document === 'undefined') {
+				return;
+			}
+
+			var jar = {};
+			// To prevent the for loop in the first place assign an empty array
+			// in case there are no cookies at all.
+			var cookies = document.cookie ? document.cookie.split('; ') : [];
+			var i = 0;
+
+			for (; i < cookies.length; i++) {
+				var parts = cookies[i].split('=');
+				var cookie = parts.slice(1).join('=');
+
+				if (!json && cookie.charAt(0) === '"') {
+					cookie = cookie.slice(1, -1);
+				}
+
+				try {
+					var name = decode(parts[0]);
+					cookie = (converter.read || converter)(cookie, name) ||
+						decode(cookie);
+
+					if (json) {
+						try {
+							cookie = JSON.parse(cookie);
+						} catch (e) {}
+					}
+
+					jar[name] = cookie;
+
+					if (key === name) {
+						break;
+					}
+				} catch (e) {}
+			}
+
+			return key ? jar[key] : jar;
+		}
+
+		api.set = set;
+		api.get = function (key) {
+			return get(key, false /* read as raw */);
+		};
+		api.getJSON = function (key) {
+			return get(key, true /* read as json */);
+		};
+		api.remove = function (key, attributes) {
+			set(key, '', extend(attributes, {
+				expires: -1
+			}));
+		};
+
+		api.defaults = {};
+
+		api.withConverter = init;
+
+		return api;
+	}
+
+	return init(function () {});
+}));
 
 
 /***/ }),
@@ -53745,7 +53368,6 @@ var render = function() {
     _c("div", { staticClass: "row" }, [
       _c("div", { staticClass: "col-md-4 chat-widget" }, [
         _c("div", { staticClass: "card" }, [
-          _vm._v(_vm._s(_vm.$store.state.messages) + "\n\t\t\t\t\t"),
           _c(
             "div",
             {
@@ -53759,11 +53381,14 @@ var render = function() {
               }
             },
             [
+              _vm._v(
+                "---" + _vm._s(this.$store.state.guest) + "\n\t\t\t\t\t\t"
+              ),
               _c(
                 "div",
                 {
                   staticClass: "pull-left",
-                  class: [_vm.isPreChat ? _vm.showIt : _vm.hideIt]
+                  class: [_vm.$store.state.isPreChat ? _vm.showIt : _vm.hideIt]
                 },
                 [
                   _c("i", { staticClass: "fas fa-lg fa-comment-dots" }),
@@ -53777,7 +53402,7 @@ var render = function() {
                 "div",
                 {
                   staticClass: "pull-left",
-                  class: [_vm.isPreChat ? _vm.hideIt : _vm.showIt]
+                  class: [_vm.$store.state.isPreChat ? _vm.hideIt : _vm.showIt]
                 },
                 [
                   _c("i", { staticClass: "fas fa-lg fa-comment-dots" }),
@@ -53789,7 +53414,7 @@ var render = function() {
                 _c("i", {
                   staticClass: "fas  fa-lg",
                   class: [
-                    _vm.showChat
+                    _vm.showChatToggle
                       ? "fa-arrow-alt-circle-down"
                       : "fa-arrow-alt-circle-up"
                   ]
@@ -53798,12 +53423,12 @@ var render = function() {
             ]
           ),
           _vm._v(" "),
-          _vm.showChat
+          _vm.showChatToggle
             ? _c(
                 "div",
                 {
                   staticClass: "card-body",
-                  class: [_vm.isPreChat ? _vm.showIt : _vm.hideIt]
+                  class: [_vm.$store.state.isPreChat ? _vm.showIt : _vm.hideIt]
                 },
                 [
                   _c("div", { staticClass: "form-group" }, [
@@ -53816,8 +53441,8 @@ var render = function() {
                         {
                           name: "model",
                           rawName: "v-model",
-                          value: _vm.guest,
-                          expression: "guest"
+                          value: _vm.$store.state.guest,
+                          expression: "$store.state.guest"
                         }
                       ],
                       staticClass: "form-control",
@@ -53826,7 +53451,7 @@ var render = function() {
                         id: "guest_name",
                         placeholder: "Enter your name"
                       },
-                      domProps: { value: _vm.guest },
+                      domProps: { value: _vm.$store.state.guest },
                       on: {
                         keyup: function($event) {
                           if (
@@ -53847,7 +53472,11 @@ var render = function() {
                           if ($event.target.composing) {
                             return
                           }
-                          _vm.guest = $event.target.value
+                          _vm.$set(
+                            _vm.$store.state,
+                            "guest",
+                            $event.target.value
+                          )
                         }
                       }
                     })
@@ -53872,12 +53501,12 @@ var render = function() {
             : _vm._e()
         ]),
         _vm._v(" "),
-        _vm.showChat
+        _vm.showChatToggle
           ? _c(
               "div",
               {
                 staticClass: "card-collapse collapse show",
-                class: [_vm.isPreChat ? _vm.hideIt : _vm.showIt],
+                class: [_vm.$store.state.isPreChat ? _vm.hideIt : _vm.showIt],
                 attrs: { id: "collapseOne" }
               },
               [
@@ -53888,86 +53517,131 @@ var render = function() {
                     _c(
                       "ul",
                       { staticClass: "chat incoming_msg" },
-                      _vm._l(_vm.$store.state.messages, function(item) {
-                        return _c("li", { staticClass: " clearfix" }, [
-                          item.user === "admin"
-                            ? _c(
-                                "div",
-                                {
-                                  class: [item.user === "admin" ? "left" : ""]
-                                },
-                                [
-                                  _vm._m(0, true),
-                                  _vm._v(" "),
-                                  _c(
-                                    "div",
-                                    { staticClass: "chat-body clearfix" },
-                                    [
-                                      _c("div", { staticClass: "header" }, [
-                                        _c(
-                                          "strong",
-                                          { staticClass: "primary-font" },
-                                          [_vm._v(_vm._s(item.user))]
-                                        ),
+                      [
+                        _vm._l(_vm.$store.state.messages, function(item) {
+                          return _c("li", { staticClass: " clearfix" }, [
+                            item.user === "admin"
+                              ? _c(
+                                  "div",
+                                  {
+                                    class: [item.user === "admin" ? "left" : ""]
+                                  },
+                                  [
+                                    _vm._m(0, true),
+                                    _vm._v(" "),
+                                    _c(
+                                      "div",
+                                      { staticClass: "chat-body clearfix" },
+                                      [
+                                        _c("div", { staticClass: "header" }, [
+                                          _c(
+                                            "strong",
+                                            { staticClass: "primary-font" },
+                                            [_vm._v(_vm._s(item.user))]
+                                          ),
+                                          _vm._v(" "),
+                                          _vm._m(1, true)
+                                        ]),
                                         _vm._v(" "),
-                                        _vm._m(1, true)
-                                      ]),
-                                      _vm._v(" "),
-                                      _c("p", [
-                                        _vm._v(
-                                          "\n\t\t\t\t\t\t\t\t\t\t" +
-                                            _vm._s(item.msg) +
-                                            "\n\t\t\t\t\t\t\t\t\t"
-                                        )
-                                      ])
+                                        _c("p", [
+                                          _vm._v(
+                                            "\n\t\t\t\t\t\t\t\t\t\t" +
+                                              _vm._s(item.msg) +
+                                              "\n\t\t\t\t\t\t\t\t\t"
+                                          )
+                                        ])
+                                      ]
+                                    )
+                                  ]
+                                )
+                              : _vm._e(),
+                            _vm._v(" "),
+                            item.user !== "admin"
+                              ? _c(
+                                  "div",
+                                  {
+                                    class: [
+                                      item.user !== "admin" ? "right" : ""
                                     ]
-                                  )
-                                ]
-                              )
-                            : _vm._e(),
-                          _vm._v(" "),
-                          item.user !== "admin"
-                            ? _c(
-                                "div",
-                                {
-                                  class: [item.user !== "admin" ? "right" : ""]
-                                },
-                                [
-                                  _vm._m(2, true),
-                                  _vm._v(" "),
-                                  _c(
-                                    "div",
-                                    { staticClass: "chat-body clearfix" },
-                                    [
-                                      _c("div", { staticClass: "header" }, [
-                                        _vm._m(3, true),
+                                  },
+                                  [
+                                    _vm._m(2, true),
+                                    _vm._v(" "),
+                                    _c(
+                                      "div",
+                                      { staticClass: "chat-body clearfix" },
+                                      [
+                                        _c("div", { staticClass: "header" }, [
+                                          _vm._m(3, true),
+                                          _vm._v(" "),
+                                          _c(
+                                            "strong",
+                                            {
+                                              staticClass:
+                                                "pull-right primary-font",
+                                              attrs: { id: "guestName" }
+                                            },
+                                            [_vm._v(_vm._s(item.user))]
+                                          )
+                                        ]),
                                         _vm._v(" "),
-                                        _c(
-                                          "strong",
-                                          {
-                                            staticClass:
-                                              "pull-right primary-font",
-                                            attrs: { id: "guestName" }
-                                          },
-                                          [_vm._v(_vm._s(item.user))]
-                                        )
-                                      ]),
-                                      _vm._v(" "),
-                                      _c("p", [
-                                        _vm._v(
-                                          "\n\t\t\t\t\t\t\t\t\t\t" +
-                                            _vm._s(item.msg) +
-                                            "\n\t\t\t\t\t\t\t\t\t"
-                                        )
-                                      ])
-                                    ]
-                                  )
-                                ]
-                              )
-                            : _vm._e()
-                        ])
-                      }),
-                      0
+                                        _c("p", [
+                                          _vm._v(
+                                            "\n\t\t\t\t\t\t\t\t\t\t" +
+                                              _vm._s(item.msg) +
+                                              "\n\t\t\t\t\t\t\t\t\t"
+                                          )
+                                        ])
+                                      ]
+                                    )
+                                  ]
+                                )
+                              : _vm._e()
+                          ])
+                        }),
+                        _vm._v(" "),
+                        _vm.$store.state.isChatEnd
+                          ? _c(
+                              "div",
+                              {
+                                staticClass:
+                                  "alert alert-warning alert-dismissible fade show",
+                                attrs: { role: "alert" }
+                              },
+                              [
+                                _c("strong", [_vm._v("Chat Ended!")]),
+                                _vm._v(
+                                  " Thanks for your conversation.\n\t\t\t\t\t\t  "
+                                ),
+                                _c(
+                                  "button",
+                                  {
+                                    staticClass: "close",
+                                    attrs: {
+                                      type: "button",
+                                      "data-dismiss": "alert",
+                                      "aria-label": "Close"
+                                    },
+                                    on: {
+                                      click: function($event) {
+                                        $event.preventDefault()
+                                        return _vm.closeChatEnd($event)
+                                      }
+                                    }
+                                  },
+                                  [
+                                    _c(
+                                      "span",
+                                      { attrs: { "aria-hidden": "true" } },
+                                      [_vm._v("×")]
+                                    )
+                                  ]
+                                )
+                              ]
+                            )
+                          : _vm._e()
+                      ],
+                      2
                     )
                   ]
                 ),
@@ -53980,68 +53654,70 @@ var render = function() {
                   : _vm._e(),
                 _vm._v(" "),
                 _c("div", { staticClass: "card-footer" }, [
-                  _c("div", { staticClass: "input-group" }, [
-                    _c("input", {
-                      directives: [
-                        {
-                          name: "model",
-                          rawName: "v-model",
-                          value: _vm.message,
-                          expression: "message"
-                        }
-                      ],
-                      staticClass: "form-control input-sm",
-                      attrs: {
-                        id: "btn-input",
-                        type: "text",
-                        placeholder: "Type your message here..."
-                      },
-                      domProps: { value: _vm.message },
-                      on: {
-                        keyup: function($event) {
-                          if (
-                            !$event.type.indexOf("key") &&
-                            _vm._k(
-                              $event.keyCode,
-                              "enter",
-                              13,
-                              $event.key,
-                              "Enter"
-                            )
-                          ) {
-                            return null
-                          }
-                          return _vm.send($event)
-                        },
-                        input: [
-                          function($event) {
-                            if ($event.target.composing) {
-                              return
+                  !_vm.disabled
+                    ? _c("div", { staticClass: "input-group" }, [
+                        _c("input", {
+                          directives: [
+                            {
+                              name: "model",
+                              rawName: "v-model",
+                              value: _vm.message,
+                              expression: "message"
                             }
-                            _vm.message = $event.target.value
+                          ],
+                          staticClass: "form-control input-sm",
+                          attrs: {
+                            id: "btn-input",
+                            type: "text",
+                            placeholder: "Type your message here..."
                           },
-                          _vm.type
-                        ]
-                      }
-                    }),
-                    _vm._v(" "),
-                    _c("span", { staticClass: "input-group-btn" }, [
-                      _c(
-                        "button",
-                        {
-                          staticClass: "btn btn-warning btn-sm",
-                          attrs: { id: "btn-chat" },
+                          domProps: { value: _vm.message },
                           on: {
-                            click: function($event) {
-                              $event.preventDefault()
+                            keyup: function($event) {
+                              if (
+                                !$event.type.indexOf("key") &&
+                                _vm._k(
+                                  $event.keyCode,
+                                  "enter",
+                                  13,
+                                  $event.key,
+                                  "Enter"
+                                )
+                              ) {
+                                return null
+                              }
                               return _vm.send($event)
-                            }
+                            },
+                            input: [
+                              function($event) {
+                                if ($event.target.composing) {
+                                  return
+                                }
+                                _vm.message = $event.target.value
+                              },
+                              _vm.type
+                            ]
                           }
-                        },
-                        [_vm._v("\n\t\t\t\t\t\t\tSend")]
-                      )
-                    ])
-                  ])
+                        }),
+                        _vm._v(" "),
+                        _c("span", { staticClass: "input-group-btn" }, [
+                          _c(
+                            "button",
+                            {
+                              staticClass: "btn btn-warning btn-sm",
+                              attrs: { id: "btn-chat" },
+                              on: {
+                                click: function($event) {
+                                  $event.preventDefault()
+                                  return _vm.send($event)
+                                }
+                              }
+                            },
+                            [_vm._v("\n\t\t\t\t\t\t\tSend")]
+                          )
+                        ])
+                      ])
+                    : _vm._e()
                 ])
               ]
             )
@@ -66854,23 +66530,6 @@ if (false) {} else {
 
 /***/ }),
 
-/***/ "./node_modules/vuex-multi-tab-state/lib/index.esm.js":
-/*!************************************************************!*\
-  !*** ./node_modules/vuex-multi-tab-state/lib/index.esm.js ***!
-  \************************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var dot_object__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! dot-object */ "./node_modules/dot-object/index.js");
-/* harmony import */ var dot_object__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(dot_object__WEBPACK_IMPORTED_MODULE_0__);
-function n(){return(n=Object.assign||function(t){for(var e=1;e<arguments.length;e++){var a=arguments[e];for(var n in a)Object.prototype.hasOwnProperty.call(a,n)&&(t[n]=a[n])}return t}).apply(this,arguments)}var r=function(){function t(t){this.tabId=Math.random().toString(36).substring(2,15)+Math.random().toString(36).substring(2,15),this.window=t}var e=t.prototype;return e.storageAvailable=function(){var t="vuex-multi-tab-state-test";try{return this.window.localStorage.setItem(t,t),this.window.localStorage.removeItem(t),!0}catch(t){return!1}},e.saveState=function(t,e){var a=JSON.stringify({id:this.tabId,state:e});this.window.localStorage.setItem(t,a)},e.fetchState=function(t,e){var a=this.window.localStorage.getItem(t);if(a)try{e(JSON.parse(a).state)}catch(e){console.warn("State saved in localStorage with key "+t+" is invalid!")}},e.addEventListener=function(t,e){var a=this;return this.window.addEventListener("storage",function(n){if(n.newValue&&n.key===t)try{var r=JSON.parse(n.newValue);r.id!==a.tabId&&e(r.state)}catch(e){console.warn("New state saved in localStorage with key "+t+" is invalid")}})},t}();/* harmony default export */ __webpack_exports__["default"] = (function(i){var o=new r(window),s="vuex-multi-tab",c=[];function u(r,i){if(0===c.length)return n({},i);var o=n({},r);return c.forEach(function(n){var r=Object(dot_object__WEBPACK_IMPORTED_MODULE_0__["pick"])(n,i);void 0===r?Object(dot_object__WEBPACK_IMPORTED_MODULE_0__["remove"])(n,o):Object(dot_object__WEBPACK_IMPORTED_MODULE_0__["set"])(n,r,o)}),o}if(i&&(s=i.key?i.key:s,c=i.statesPaths?i.statesPaths:c),!o.storageAvailable())throw new Error("Local storage is not available!");return function(a){o.fetchState(s,function(t){a.replaceState(u(a.state,t))}),o.addEventListener(s,function(t){a.replaceState(u(a.state,t))}),a.subscribe(function(a,n){var r=n;c.length>0&&(r=function(a){var n={};return c.forEach(function(r){Object(dot_object__WEBPACK_IMPORTED_MODULE_0__["set"])(r,Object(dot_object__WEBPACK_IMPORTED_MODULE_0__["pick"])(r,a),n)}),n}(n)),o.saveState(s,r)})}});
-//# sourceMappingURL=index.esm.js.map
-
-
-/***/ }),
-
 /***/ "./node_modules/vuex-persistedstate/dist/vuex-persistedstate.es.js":
 /*!*************************************************************************!*\
   !*** ./node_modules/vuex-persistedstate/dist/vuex-persistedstate.es.js ***!
@@ -69092,24 +68751,25 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.common.js");
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(vue__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm.js");
-/* harmony import */ var vuex_multi_tab_state__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vuex-multi-tab-state */ "./node_modules/vuex-multi-tab-state/lib/index.esm.js");
-/* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./helper */ "./resources/js/helper.js");
-/* harmony import */ var vuex_persistedstate__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! vuex-persistedstate */ "./node_modules/vuex-persistedstate/dist/vuex-persistedstate.es.js");
-/* harmony import */ var secure_ls__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! secure-ls */ "./node_modules/secure-ls/dist/secure-ls.js");
-/* harmony import */ var secure_ls__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(secure_ls__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./helper */ "./resources/js/helper.js");
+/* harmony import */ var vuex_persistedstate__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! vuex-persistedstate */ "./node_modules/vuex-persistedstate/dist/vuex-persistedstate.es.js");
+/* harmony import */ var secure_ls__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! secure-ls */ "./node_modules/secure-ls/dist/secure-ls.js");
+/* harmony import */ var secure_ls__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(secure_ls__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! js-cookie */ "./node_modules/js-cookie/src/js.cookie.js");
+/* harmony import */ var js_cookie__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(js_cookie__WEBPACK_IMPORTED_MODULE_5__);
 
 
 vue__WEBPACK_IMPORTED_MODULE_0___default.a.use(vuex__WEBPACK_IMPORTED_MODULE_1__["default"]);
 
 
-
-var _helper = new _helper__WEBPACK_IMPORTED_MODULE_3__["default"]();
-
+var _helper = new _helper__WEBPACK_IMPORTED_MODULE_2__["default"]();
 
 
-var ls = new secure_ls__WEBPACK_IMPORTED_MODULE_5___default.a({
+
+var ls = new secure_ls__WEBPACK_IMPORTED_MODULE_4___default.a({
   isCompression: false
 });
+
 /* harmony default export */ __webpack_exports__["default"] = (new vuex__WEBPACK_IMPORTED_MODULE_1__["default"].Store({
   state: {
     selectedProduct: {},
@@ -69131,6 +68791,8 @@ var ls = new secure_ls__WEBPACK_IMPORTED_MODULE_5___default.a({
     maxQuantityArr: [],
     lastSelectedProduct: {},
     productsOnCart: [],
+    isPreChat: true,
+    isChatEnd: false,
     listOfGuests: [],
     messages: [{
       user: 'admin',
@@ -69138,7 +68800,8 @@ var ls = new secure_ls__WEBPACK_IMPORTED_MODULE_5___default.a({
     }, {
       user: 'guest',
       msg: 'Yes, I need help'
-    }]
+    }],
+    guest: ''
   },
   getters: {},
   mutations: {
@@ -69197,8 +68860,16 @@ var ls = new secure_ls__WEBPACK_IMPORTED_MODULE_5___default.a({
       var defaultMessage = this.state.messages.shift();
       this.state.messages = [];
       this.state.messages.push(defaultMessage);
-      ls.remove('vuex');
-      alert('expire');
+      this.state.isPreChat = false;
+    },
+    TOGGLE_IS_CHAT_END: function TOGGLE_IS_CHAT_END(state, payload) {
+      this.state.isChatEnd = payload;
+    },
+    TOGGLE_IS_PRECHAT: function TOGGLE_IS_PRECHAT(state, payload) {
+      this.state.isPreChat = payload;
+    },
+    SET_GUEST: function SET_GUEST(state, payload) {
+      this.state.guest = payload;
     }
   },
   actions: {
@@ -69211,19 +68882,13 @@ var ls = new secure_ls__WEBPACK_IMPORTED_MODULE_5___default.a({
       });
     }
   },
-  plugins: [Object(vuex_persistedstate__WEBPACK_IMPORTED_MODULE_4__["default"])({
-    storage: {
-      getItem: function getItem(key) {
-        return ls.get(key);
-      },
-      setItem: function setItem(key, value) {
-        return ls.set(key, value);
-      },
-      removeItem: function removeItem(key) {
-        return ls.remove(key);
-      }
-    },
-    paths: ['messages']
+  plugins: [Object(vuex_persistedstate__WEBPACK_IMPORTED_MODULE_3__["default"])({
+    // storage: {
+    //        getItem: key => Cookies.get(key),
+    //     setItem: (key, value) => Cookies.set(key, value, { expires: 1/(86400/3), secure: true }),
+    //     removeItem: key => Cookies.remove(key)
+    //    },
+    paths: ['messages', 'isPreChat', 'showChatToggle', 'isChatEnd', 'guest']
   })]
 }));
 

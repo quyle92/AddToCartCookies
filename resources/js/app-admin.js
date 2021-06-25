@@ -10,7 +10,7 @@ require('admin-lte');
 
 window.Vue = require('vue');
 
-import store from './store';
+import store from './store-admin';
 Vue.prototype.$store = store;
 
 import router from './router';

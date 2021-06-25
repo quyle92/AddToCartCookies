@@ -1,13 +1,13 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 Vue.use(Vuex);
-import createMultiTabState from 'vuex-multi-tab-state';
 
 import Helper from './helper';
 let _helper = new Helper()
 import createPersistedState from "vuex-persistedstate";
 import SecureLS from "secure-ls";
 const ls = new SecureLS({ isCompression: false });
+import Cookies from 'js-cookie'
 
 export default  new Vuex.Store({
 	state:
@@ -31,6 +31,8 @@ export default  new Vuex.Store({
         maxQuantityArr:[],
         lastSelectedProduct: {},
       	productsOnCart: [],
+      	isPreChat: true,
+		isChatEnd: false,
       	listOfGuests: [],
       	messages:[
  			{
@@ -42,12 +44,14 @@ export default  new Vuex.Store({
  				msg:'Yes, I need help'
  			},
  		],
+ 		guest:'',
+ 		
 
 
 	},
 	getters:
 	{
-
+		
 
 	},
 	mutations:
@@ -115,7 +119,6 @@ export default  new Vuex.Store({
 		SET_LAST_SELECTED_PRODUCT( state, payload ){
 			this.state.lastSelectedProduct = payload;
 		},
-
 		ADD_MESSAGES( state, payload ) {
 			this.state.messages.push( payload );
 		},
@@ -123,9 +126,19 @@ export default  new Vuex.Store({
 			let defaultMessage = this.state.messages.shift();
 			this.state.messages = [];
 			this.state.messages.push( defaultMessage );
-			ls.remove('vuex')
-			alert('expire');
+			this.state.isPreChat = false
+
+		},
+		TOGGLE_IS_CHAT_END( state, payload) {
+			this.state.isChatEnd = payload;
+		},
+		TOGGLE_IS_PRECHAT( state, payload) {
+			this.state.isPreChat = payload;
+		},
+		SET_GUEST( state, payload) {
+			this.state.guest = payload;
 		}
+
 
 	},
 	actions:
@@ -141,12 +154,12 @@ export default  new Vuex.Store({
 		}
 	},
 	plugins: [createPersistedState({
-		 storage: {
-	        getItem: (key) => ls.get(key),
-	        setItem: (key, value) => ls.set(key, value),
-	        removeItem: (key) => ls.remove(key)
-	      },
-		paths:['messages']
+		// storage: {
+	 //        getItem: key => Cookies.get(key),
+		//     setItem: (key, value) => Cookies.set(key, value, { expires: 1/(86400/3), secure: true }),
+		//     removeItem: key => Cookies.remove(key)
+	 //    },
+		paths:['messages', 'isPreChat', 'showChatToggle', 'isChatEnd', 'guest', ]
 	})],
 });
 

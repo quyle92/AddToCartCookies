@@ -2,30 +2,30 @@
 	<div class="container">
 		<div class="row">
 			<div class="col-md-4 chat-widget">
-				<div class="card">{{$store.state.messages}}
-					<div class="card-header" id="accordion"  @click.prevent="toggle">
-						<div  v-bind:class="[isPreChat ? showIt : hideIt]"  class="pull-left">
+				<div class="card">
+					<div class="card-header" id="accordion"  @click.prevent="toggle">---{{this.$store.state.guest}}
+						<div  v-bind:class="[$store.state.isPreChat ? showIt : hideIt]"  class="pull-left">
 							<i class="fas fa-lg fa-comment-dots"></i>  Fill in the form below to start chatting
 						</div>
-						<div v-bind:class="[isPreChat ? hideIt : showIt]" class="pull-left">
+						<div v-bind:class="[$store.state.isPreChat ? hideIt : showIt]" class="pull-left">
 							<i class="fas fa-lg fa-comment-dots"></i> Chat
 						</div>
 						<div class="btn-group pull-right">
 							<i class="fas  fa-lg" 
-							:class="[showChat ? 'fa-arrow-alt-circle-down' : 'fa-arrow-alt-circle-up' ]">
+							:class="[showChatToggle ? 'fa-arrow-alt-circle-down' : 'fa-arrow-alt-circle-up' ]">
 						</i>
 					</div>
 				</div>
 
-				<div class="card-body" v-bind:class="[isPreChat ? showIt : hideIt]" v-if="showChat">
+				<div class="card-body" v-bind:class="[$store.state.isPreChat ? showIt : hideIt]" v-if="showChatToggle">
 					<div class="form-group">
 						<label for="guest_name">Name</label>
-						<input type="text" class="form-control" id="guest_name"  placeholder="Enter your name" v-model="guest" @keyup.enter="submit"/>
+						<input type="text" class="form-control" id="guest_name"  placeholder="Enter your name" v-model="$store.state.guest" @keyup.enter="submit"/>
 					</div>
 					<button type="submit" class="btn btn-primary submit" @click.prevent="submit">Submit</button>
 				</div>
 			</div>
-			<div class="card-collapse collapse show" id="collapseOne" v-bind:class="[isPreChat ? hideIt : showIt]" v-if="showChat">
+			<div class="card-collapse collapse show" id="collapseOne" v-bind:class="[$store.state.isPreChat ? hideIt : showIt]" v-if="showChatToggle">
 
 				<div class="card-body" id="chatMsg">
 					<ul class="chat incoming_msg">
@@ -65,12 +65,21 @@
 							</div>
 
 						</li>
+						<div class="alert alert-warning alert-dismissible fade show" role="alert" v-if="$store.state.isChatEnd">
+						  <strong>Chat Ended!</strong> Thanks for your conversation.
+						  <button type="button" class="close" data-dismiss="alert" aria-label="Close" 
+						  @click.prevent="closeChatEnd">
+						    <span aria-hidden="true">&times;</span>
+						  </button>
+						</div>
 					</ul>
+
 				</div>
+				
 				<small v-if="isTyping"><i class="fas fa-pen-nib fa-fw fa-spin"></i>admin is typing...</small>
 				<div class="card-footer">
-					<div class="input-group">
-						<input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." @keyup.enter="send" v-model="message" @input="type"/>
+					<div class="input-group" v-if="!disabled">
+						<input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." @keyup.enter="send" v-model="message" @input="type" />
 						<span class="input-group-btn">
 							<button class="btn btn-warning btn-sm" id="btn-chat" @click.prevent="send">
 							Send</button>
@@ -85,7 +94,7 @@
 
 <script>
 import { mapState } from 'vuex'
-//import { mapGetters } from 'vuex'
+import { mapGetters } from 'vuex'
 
 export default {
 	props:{
@@ -93,61 +102,75 @@ export default {
 	},
 	data: function() {
 		return {
-			isPreChat: true,
+			
 			showIt: 'showIt',
 			hideIt: 'hideIt',
-			showChat: true,
-			guest:'',
 			message:'',
 			isTyping: false,
-			isExpire: false,
-			timer: null
-
+			timer: null,
+			showChatToggle: true,
+			disabled: false
 		}
 	},
-	computed: mapState({
-		messages: state => state.messages
-	}),
+	computed: mapState(
+		{
+			messages: state => state.messages
+		},
+		
+	),
 	methods: {
 		submit(){
-			this.isPreChat = false;
 
-  		//get incoming messages
-  		Echo.private(`admin-sent-message_${this.guest}`)
-  		.listen('AdminSentMessage', (result) => {
-  			console.log(result);
-  			this.$store.state.messages.push({
-  				user: 'admin',
-  				msg: result.message
-  			});
+			axios.post('/joinChat', {
+			    guest: this.$store.state.guest,
+				})
+				.then( (response) => {
+					console.log(response.data)
+					this.registerGuest();
+				})
+				.catch( (error) => {
+				    console.log(error);
+				});
 
-  			Vue.nextTick(function () {
-  				vueChatScroll();
-  			});
-
-  		});
-
-  		Echo.private(`guest-sent-message`)
-  		.listenForWhisper('typing', (e) => {
-  			//console.log(e.message);
-  			if(e.message.length > 0){
-  				this.isTyping = true;
-  			} else
-  			{
-  				this.isTyping = false
-  			}
-  		});
-  		
   	},
+  	registerGuest() {
+  			this.disabled = false;
+			this.$store.commit('TOGGLE_IS_PRECHAT', false);
+		    //get incoming messages
+	  		Echo.private(`admin-sent-message_${this.$store.state.guest}`)
+	  		.listen('AdminSentMessage', (result) => {
+	  			console.log(result);	
+	  			this.$store.state.messages.push({
+	  				user: 'admin',
+	  				msg: result.message
+	  			});
+
+	  			Vue.nextTick(function () {
+	  				vueChatScroll();
+	  			});
+
+	  		});
+
+	  		Echo.private(`guest-sent-message`)
+		  		.listenForWhisper('typing', (e) => {
+		  			//console.log(e.message);
+		  			if(e.message.length > 0){
+		  				this.isTyping = true;
+		  			} else
+		  			{
+		  				this.isTyping = false
+		  			}
+		  		});
+	},
   	type() {
-  		Echo.private(`admin-sent-message_${this.guest}`)
+  		Echo.private(`admin-sent-message_${this.$store.state.guest}`)
   		.whisper('typing', {
   			name: 'guest',
   			message: this.message
   		});
   	},
   	toggle() {
-  		this.showChat = ! this.showChat;
+  		this.showChatToggle = ! this.showChatToggle;
   	},
   	send() {
   		
@@ -159,14 +182,14 @@ export default {
   		}
   		this.$store.commit('ADD_MESSAGES', payload);
 
-  		Vue.nextTick(function () {
+  		Vue.nextTick( function () {
   			vueChatScroll();
   		});
   		
   		
 
   		axios.post('/guestSentMessage', {
-  			guest: this.guest,
+  			guest: this.$store.state.guest,
   			message: this.message,
   			
   		})
@@ -181,10 +204,18 @@ export default {
 
 		//remove typing notification on admin side 
 		this.type();
+	},
+	closeChatEnd() {
+		this.$store.commit('REMOVE_MESSAGES');
+		this.$store.commit('TOGGLE_IS_CHAT_END', false);
+		this.$store.commit('TOGGLE_IS_PRECHAT', true)
+		this.showChatToggle = true;
+		
 	}
 }, 
 mounted() {
-	
+	//if(this.$store.state.guest.length > 0)
+		this.submit();
 },
 updated() {
 	Vue.nextTick(function () {
@@ -201,7 +232,7 @@ watch: {
 	},
 	messages: {
 		deep: true,
-		handler() {
+		handler() {console.log(this.messages);
 
 			if (this.timer) {
 			    clearTimeout(this.timer); //cancel the previous timer.
@@ -210,8 +241,13 @@ watch: {
 
 			this.timer = setTimeout(() => {
 				if(this.messages.length > 1){
-					this.$store.commit('REMOVE_MESSAGES')
-				}
+					// this.$store.state.isChatEnd =  true;
+					this.$store.commit('TOGGLE_IS_CHAT_END', true);
+					this.disabled = true;
+					// Echo.private(`admin-sent-message_${this.$store.state.guest}`).stopListening('AdminSentMessage')
+					Echo.private(`admin-sent-message_${this.$store.state.guest}`).whisper('ChatEnd',{ guest: this.$store.state.guest });
+					Echo.leave(`admin-sent-message_${this.$store.state.guest}`)//(1)
+				}	
 			}, 3000);
 		}
 	},
@@ -220,8 +256,9 @@ watch: {
 }
 
 function vueChatScroll() {
-	const div = document.getElementById('chatMsg');
-	div.scrollTop = div.scrollHeight;
+	const div = document.getElementById('chatMsg') ?? null;
+	if(div !== null)
+		div.scrollTop = div.scrollHeight;
 }
 
 </script>
@@ -313,3 +350,7 @@ function vueChatScroll() {
 	background-color: #fff;
 }
 </style>
+<!--Note
+//(1): leave chat phải để sau cùng
+
+	-->

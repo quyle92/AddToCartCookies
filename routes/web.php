@@ -82,15 +82,15 @@ Route::get('/saveShippingFee', [
 ]);
 
 Route::post('/adminSentMessage', [
-    'uses' =>'BroadcastController@adminSentMessage'
+    'uses' =>'ChatController.php@adminSentMessage'
 ]);
 Route::post('/guestSentMessage', [
-    'uses' =>'BroadcastController@guestSentMessage'
-]);
-Route::post('/guest-update', [
-    'uses' =>'BroadcastController@guestUpdate'
+    'uses' =>'ChatController.php@guestSentMessage'
 ]);
 
+Route::post('/joinChat', [
+    'uses' =>'ChatController@joinChat'
+]);
 
 /*
 Paypal Omnipay
