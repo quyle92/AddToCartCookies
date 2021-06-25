@@ -134,10 +134,11 @@ export default {
 
   	},
   	registerGuest() {
-  			this.disabled = false;
-			this.$store.commit('TOGGLE_IS_PRECHAT', false);
-		    //get incoming messages
-	  		Echo.private(`admin-sent-message_${this.$store.state.guest}`)
+
+		this.disabled = false;
+		this.$store.commit('TOGGLE_IS_PRECHAT', false);
+	    //get incoming messages
+  		Echo.private(`admin-sent-message_${this.$store.state.guest}`)
 	  		.listen('AdminSentMessage', (result) => {
 	  			console.log(result);	
 	  			this.$store.state.messages.push({
@@ -151,16 +152,17 @@ export default {
 
 	  		});
 
-	  		Echo.private(`guest-sent-message`)
-		  		.listenForWhisper('typing', (e) => {
-		  			//console.log(e.message);
-		  			if(e.message.length > 0){
-		  				this.isTyping = true;
-		  			} else
-		  			{
-		  				this.isTyping = false
-		  			}
-		  		});
+  		Echo.private(`guest-sent-message`)
+	  		.listenForWhisper('typing', (e) => {
+	  			//console.log(e.message);
+	  			if(e.message.length > 0){
+	  				this.isTyping = true;
+	  			} else
+	  			{
+	  				this.isTyping = false
+	  			}
+	  	});
+	  		
 	},
   	type() {
   		Echo.private(`admin-sent-message_${this.$store.state.guest}`)

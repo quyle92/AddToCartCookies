@@ -21,7 +21,10 @@
 |
 */
 
-
+Route::get('/flush', function (){
+    Session::flush();
+    dd(Session::all());
+});
 Auth::routes();
 Auth::routes(['verify' => true]);
 
@@ -82,10 +85,11 @@ Route::get('/saveShippingFee', [
 ]);
 
 Route::post('/adminSentMessage', [
-    'uses' =>'ChatController.php@adminSentMessage'
+    'uses' =>'ChatController@adminSentMessage'
 ]);
 Route::post('/guestSentMessage', [
-    'uses' =>'ChatController.php@guestSentMessage'
+    'uses' =>'ChatController@guestSentMessage',
+     'middleware' => 'auth'
 ]);
 
 Route::post('/joinChat', [

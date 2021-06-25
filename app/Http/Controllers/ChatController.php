@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Chat;
 use App\Guest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class ChatController extends Controller
 {   
@@ -18,7 +19,7 @@ class ChatController extends Controller
             $guest->save();
 
             Auth::login( $guest );
-            
+            Session::put('guest', $guest);
             return response()->json([
                 'msg' => 'success'
             ]);
@@ -35,11 +36,30 @@ class ChatController extends Controller
     {
         try 
         {   
-            $message = $request->message;
-            $guest    = $request->guest;
-        
+            $new_message = array(
+                    'user' =>'guest',
+                    'content' => $request->message
+            );
+            $guest = session('guest');
+            dd(  Auth::user() );
+            $current_guest =  Chat::find( $guest->id ) ?? null;
+            if( ! $current_guest )
+            {
+                Chat::create([
+                    'guest_id' => $guest->id ,
+                    'messages' => $new_message
+                ]);
+            }
+            else 
+            {
+                $current_messages = $current_guest->chat->messages;
+                array_push($current_messages);
+                $current_guest->messages = $current_messages;
+
+            }
             
-            event( new \App\Events\GuestSentMessage( $message, $guest ) );
+            
+            event( new \App\Events\GuestSentMessage( $new_message, $guest ) );
 
             return response()->json([
                 'msg' => 'success'

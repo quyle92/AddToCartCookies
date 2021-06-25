@@ -14,4 +14,7 @@ class Guest extends Authenticatable
      */
     protected $guard = [];
     
+    public function chat() {
+        return $this->hasOne(Chat::class);
+    }
 }
