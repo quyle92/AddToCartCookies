@@ -13,7 +13,7 @@ window.Vue = require('vue');
 import store from './store-admin';
 Vue.prototype.$store = store;
 
-import router from './router';
+import router from './router-admin';
 
 window.vm = new Vue();
 

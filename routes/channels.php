@@ -29,20 +29,27 @@ Route::post('/broadcasting/auth/admin', function (Illuminate\Http\Request $req) 
 
 });//(2)
 
-Route::post('/broadcasting/auth/guest', function (Illuminate\Http\Request $req) {
+// Route::post('/broadcasting/auth/guest', function (Illuminate\Http\Request $req) {
+// // dd( Session::all() );
+//     return Broadcast::auth($req);
 
-    return Broadcast::auth($req);
+// });
 
-})->middleware('guest');
+
 
 Broadcast::channel('guest-sent-message', function ($user) {
 // dd($user);
-    return 'admin';
+    return  true;
 });
 
-Broadcast::channel('admin-sent-message_{guest}', function ( $user, $guest) {
+Broadcast::channel('admin-whisper-to-{guest}', function ($user, $guest) {
+// dd($user);
+    return  true;
+});
 
-    return $guest;
+Broadcast::channel('admin-sent-message-{guest}', function ( $user, $guest) {
+
+    return  true;
 });//(1)
 
 
@@ -62,5 +69,10 @@ Note
 
 //(2) Route::post only run in case of private channel, which means there is "Echo.private()..." somewhere in Javascript and it only run for client Event (event trigger in JavaScript), not channel event (event triggered in backend code,ie. event( new \App\Events\GuestSentMessage( $message, $guest ) );
 
-//Console displays this msg: "["No callbacks on private-admin-sent-message_nam for App\\Events\\AdminSentMessage"]": có nghĩa là ở trong Javascript, mình có subscribe to Channel nhưng ko listen, vì dụ như khi whisper chẳng hạn, ei. Echo.private(...).whisper, mà whisper làm gì có callback. Khi Echo.private(...).listen(Event, () => {}), tức có callback thì msg đó sẽ có display nữa.
+//Console displays this msg: "["No callbacks on private-admin-sent-message_nam for App\\Events\\AdminSentMessage"]": có nghĩa là ở trong Javascript, mình có subscribe to Channel nhưng ko listen, vì dụ như khi whisper chẳng hạn, ei. Echo.private(...).whisper, mà whisper làm gì có callback. Khi Echo.private(...).listen(Event, () => {}), tức có callback thì msg đó sẽ có display nữa. TH2 là có listen nhưng cái listen đó nó nằm trong 1 hàm mà hàm đó nó chưa chạy (ví dụ như do mệnh đề if chưa đc thỏa mãn nên hàm chứa Echo.private(...).listen đó chưa chạy, nên cho dù data có về dc client đi nữa thì nó cũng ko lấy data đó dc)
+
+//["Event recd",{"event":"App\\Events\\AdminSentMessage","channel":"private-admin-sent-message-nam","data":{"message":"asas","guest":"nam"}}] ==> this is channel event
+
+//Pusher :  ["Event sent",{"event":"client-typing","data":{"name":"admin","message":""},"channel":"private-admin-sent-message-nam"}] 
+//==> this is client event 
 

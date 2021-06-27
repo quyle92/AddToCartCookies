@@ -37,9 +37,12 @@ window.Echo = new Echo({
     cluster: 'ap1',
     forceTLS: true,
     encrypted: true,
-    authEndpoint: "/broadcasting/auth/guest",
-
-
+    // authEndpoint: "/broadcasting/auth/guest",
+      // auth: {
+      //       headers: {
+      //         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+      //       }
+      // }
 });
 window.Pusher.logToConsole = true
 
@@ -62,7 +65,7 @@ Vue.component('product-page', require('./components/ProductPage.vue').default);
 Vue.component('cart', require('./components/Cart.vue').default);
 Vue.component('popover', require('./components/Popover.vue').default);
 Vue.component('dropdown-cart', require('./components/DropdownCart.vue').default);
-Vue.component('chat', require('./components/ChatX.vue').default);
+Vue.component('chat', require('./components/Chat.vue').default);
 
 const getCookieValue = (name) => (
   document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)')?.pop() || ''

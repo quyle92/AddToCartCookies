@@ -4,7 +4,7 @@ Vue.use(Router)
 import Content from './AdminComponents/Content'
 import Dashboard from './AdminComponents/Dashboard'
 import Users from './AdminComponents/Users'
-import ChatAdmin from './AdminComponents/ChatAdminX'
+import ChatAdmin from './AdminComponents/ChatAdmin'
 
 const routes = [
 	{

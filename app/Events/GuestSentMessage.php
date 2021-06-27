@@ -25,8 +25,9 @@ class GuestSentMessage implements ShouldBroadcastNow
      */
     public function __construct($message, $guest)
     {   
-        $this->message = $message;
-        $this->guest = $guest;
+       
+        $this->message = $message['content'];
+        $this->guest = $guest->guest_name;
 
         $this->dontBroadcastToCurrentUser();
     }
@@ -38,7 +39,7 @@ class GuestSentMessage implements ShouldBroadcastNow
      */
     public function broadcastOn()
     {   
-        // dd($this->guest);
+        // dd($this->message);
         return new PrivateChannel("guest-sent-message");
     }
 }

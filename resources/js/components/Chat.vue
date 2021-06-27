@@ -83,6 +83,8 @@
 						<span class="input-group-btn">
 							<button class="btn btn-warning btn-sm" id="btn-chat" @click.prevent="send">
 							Send</button>
+							<!-- <button class="btn btn-info btn-sm" id="btn-chat" @click.prevent="closeChatEnd">
+							Test</button> -->
 						</span>
 					</div>
 				</div>
@@ -133,12 +135,24 @@ export default {
 				});
 
   	},
+  	test(){	
+  		$.ajax({
+			type: 'POST',
+			url:'/checkAuthentication',
+			success: function(data) {
+               console.log(e)
+            },
+            error: function(e) {
+            	console.log(e)
+            }
+		})
+  	},
   	registerGuest() {
 
 		this.disabled = false;
 		this.$store.commit('TOGGLE_IS_PRECHAT', false);
 	    //get incoming messages
-  		Echo.private(`admin-sent-message_${this.$store.state.guest}`)
+  		Echo.private(`admin-sent-message-${this.$store.state.guest}`)
 	  		.listen('AdminSentMessage', (result) => {
 	  			console.log(result);	
 	  			this.$store.state.messages.push({
@@ -150,11 +164,9 @@ export default {
 	  				vueChatScroll();
 	  			});
 
-	  		});
-
-  		Echo.private(`guest-sent-message`)
+	  		})
 	  		.listenForWhisper('typing', (e) => {
-	  			//console.log(e.message);
+	  			console.log(e.message);
 	  			if(e.message.length > 0){
 	  				this.isTyping = true;
 	  			} else
@@ -165,7 +177,7 @@ export default {
 	  		
 	},
   	type() {
-  		Echo.private(`admin-sent-message_${this.$store.state.guest}`)
+  		Echo.private(`admin-sent-message-${this.$store.state.guest}`)
   		.whisper('typing', {
   			name: 'guest',
   			message: this.message
@@ -216,8 +228,8 @@ export default {
 	}
 }, 
 mounted() {
-	//if(this.$store.state.guest.length > 0)
-		this.submit();
+	// if( this.$store.state.guest.length === 0 )
+		this.registerGuest();
 },
 updated() {
 	Vue.nextTick(function () {
@@ -234,23 +246,23 @@ watch: {
 	},
 	messages: {
 		deep: true,
-		handler() {console.log(this.messages);
+		handler() {
 
 			if (this.timer) {
 			    clearTimeout(this.timer); //cancel the previous timer.
 			    this.timer = null;
 			}
 
-			this.timer = setTimeout(() => {
-				if(this.messages.length > 1){
-					// this.$store.state.isChatEnd =  true;
-					this.$store.commit('TOGGLE_IS_CHAT_END', true);
-					this.disabled = true;
-					// Echo.private(`admin-sent-message_${this.$store.state.guest}`).stopListening('AdminSentMessage')
-					Echo.private(`admin-sent-message_${this.$store.state.guest}`).whisper('ChatEnd',{ guest: this.$store.state.guest });
-					Echo.leave(`admin-sent-message_${this.$store.state.guest}`)//(1)
-				}	
-			}, 3000);
+			// this.timer = setTimeout(() => {
+			// 	if(this.messages.length > 1){
+			// 		this.$store.commit('TOGGLE_IS_CHAT_END', true);
+			// 		this.disabled = true;
+			// 		// Echo.private(`admin-sent-message-${this.$store.state.guest}`).stopListening('AdminSentMessage')
+			// 		Echo.private(`admin-sent-message-${this.$store.state.guest}`).whisper('ChatEnd',{ guest: this.$store.state.guest });
+			// 		Echo.leave(`admin-sent-message-${this.$store.state.guest}`)
+			// 		Echo.leave(`admin-whisper-to-${this.$store.state.guest}`)//(1)
+			// 	}	
+			// }, 3000);
 		}
 	},
 

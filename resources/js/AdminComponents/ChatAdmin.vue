@@ -50,7 +50,8 @@
 							</div>
 						</div>
 					</div>
-					<small v-if="isTyping"><i class="fas fa-pen-nib fa-fw fa-spin"></i>guest is typing...</small>
+
+					<small v-if="guest.isTyping"><i class="fas fa-pen-nib fa-fw fa-spin"></i>guest is typing...</small>
 				  <div class="type_msg">
 							<div class="input_msg_write">
 							  <input type="text" class="write_msg" placeholder="Type a message" @keyup.enter="send" v-model="message" @input="type"/>
@@ -77,7 +78,7 @@ export default {
 		  	selectedGuest: '',
 		  	selectedGuestIndex:'',
 		  	msgReceived:true,
-		  	isTyping: false
+		  	
  	  }
   },
   computed: {
@@ -97,19 +98,18 @@ export default {
   			this.guestList[index].isShown = true;
   			this.guestList[index].active = true;
 
-  			Echo.private(`admin-sent-message_${this.selectedGuest.name}`)
+  			Echo.private(`admin-sent-message-${this.selectedGuest.name}`)
 		    	.listenForWhisper('typing', (e) => {
 		    		console.log(e.message);
 		       		if(e.message.length > 0){
-		       			this.isTyping = true;
+		       			this.guestList[this.selectedGuestIndex].isTyping = true;
 		       		} else
 		       		{
-		       			this.isTyping = false
+		       			this.guestList[this.selectedGuestIndex].isTyping = false
 		       		}
 	   		 }).listenForWhisper('ChatEnd', (response) => {
 				  	console.log(response);
 				  	let checkGuest = containsGuest(this.guestList, response) ;
-				  	console.log(checkGuest);
 				  	let currentGuestIndex = checkGuest.index;
 				  	document.getElementsByClassName('chat_people')[currentGuestIndex].classList.add("guest-leave-chat");
 				  	alert('ChatEnd')
@@ -139,7 +139,7 @@ export default {
 				this.type();
   		},
   		type() {
-  			Echo.private(`guest-sent-message`)
+  			Echo.private(`admin-sent-message-${this.selectedGuest.name}`)
 				    .whisper('typing', {
 				        name: 'admin',
 				        message: this.message
@@ -170,7 +170,8 @@ export default {
 		      					content: result.message
 		      				}],
 						  		isShown: false,
-						  		active: false
+						  		active: false,
+						  		isTyping: false
 		      			}
 
 		      			this.guestList.push(newGuest)
@@ -211,7 +212,7 @@ export default {
 					    div.scrollTop = div.scrollHeight;
 					});
    			}
-   		}
+   		},
    }
 }
 

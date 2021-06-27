@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Chat;
 use App\Guest;
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 
 class ChatController extends Controller
@@ -13,16 +15,25 @@ class ChatController extends Controller
     public function joinChat(Request $request) 
     {
         try 
-        {   
-            $guest = new Guest();
-            $guest->guest_name = $request->guest;
-            $guest->save();
+        {  
+            if( ! Auth::check() )
+            {   
 
-            Auth::login( $guest );
-            Session::put('guest', $guest);
-            return response()->json([
-                'msg' => 'success'
+                $guest = new Guest();
+                $guest->guest_name = $request->guest;
+                $guest->save();
+
+                Auth::logout();
+                Auth::guard('guest')->login(  $guest ); 
+
+   
+            }
+
+             return response()->json([
+                'msg' => 'success',
+                'auth' => Auth::guard('guest')->check()
             ]);
+      
         }
         catch(\Exception $err) 
         {  
@@ -37,12 +48,15 @@ class ChatController extends Controller
         try 
         {   
             $new_message = array(
-                    'user' =>'guest',
-                    'content' => $request->message
+                'user' =>'guest',
+                'content' => $request->message
             );
-            $guest = session('guest');
-            dd(  Auth::user() );
+
+            $guest = Auth::guard('guest')->user();
+
+
             $current_guest =  Chat::find( $guest->id ) ?? null;
+
             if( ! $current_guest )
             {
                 Chat::create([

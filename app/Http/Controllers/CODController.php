@@ -44,7 +44,7 @@ class CODController extends Controller
         }
 
         if( count($missing_field) > 0 ) {  
-            Session::flash('msg', ($missing_field) );
+            Session::flash('msg', $missing_field );
             return redirect()->back();
             
         }

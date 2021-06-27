@@ -11,23 +11,20 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 
-class AdminSentMessage implements ShouldBroadcastNow
+class AdminWhisper implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    public $message;
+    
     public $guest;
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    
-    public function __construct($message, $guest)
-    {   
-        $this->message = $message;
-        $this->guest = $guest;
-        
+    public function __construct($guest)
+    {
+        $this->guest =  $guest;
+
     }
 
     /**
@@ -36,8 +33,7 @@ class AdminSentMessage implements ShouldBroadcastNow
      * @return \Illuminate\Broadcasting\Channel|array
      */
     public function broadcastOn()
-    {   
-        //dd($this->guest);
-        return new PrivateChannel('admin-sent-message-' . $this->guest);
+    {
+        return new PrivateChannel('admin-whisper-to-' . $this->guest);
     }
 }

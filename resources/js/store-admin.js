@@ -29,7 +29,8 @@ export default new Vuex.Store({
             }
           ],
           isShown: true,
-          active: true
+          active: true,
+          isTyping: false
         },
         {
           name: 'Bob',
@@ -52,7 +53,8 @@ export default new Vuex.Store({
             }
           ],
           isShown: false,
-          active: false
+          active: false,
+          isTyping: false
         }
       ],
   },

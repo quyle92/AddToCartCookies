@@ -1,7 +1,6 @@
 <?php
-// use Illuminate\Support\Facades\Session;
-// Session::flash('foo','bar');
-// dd( Session::get('foo') );
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Log;
 
 // $mydate = getdate(date("U"));
 // $now = DateTime::createFromFormat('U.u', microtime(true));
@@ -20,11 +19,33 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
-
-Route::get('/flush', function (){
-    Session::flush();
-    dd(Session::all());
+Route::get('test', function (){
+    return view('test');
 });
+// Route::post('authentication', 'ChatController@joinChat');
+// Route::post('checkAuthentication', 'ChatController@guestSentMessage');
+Route::post('authentication', function () {
+    Auth::logout();
+    $user =  App\Guest::find(27) ;
+    Auth::guard('guest')->login($user);
+    Session::put('guest',$user);
+
+    return response()->json([
+        'msg' => 'success',
+        'auth' => Auth::guard('guest')->check(),
+        'user' =>  Auth::guard('guest')->user()
+    ]);
+})->name('authentication');
+
+Route::post('checkAuthentication', function () {
+    //dd( Auth::user() );
+    return response()->json([
+        'auth' => Auth::guard('guest')->check()
+    ]);
+    
+});//->middleware('guest');
+
+
 Auth::routes();
 Auth::routes(['verify' => true]);
 
@@ -89,7 +110,7 @@ Route::post('/adminSentMessage', [
 ]);
 Route::post('/guestSentMessage', [
     'uses' =>'ChatController@guestSentMessage',
-     'middleware' => 'auth'
+     //'middleware' => 'auth'
 ]);
 
 Route::post('/joinChat', [
