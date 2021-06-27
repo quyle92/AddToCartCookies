@@ -14,6 +14,8 @@ class Chat extends Model
      */
     protected $fillable = ['guest_id', 'messages'];
 
+    protected $visible = ['messages'];
+
     protected $casts = [
         'messages' => 'array'
     ];

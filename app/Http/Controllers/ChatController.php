@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use DB; 
 
 class ChatController extends Controller
 {   
@@ -54,22 +55,21 @@ class ChatController extends Controller
 
             $guest = Auth::guard('guest')->user();
 
-
             $current_guest =  Chat::find( $guest->id ) ?? null;
 
             if( ! $current_guest )
             {
                 Chat::create([
                     'guest_id' => $guest->id ,
-                    'messages' => $new_message
+                    'messages' => array( $new_message )
                 ]);
             }
             else 
-            {
-                $current_messages = $current_guest->chat->messages;
-                array_push($current_messages);
+            {   
+                $current_messages = $current_guest->messages;
+                array_push($current_messages, $new_message);
                 $current_guest->messages = $current_messages;
-
+                $current_guest->save();
             }
             
             
@@ -109,5 +109,27 @@ class ChatController extends Controller
         
     }
 
+    public function getGuestList() 
+    {
+        try 
+        {   
+            $guestList = Guest::with('chat')->get();
+
+            return response()->json([
+                'result' => $guestList
+            ]);
+        }
+        catch(\Exception $err) 
+        {  
+            return response()->json([
+                'msg' => $err->getMessage()
+            ]);
+        }
+    }
+
 
 }
+
+/**
+ * Note
+ */

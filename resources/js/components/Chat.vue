@@ -83,8 +83,8 @@
 						<span class="input-group-btn">
 							<button class="btn btn-warning btn-sm" id="btn-chat" @click.prevent="send">
 							Send</button>
-							<!-- <button class="btn btn-info btn-sm" id="btn-chat" @click.prevent="closeChatEnd">
-							Test</button> -->
+							<button class="btn btn-info btn-sm" id="btn-chat" @click.prevent="closeChatEnd">
+							End</button>
 						</span>
 					</div>
 				</div>

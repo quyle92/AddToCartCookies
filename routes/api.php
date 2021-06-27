@@ -21,3 +21,5 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::apiResources([
     'users' => Admin\API\UserController::class,
 ]);
+
+Route::get('/getGuestList', 'ChatController@getGuestList' ); 

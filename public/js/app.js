@@ -53720,6 +53720,21 @@ var render = function() {
                               }
                             },
                             [_vm._v("\n\t\t\t\t\t\t\tSend")]
+                          ),
+                          _vm._v(" "),
+                          _c(
+                            "button",
+                            {
+                              staticClass: "btn btn-info btn-sm",
+                              attrs: { id: "btn-chat" },
+                              on: {
+                                click: function($event) {
+                                  $event.preventDefault()
+                                  return _vm.closeChatEnd($event)
+                                }
+                              }
+                            },
+                            [_vm._v("\n\t\t\t\t\t\t\tEnd")]
                           )
                         ])
                       ])
