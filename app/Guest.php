@@ -14,7 +14,7 @@ class Guest extends Authenticatable
      */
     protected $guard = [];
 
-    protected $hidden = ['id','guest_name','updated_at', 'created_at'];
+    protected $hidden = ['guest_name','updated_at', 'created_at'];
     
     protected $appends = ['name'];//(1)
 

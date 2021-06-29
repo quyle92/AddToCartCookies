@@ -17,17 +17,19 @@ class GuestSentMessage implements ShouldBroadcastNow
 
     public $message;
     public $guest;
+    public $id;
 
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct($message, $guest)
+    public function __construct($guest,  $message)
     {   
-       
-        $this->message = $message['content'];
+        
+        $this->id = $guest->id;
         $this->guest = $guest->guest_name;
+        $this->message = $message['content'];
 
         $this->dontBroadcastToCurrentUser();
     }

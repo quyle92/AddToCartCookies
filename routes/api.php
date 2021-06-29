@@ -23,3 +23,4 @@ Route::apiResources([
 ]);
 
 Route::get('/getGuestList', 'ChatController@getGuestList' ); 
+Route::post('/deleteChat', 'ChatController@deleteChat' ); 

@@ -38,8 +38,8 @@ Route::post('/broadcasting/auth/admin', function (Illuminate\Http\Request $req) 
 
 
 Broadcast::channel('guest-sent-message', function ($user) {
-// dd($user);
-    return  true;
+
+    return  $user;
 });
 
 Broadcast::channel('admin-whisper-to-{guest}', function ($user, $guest) {

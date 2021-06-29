@@ -32,6 +32,9 @@ Vue.component(HasError.name, HasError)
 Vue.component(AlertError.name, AlertError)
 Vue.component(AlertErrors.name, AlertErrors)
 Vue.component(AlertSuccess.name, AlertSuccess)
+
+Vue.component('context-menu', require('./Admincomponents/ContextMenu.vue').default);
+Vue.component('test', require('./Admincomponents/Test.vue').default);
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue
@@ -69,6 +72,11 @@ const app = new Vue({
    	data: () => ({
    		
         }),
+    methods: {
+        clickOutside() {
+            vm.$emit('closeContextMenu')
+        }
+    },
    	mounted() {
 
   	}

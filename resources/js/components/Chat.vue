@@ -2,12 +2,12 @@
 	<div class="container">
 		<div class="row">
 			<div class="col-md-4 chat-widget">
-				<div class="card">
-					<div class="card-header" id="accordion"  @click.prevent="toggle">---{{this.$store.state.guest}}
-						<div  v-bind:class="[$store.state.isPreChat ? showIt : hideIt]"  class="pull-left">
+				<div class="card">{{isPreChat}}
+					<div class="card-header" id="accordion"  @click.prevent="toggle">---{{guest}}
+						<div  v-bind:class="[isPreChat ? showIt : hideIt]"  class="pull-left">
 							<i class="fas fa-lg fa-comment-dots"></i>  Fill in the form below to start chatting
 						</div>
-						<div v-bind:class="[$store.state.isPreChat ? hideIt : showIt]" class="pull-left">
+						<div v-bind:class="[isPreChat ? hideIt : showIt]" class="pull-left">
 							<i class="fas fa-lg fa-comment-dots"></i> Chat
 						</div>
 						<div class="btn-group pull-right">
@@ -17,19 +17,19 @@
 					</div>
 				</div>
 
-				<div class="card-body" v-bind:class="[$store.state.isPreChat ? showIt : hideIt]" v-if="showChatToggle">
+				<div class="card-body" v-bind:class="[isPreChat ? showIt : hideIt]" v-if="showChatToggle">
 					<div class="form-group">
 						<label for="guest_name">Name</label>
-						<input type="text" class="form-control" id="guest_name"  placeholder="Enter your name" v-model="$store.state.guest" @keyup.enter="submit"/>
+						<input type="text" class="form-control" id="guest_name"  placeholder="Enter your name" v-model="guestName" @keyup.enter="submit"/>
 					</div>
 					<button type="submit" class="btn btn-primary submit" @click.prevent="submit">Submit</button>
 				</div>
 			</div>
-			<div class="card-collapse collapse show" id="collapseOne" v-bind:class="[$store.state.isPreChat ? hideIt : showIt]" v-if="showChatToggle">
+			<div class="card-collapse collapse show" id="collapseOne" v-bind:class="[isPreChat ? hideIt : showIt]" v-if="showChatToggle">
 
 				<div class="card-body" id="chatMsg">
 					<ul class="chat incoming_msg">
-						<li class=" clearfix" v-for="item in $store.state.messages" >
+						<li class=" clearfix" v-for="item in messages" >
 							<div :class="[item.user==='admin' ? 'left' : '']" v-if="item.user==='admin'">
 								<span class="chat-img pull-left" >
 									<img src="http://placehold.it/50/55C1E7/fff&text=U" alt="User Avatar" class="img-circle" />
@@ -65,7 +65,7 @@
 							</div>
 
 						</li>
-						<div class="alert alert-warning alert-dismissible fade show" role="alert" v-if="$store.state.isChatEnd">
+						<div class="alert alert-warning alert-dismissible fade show" role="alert" v-if="isChatEnd">
 						  <strong>Chat Ended!</strong> Thanks for your conversation.
 						  <button type="button" class="close" data-dismiss="alert" aria-label="Close" 
 						  @click.prevent="closeChatEnd">
@@ -111,23 +111,23 @@ export default {
 			isTyping: false,
 			timer: null,
 			showChatToggle: true,
-			disabled: false
+			disabled: false,
+			guestName: ''
 		}
 	},
 	computed: mapState(
-		{
-			messages: state => state.messages
-		},
-		
+		['messages', 'isPreChat', 'isChatEnd', 'guest', ]
 	),
 	methods: {
 		submit(){
 
 			axios.post('/joinChat', {
-			    guest: this.$store.state.guest,
+			    guest: this.guestName,
 				})
 				.then( (response) => {
-					console.log(response.data)
+					console.log(response.data);
+					this.$store.commit('TOGGLE_IS_CHAT_END', false);
+					this.$store.commit('TOGGLE_IS_PRECHAT', false);
 					this.registerGuest();
 				})
 				.catch( (error) => {
@@ -135,31 +135,20 @@ export default {
 				});
 
   	},
-  	test(){	
-  		$.ajax({
-			type: 'POST',
-			url:'/checkAuthentication',
-			success: function(data) {
-               console.log(e)
-            },
-            error: function(e) {
-            	console.log(e)
-            }
-		})
-  	},
-  	registerGuest() {
-
+  	registerGuest() {console.log('registerGuest')
 		this.disabled = false;
-		this.$store.commit('TOGGLE_IS_PRECHAT', false);
-	    //get incoming messages
-  		Echo.private(`admin-sent-message-${this.$store.state.guest}`)
+  		if(this.guest.length === 0) {
+  			this.$store.commit('SET_GUEST', this.guestName);
+  		}
+	   // get incoming messages
+  		Echo.private(`admin-sent-message-${this.guest}`)
 	  		.listen('AdminSentMessage', (result) => {
 	  			console.log(result);	
-	  			this.$store.state.messages.push({
+	  			let data = {
 	  				user: 'admin',
 	  				msg: result.message
-	  			});
-
+	  			}
+	  			this.$store.commit('ADD_MESSAGES', data);
 	  			Vue.nextTick(function () {
 	  				vueChatScroll();
 	  			});
@@ -177,7 +166,7 @@ export default {
 	  		
 	},
   	type() {
-  		Echo.private(`admin-sent-message-${this.$store.state.guest}`)
+  		Echo.private(`admin-sent-message-${this.guest}`)
   		.whisper('typing', {
   			name: 'guest',
   			message: this.message
@@ -193,6 +182,7 @@ export default {
   		let payload = {
   			user: 'guest',
   			msg: this.message,
+  			time: new Date()
   		}
   		this.$store.commit('ADD_MESSAGES', payload);
 
@@ -203,33 +193,39 @@ export default {
   		
 
   		axios.post('/guestSentMessage', {
-  			guest: this.$store.state.guest,
+  			guest: this.guest,
   			message: this.message,
   			
   		})
   		.then( (response) => {
+  			this.message = '';
 
+			//remove typing notification on admin side 
+			this.type();
   		})
   		.catch( (error) => {
   			console.log(error);
   		});
 
-  		this.message = '';
-
-		//remove typing notification on admin side 
-		this.type();
+  		
 	},
-	closeChatEnd() {
+	closeChatEnd() {console.log(this.guest);
 		this.$store.commit('REMOVE_MESSAGES');
-		this.$store.commit('TOGGLE_IS_CHAT_END', false);
+		this.$store.commit('TOGGLE_IS_CHAT_END', true);
 		this.$store.commit('TOGGLE_IS_PRECHAT', true)
 		this.showChatToggle = true;
 		
+		//from set_timeout
+		Echo.private(`admin-sent-message-${this.guest}`).whisper('ChatEnd',{ guest: this.guest });
+		Echo.leave(`admin-sent-message-${this.guest}`)
+		Echo.leave(`admin-whisper-to-${this.guest}`);
+		this.$store.commit('SET_GUEST', '');
 	}
 }, 
 mounted() {
-	// if( this.$store.state.guest.length === 0 )
+	if( this.guest.length > 0 ){console.log('mounted', this.guest)
 		this.registerGuest();
+	}
 },
 updated() {
 	Vue.nextTick(function () {
@@ -257,10 +253,10 @@ watch: {
 			// 	if(this.messages.length > 1){
 			// 		this.$store.commit('TOGGLE_IS_CHAT_END', true);
 			// 		this.disabled = true;
-			// 		// Echo.private(`admin-sent-message-${this.$store.state.guest}`).stopListening('AdminSentMessage')
-			// 		Echo.private(`admin-sent-message-${this.$store.state.guest}`).whisper('ChatEnd',{ guest: this.$store.state.guest });
-			// 		Echo.leave(`admin-sent-message-${this.$store.state.guest}`)
-			// 		Echo.leave(`admin-whisper-to-${this.$store.state.guest}`)//(1)
+			// 		// Echo.private(`admin-sent-message-${this.guest}`).stopListening('AdminSentMessage')
+			// 		Echo.private(`admin-sent-message-${this.guest}`).whisper('ChatEnd',{ guest: this.guest });
+			// 		Echo.leave(`admin-sent-message-${this.guest}`)
+			// 		Echo.leave(`admin-whisper-to-${this.guest}`)//(1)
 			// 	}	
 			// }, 3000);
 		}
@@ -276,7 +272,10 @@ function vueChatScroll() {
 }
 
 </script>
+<!--Note
+//(1): leave chat phải để sau cùng
 
+	-->
 <style scoped>
 .chat-widget {
 	position: fixed;
@@ -364,7 +363,3 @@ function vueChatScroll() {
 	background-color: #fff;
 }
 </style>
-<!--Note
-//(1): leave chat phải để sau cùng
-
-	-->

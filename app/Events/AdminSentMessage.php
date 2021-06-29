@@ -37,7 +37,7 @@ class AdminSentMessage implements ShouldBroadcastNow
      */
     public function broadcastOn()
     {   
-        //dd($this->guest);
+        // dd($this->guest);
         return new PrivateChannel('admin-sent-message-' . $this->guest);
     }
 }

@@ -14,7 +14,7 @@
         </script>
     </head>
     <body>
-        <div id="app">
+        <div id="app" @click="clickOutside">
             <!-- Navigation -->
           @include('admin.menu')
             

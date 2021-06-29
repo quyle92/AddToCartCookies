@@ -32,7 +32,7 @@ export default  new Vuex.Store({
         lastSelectedProduct: {},
       	productsOnCart: [],
       	isPreChat: true,
-		isChatEnd: false,
+		isChatEnd: true,
       	listOfGuests: [],
       	messages:[
  			{
@@ -131,11 +131,12 @@ export default  new Vuex.Store({
 		},
 		TOGGLE_IS_CHAT_END( state, payload) {
 			this.state.isChatEnd = payload;
+		
 		},
 		TOGGLE_IS_PRECHAT( state, payload) {
 			this.state.isPreChat = payload;
 		},
-		SET_GUEST( state, payload) {
+		SET_GUEST( state, payload) {console.log('SET_GUEST', payload)
 			this.state.guest = payload;
 		}
 
@@ -159,7 +160,7 @@ export default  new Vuex.Store({
 		//     setItem: (key, value) => Cookies.set(key, value, { expires: 1/(86400/3), secure: true }),
 		//     removeItem: key => Cookies.remove(key)
 	 //    },
-		paths:['messages', 'isPreChat', 'showChatToggle', 'isChatEnd', 'guest', ]
+		paths:['messages', 'isPreChat', 'isChatEnd', 'guest', ]
 	})],
 });
 

@@ -19,17 +19,21 @@
 								<div class="chat_people" :class="{active_chat:guest.active}" 
 									v-for="(guest, index) in guestList" 
 									@click="selectGuest(guest, index)" 
-									@contextmenu.prevent="showContextMenu( index, guest.id, $event)"
+									@contextmenu="showContextMenu( 1, $event)"
 									:id="'guest-' + index"
 									
 								>
-
+							<!-- 	<button type="button" class="btn btn-danger"
+		 @click.prevent="test($event)"
+		 @contextmenu="showContextMenu( 1, $event)"
+		 >
+			button</button> -->
 									<div class="chat_img"> 
 										<img src="https://ptetutorials.com/images/user-profile.png" alt="sunil">
 									</div>
 									<div class="chat_ib">
 										<h5>{{guest.name}}<span class="chat_date">Dec 25</span></h5>
-										<p>{{guest.chat !== undefined ? guest.chat[guest.chat.length -1 ].content : ''}}.</p>
+										<p>{{guest.chat[guest.chat.length -1 ].content}}.</p>
 									</div>
 								</div>
 								
@@ -39,7 +43,7 @@
 					</div>
 				</div>
 				<div class="mesgs"  v-for="(guest, index) in guestList" :key='index' v-if="guest.isShown" >
-					<div  class="msg_history" style="height: 400px; overflow-y: scroll;">
+					<div  class="msg_history" style="height: 600px; overflow-y: scroll;">
 						<div   v-for='(item) in guest.chat' >
 							<div class="incoming_msg"  v-if="item.user ==='guest'" >
 								<div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> 
@@ -70,13 +74,11 @@
 			</div>
 		</div>
 <context-menu
+	
 	:is-context-menu="isContextMenu"
 	:event-context-menu="eventContextMenu"
-	:guest-index="guestIndex"
-	:guest-id="guestId"
-	@delete="deleteChat"
 ></context-menu>
-
+		<!-- <test :event-context-menu='eventContextMenu' :is-content-menu="isContextMenu"></test> -->
 	</div>
 
 </template>
@@ -147,9 +149,7 @@
 				msgReceived:true,
 				isContextMenu: false,
 				eventContextMenu: {},
-				foo: 'foo',
-				guestIndex: 0,
-				guestId: 0
+				foo: 'foo'
 			}
 		},
 		computed: {
@@ -158,27 +158,21 @@
 			])
 		},
 		methods: {
-			showContextMenu(index, guestId, e){
+			test(e) {
+				this.foo="bar";
+				this.eventContextMenu = e;
+			},
+			showContextMenu(guestID, e){
 					// console.log(guestID);
 					this.isContextMenu = true;
 					this.eventContextMenu = e;
-					this.guestIndex = index
-					this.guestId = guestId
 
 			},
-			closeContextMenu() {
+			closeContextMenu() {console.log('closeContextMenu')
 					this.isContextMenu = false;
-
-			},
-			deleteChat(){
-				//need to have this here, else chat DOM(id='msg_history') will be broken b/c of its v-if="guest.isShown"
-				if( this.selectedGuest.isShown === true ){
-					this.guestList[this.selectedGuestIndex-1].isShown = true
-				}
-
-				this.guestList.splice(this.guestIndex, 1);
 			},
 			selectGuest(guest, index) {
+				// this.isContextMenu = false;
 				this.selectedGuest = guest;
 				this.selectedGuestIndex = index;
 				this.guestList.map( e => {
@@ -199,7 +193,7 @@
 							this.guestList[this.selectedGuestIndex].isTyping = false
 						}
 					}).listenForWhisper('ChatEnd', (response) => {
-						console.log('ChatEnd', response);
+						console.log(response);
 						let checkGuest = containsGuest(this.guestList, response) ;
 						let currentGuestIndex = checkGuest.index;
 						document.getElementsByClassName('chat_people')[currentGuestIndex].classList.add("guest-leave-chat");
@@ -208,29 +202,26 @@
 
 			},
 			send() {
-				if( this.message === '' ) return;
-				console.log(this.selectedGuest.id)
+				this.guestList[this.selectedGuestIndex].chat.push({
+					user: 'admin',
+					content: this.message
+				});
+
 				axios.post('/adminSentMessage', {
-					guest_id: this.selectedGuest.id,
 					guest: this.selectedGuest.name,
 					message: this.message,
 				})
 				.then( (response) => {
-						this.guestList[this.selectedGuestIndex].chat.push({
-							user: 'admin',
-							content: this.message
-						});
-						this.message = '';
-						//remove typing notification on guest side 
-						this.type();
+
 				})
 				.catch( (error) => {
 					console.log(error);
 				});
 
-				
+				this.message = '';
 
-				
+				//remove typing notification on guest side 
+				this.type();
 			},
 			type() {
 				Echo.private(`admin-sent-message-${this.selectedGuest.name}`)
@@ -248,7 +239,7 @@
 				let checkGuest = containsGuest(this.guestList, result) ;
 
 				if( checkGuest.isOldGuest === true ) 
-				{	console.log('isOldGuest')
+				{
 					let currentGuestIndex = checkGuest.index;
 					this.guestList[ currentGuestIndex ].chat.push({
 						user: 'guest',
@@ -258,7 +249,6 @@
 				else 
 				{		
 					let newGuest = {
-						id: result.id,
 						name: result.guest,
 						chat: [{
 							user: 'guest',
@@ -270,21 +260,11 @@
 						
 					}
 
-					this.guestList.push(newGuest);
-					console.log(this.guestList)
+					this.guestList.push(newGuest)
 				}
-			});
+			})
 
-			// Echo.join(`guest-sent-message`)
-   //      .here( (users) => {
-   //      		console.log(users)
-   //      }).joining( (user) => {
-   //      		console.log(user)
-   //      });
 
-			vm.$on('closeContextMenu', () => {
-						this.isContextMenu = false
-			});
 
 
 		},
@@ -315,7 +295,7 @@
 					this.guestList.push({
 						id: e.id,
 						name: e.name,
-						chat: e?.chat?.messages,
+						chat: e.chat.messages,
 						active: false,
 						isShown: false,
 						isTyping: false,
@@ -336,11 +316,10 @@
 		watch: {
 			guestList: {
 				deep: true,
-				handler() {console.log('handler', document.getElementsByClassName('msg_history')[0])
+				handler() {
 					Vue.nextTick(function () {
-						 //var div = document.getElementsByClassName('msg_history')[0];
-						// console.log( document.getElementsByClassName('msg_history')[0])
-						//div.scrollTop = div.scrollHeight;
+						const div = document.getElementsByClassName('msg_history')[0];
+						div.scrollTop = div.scrollHeight;
 					});
 				}
 			},
@@ -364,7 +343,7 @@
 	function containsGuest(guestList, obj) 
 	{
 		for( let i = 0; i < guestList.length; i ++ ) {
-			if(guestList[i].id === obj.id) {
+			if(guestList[i].name === obj.guest) {
 				return {
 					isOldGuest: true,
 					index: i

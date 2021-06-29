@@ -2420,53 +2420,48 @@ __webpack_require__.r(__webpack_exports__);
       isTyping: false,
       timer: null,
       showChatToggle: true,
-      disabled: false
+      disabled: false,
+      guestName: ''
     };
   },
-  computed: Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])({
-    messages: function messages(state) {
-      return state.messages;
-    }
-  }),
+  computed: Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['messages', 'isPreChat', 'isChatEnd', 'guest']),
   methods: {
     submit: function submit() {
       var _this = this;
 
       axios.post('/joinChat', {
-        guest: this.$store.state.guest
+        guest: this.guestName
       }).then(function (response) {
         console.log(response.data);
+
+        _this.$store.commit('TOGGLE_IS_CHAT_END', false);
+
+        _this.$store.commit('TOGGLE_IS_PRECHAT', false);
 
         _this.registerGuest();
       })["catch"](function (error) {
         console.log(error);
       });
     },
-    test: function test() {
-      $.ajax({
-        type: 'POST',
-        url: '/checkAuthentication',
-        success: function success(data) {
-          console.log(e);
-        },
-        error: function error(e) {
-          console.log(e);
-        }
-      });
-    },
     registerGuest: function registerGuest() {
       var _this2 = this;
 
+      console.log('registerGuest');
       this.disabled = false;
-      this.$store.commit('TOGGLE_IS_PRECHAT', false); //get incoming messages
 
-      Echo["private"]("admin-sent-message-".concat(this.$store.state.guest)).listen('AdminSentMessage', function (result) {
+      if (this.guest.length === 0) {
+        this.$store.commit('SET_GUEST', this.guestName);
+      } // get incoming messages
+
+
+      Echo["private"]("admin-sent-message-".concat(this.guest)).listen('AdminSentMessage', function (result) {
         console.log(result);
-
-        _this2.$store.state.messages.push({
+        var data = {
           user: 'admin',
           msg: result.message
-        });
+        };
+
+        _this2.$store.commit('ADD_MESSAGES', data);
 
         Vue.nextTick(function () {
           vueChatScroll();
@@ -2482,7 +2477,7 @@ __webpack_require__.r(__webpack_exports__);
       });
     },
     type: function type() {
-      Echo["private"]("admin-sent-message-".concat(this.$store.state.guest)).whisper('typing', {
+      Echo["private"]("admin-sent-message-".concat(this.guest)).whisper('typing', {
         name: 'guest',
         message: this.message
       });
@@ -2491,35 +2486,49 @@ __webpack_require__.r(__webpack_exports__);
       this.showChatToggle = !this.showChatToggle;
     },
     send: function send() {
+      var _this3 = this;
+
       if (this.message.length === 0) return;
       var payload = {
         user: 'guest',
-        msg: this.message
+        msg: this.message,
+        time: new Date()
       };
       this.$store.commit('ADD_MESSAGES', payload);
       Vue.nextTick(function () {
         vueChatScroll();
       });
       axios.post('/guestSentMessage', {
-        guest: this.$store.state.guest,
+        guest: this.guest,
         message: this.message
-      }).then(function (response) {})["catch"](function (error) {
+      }).then(function (response) {
+        _this3.message = ''; //remove typing notification on admin side 
+
+        _this3.type();
+      })["catch"](function (error) {
         console.log(error);
       });
-      this.message = ''; //remove typing notification on admin side 
-
-      this.type();
     },
     closeChatEnd: function closeChatEnd() {
+      console.log(this.guest);
       this.$store.commit('REMOVE_MESSAGES');
-      this.$store.commit('TOGGLE_IS_CHAT_END', false);
+      this.$store.commit('TOGGLE_IS_CHAT_END', true);
       this.$store.commit('TOGGLE_IS_PRECHAT', true);
-      this.showChatToggle = true;
+      this.showChatToggle = true; //from set_timeout
+
+      Echo["private"]("admin-sent-message-".concat(this.guest)).whisper('ChatEnd', {
+        guest: this.guest
+      });
+      Echo.leave("admin-sent-message-".concat(this.guest));
+      Echo.leave("admin-whisper-to-".concat(this.guest));
+      this.$store.commit('SET_GUEST', '');
     }
   },
   mounted: function mounted() {
-    // if( this.$store.state.guest.length === 0 )
-    this.registerGuest();
+    if (this.guest.length > 0) {
+      console.log('mounted', this.guest);
+      this.registerGuest();
+    }
   },
   updated: function updated() {
     Vue.nextTick(function () {
@@ -2542,10 +2551,10 @@ __webpack_require__.r(__webpack_exports__);
         // 	if(this.messages.length > 1){
         // 		this.$store.commit('TOGGLE_IS_CHAT_END', true);
         // 		this.disabled = true;
-        // 		// Echo.private(`admin-sent-message-${this.$store.state.guest}`).stopListening('AdminSentMessage')
-        // 		Echo.private(`admin-sent-message-${this.$store.state.guest}`).whisper('ChatEnd',{ guest: this.$store.state.guest });
-        // 		Echo.leave(`admin-sent-message-${this.$store.state.guest}`)
-        // 		Echo.leave(`admin-whisper-to-${this.$store.state.guest}`)//(1)
+        // 		// Echo.private(`admin-sent-message-${this.guest}`).stopListening('AdminSentMessage')
+        // 		Echo.private(`admin-sent-message-${this.guest}`).whisper('ChatEnd',{ guest: this.guest });
+        // 		Echo.leave(`admin-sent-message-${this.guest}`)
+        // 		Echo.leave(`admin-whisper-to-${this.guest}`)//(1)
         // 	}	
         // }, 3000);
 
@@ -53374,6 +53383,7 @@ var render = function() {
     _c("div", { staticClass: "row" }, [
       _c("div", { staticClass: "col-md-4 chat-widget" }, [
         _c("div", { staticClass: "card" }, [
+          _vm._v(_vm._s(_vm.isPreChat) + "\n\t\t\t\t\t"),
           _c(
             "div",
             {
@@ -53387,14 +53397,12 @@ var render = function() {
               }
             },
             [
-              _vm._v(
-                "---" + _vm._s(this.$store.state.guest) + "\n\t\t\t\t\t\t"
-              ),
+              _vm._v("---" + _vm._s(_vm.guest) + "\n\t\t\t\t\t\t"),
               _c(
                 "div",
                 {
                   staticClass: "pull-left",
-                  class: [_vm.$store.state.isPreChat ? _vm.showIt : _vm.hideIt]
+                  class: [_vm.isPreChat ? _vm.showIt : _vm.hideIt]
                 },
                 [
                   _c("i", { staticClass: "fas fa-lg fa-comment-dots" }),
@@ -53408,7 +53416,7 @@ var render = function() {
                 "div",
                 {
                   staticClass: "pull-left",
-                  class: [_vm.$store.state.isPreChat ? _vm.hideIt : _vm.showIt]
+                  class: [_vm.isPreChat ? _vm.hideIt : _vm.showIt]
                 },
                 [
                   _c("i", { staticClass: "fas fa-lg fa-comment-dots" }),
@@ -53434,7 +53442,7 @@ var render = function() {
                 "div",
                 {
                   staticClass: "card-body",
-                  class: [_vm.$store.state.isPreChat ? _vm.showIt : _vm.hideIt]
+                  class: [_vm.isPreChat ? _vm.showIt : _vm.hideIt]
                 },
                 [
                   _c("div", { staticClass: "form-group" }, [
@@ -53447,8 +53455,8 @@ var render = function() {
                         {
                           name: "model",
                           rawName: "v-model",
-                          value: _vm.$store.state.guest,
-                          expression: "$store.state.guest"
+                          value: _vm.guestName,
+                          expression: "guestName"
                         }
                       ],
                       staticClass: "form-control",
@@ -53457,7 +53465,7 @@ var render = function() {
                         id: "guest_name",
                         placeholder: "Enter your name"
                       },
-                      domProps: { value: _vm.$store.state.guest },
+                      domProps: { value: _vm.guestName },
                       on: {
                         keyup: function($event) {
                           if (
@@ -53478,11 +53486,7 @@ var render = function() {
                           if ($event.target.composing) {
                             return
                           }
-                          _vm.$set(
-                            _vm.$store.state,
-                            "guest",
-                            $event.target.value
-                          )
+                          _vm.guestName = $event.target.value
                         }
                       }
                     })
@@ -53512,7 +53516,7 @@ var render = function() {
               "div",
               {
                 staticClass: "card-collapse collapse show",
-                class: [_vm.$store.state.isPreChat ? _vm.hideIt : _vm.showIt],
+                class: [_vm.isPreChat ? _vm.hideIt : _vm.showIt],
                 attrs: { id: "collapseOne" }
               },
               [
@@ -53524,7 +53528,7 @@ var render = function() {
                       "ul",
                       { staticClass: "chat incoming_msg" },
                       [
-                        _vm._l(_vm.$store.state.messages, function(item) {
+                        _vm._l(_vm.messages, function(item) {
                           return _c("li", { staticClass: " clearfix" }, [
                             item.user === "admin"
                               ? _c(
@@ -53606,7 +53610,7 @@ var render = function() {
                           ])
                         }),
                         _vm._v(" "),
-                        _vm.$store.state.isChatEnd
+                        _vm.isChatEnd
                           ? _c(
                               "div",
                               {
@@ -68818,7 +68822,7 @@ var ls = new secure_ls__WEBPACK_IMPORTED_MODULE_4___default.a({
     lastSelectedProduct: {},
     productsOnCart: [],
     isPreChat: true,
-    isChatEnd: false,
+    isChatEnd: true,
     listOfGuests: [],
     messages: [{
       user: 'admin',
@@ -68895,6 +68899,7 @@ var ls = new secure_ls__WEBPACK_IMPORTED_MODULE_4___default.a({
       this.state.isPreChat = payload;
     },
     SET_GUEST: function SET_GUEST(state, payload) {
+      console.log('SET_GUEST', payload);
       this.state.guest = payload;
     }
   },
@@ -68914,7 +68919,7 @@ var ls = new secure_ls__WEBPACK_IMPORTED_MODULE_4___default.a({
     //     setItem: (key, value) => Cookies.set(key, value, { expires: 1/(86400/3), secure: true }),
     //     removeItem: key => Cookies.remove(key)
     //    },
-    paths: ['messages', 'isPreChat', 'showChatToggle', 'isChatEnd', 'guest']
+    paths: ['messages', 'isPreChat', 'isChatEnd', 'guest']
   })]
 }));
 
