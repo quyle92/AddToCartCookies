@@ -9,7 +9,8 @@ import createPersistedState from "vuex-persistedstate";
 export default new Vuex.Store({
   state: {
     selectedGuest: {},
-    selectedGuestIndex:''
+    selectedGuestIndex:'',
+    deletedChatId:[]
   },
   mutations: {
     SET_SELECTED_GUEST(state, payload) {
@@ -17,6 +18,9 @@ export default new Vuex.Store({
     },
     SET_SELECTED_GUEST_INDEX(state, payload) {
       this.state.selectedGuestIndex = payload;
+    },
+    SET_DELETED_CHAT_ID(state, payload) {
+      this.state.deletedChatId.push( payload );
     }
   },
   actions: {
@@ -24,7 +28,7 @@ export default new Vuex.Store({
   },
   plugins: [
     createPersistedState({
-        paths:[ 'selectedGuest' , 'selectedGuestIndex' ]
+        paths:[ 'selectedGuest' , 'selectedGuestIndex', 'deletedChatId' ]
     })
   ],
 

@@ -37,19 +37,13 @@ export default {
               
         },
         removeItem() {
+            // console.log(this.guestId);debugger
             let data = { guest_id: this.guestId };
-            axios.post('/api/deleteChat', data)
-                .then( (response) => {
-                    console.log(response.data)
-                    this.$emit('delete')
-                })
-                .catch( (error) => {
-                    console.log(error);
-                });
+            
+            this.$emit('delete', data);
+            
+            
                 
-            // setTimeout(()=>{
-            //    this.$emit('delete-chat') 
-            // })
         }
     }, 
     watch: { 

@@ -2474,7 +2474,7 @@ __webpack_require__.r(__webpack_exports__);
         } else {
           _this2.isTyping = false;
         }
-      }).listenForWhisper('ChatEnd', function (response) {
+      }).listenForWhisper('ChatEndX', function (response) {
         console.log('ChatEnd');
 
         _this2.closeChatEnd();
@@ -2515,7 +2515,7 @@ __webpack_require__.r(__webpack_exports__);
     },
     closeChatEnd: function closeChatEnd() {
       Echo["private"]("admin-sent-message-".concat(this.guestId)).whisper('ChatEnd', {
-        guest: this.guestId
+        id: this.guestId
       });
       Echo.leave("admin-sent-message-".concat(this.guestId)); //(1)
 
@@ -2561,15 +2561,7 @@ __webpack_require__.r(__webpack_exports__);
 
       }
     },
-    guestId: function guestId(val) {
-      var _this4 = this;
-
-      console.log('watch', val); //receive whisper from admin
-
-      if (val.length > 0) Echo["private"]("admin-sent-message-".concat(this.guestId)).listenForWhisper('ChatEnd', function (response) {
-        _this4.closeChatEnd();
-      });
-    }
+    guestId: function guestId(val) {}
   } //end
 
 });

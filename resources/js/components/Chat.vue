@@ -162,7 +162,8 @@ export default {
 	  			{
 	  				this.isTyping = false
 	  			}
-		  	}).listenForWhisper('ChatEnd', (response) => {console.log('ChatEnd')
+		  	}) 	
+		  	.listenForWhisper('ChatEndX', (response) => {console.log('ChatEnd')
 					this.closeChatEnd();
 			});
 	  		
@@ -213,7 +214,7 @@ export default {
   		
 	},
 	closeChatEnd() {
-		Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ guest: this.guestId });
+		Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ id: this.guestId });
 		Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
 
 		this.$store.commit('REMOVE_MESSAGES');
@@ -266,13 +267,8 @@ watch: {
 			// }, 3000);
 		}
 	},
-	guestId(val) {console.log('watch',val)
-		//receive whisper from admin
-		if( val.length > 0 )
-			Echo.private(`admin-sent-message-${this.guestId}`)
-				.listenForWhisper('ChatEnd', (response) => {
-					this.closeChatEnd();
-				});
+	guestId(val) {
+	
 	}
 
 

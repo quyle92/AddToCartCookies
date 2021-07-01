@@ -126,7 +126,7 @@ class ChatController extends Controller
     {
         try 
         {   
-            $guestList = Guest::with('chat')->get();
+            $guestList = Guest::with('chat')->get();//dd( $guestList );
 
             return response()->json([
                 'result' => $guestList

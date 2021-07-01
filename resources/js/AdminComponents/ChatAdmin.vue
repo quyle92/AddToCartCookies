@@ -16,7 +16,7 @@
 					<div class="inbox_chat">
 							<div class="chat_list" >	
 								<div class="chat_people" 
-									:class="{active_chat:guest.active}" 
+									:class="[{active_chat:guest.active}, {'guest-leave-chat': guest.chatDelete}]" 
 									v-for="(guest, index) in guestList" 
 									@click="selectGuest(guest, index)" 
 									@contextmenu.prevent="showContextMenu( index, guest.id, $event)"
@@ -30,8 +30,6 @@
 										<p>{{guest.chat.length > 0 ? guest.chat[guest.chat.length -1 ].content : ''}}.</p>
 									</div>
 								</div>
-								
-								
 							</div>
 					</div>
 				</div>
@@ -147,30 +145,44 @@
 				isContextMenu: false,
 				eventContextMenu: {},
 				foo: 'foo',
-				guestIndex: 0,
-				guestId: 0
+				guestIndex: '',
+				guestId: '',
 			}
 		},
 		computed: {
 			...mapState([
-					'selectedGuest', 'selectedGuestIndex'
+					'selectedGuest', 'selectedGuestIndex', 'deletedChatId'
 			])
 		},
 		methods: {
 			showContextMenu(index, guestId, e){
-					// console.log(guestID);
+					// console.log(guestId);debugger
 					this.isContextMenu = true;
 					this.eventContextMenu = e;
 					this.guestIndex = index
 					this.guestId = guestId
 
+					Echo.private(`admin-sent-message-${this.guestId}`)
+	          .listen('AdminSentMessage', (e) => {
+	              console.log()
+	          });
+        
 			},
 			closeContextMenu() {
 					this.isContextMenu = false;
 
 			},
-			deleteChat(){	
-				Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd');
+			deleteChat(data){	
+				Echo.private(`admin-sent-message-${this.guestId}`)
+					.whisper('ChatEndX',{id: this.guestId});
+
+				axios.post('/api/deleteChat', data)
+                .then( (response) => {
+                console.log(response.data)
+                
+            }).catch( (error) => {
+                console.log(error);
+            });
 				this.$store.commit('SET_SELECTED_GUEST', '');
 				this.$store.commit('SET_SELECTED_GUEST_INDEX', '');
 				this.guestList.splice(this.guestIndex, 1);
@@ -195,16 +207,6 @@
 						{
 							this.guestList[this.selectedGuestIndex].isTyping = false
 						}
-					}).listenForWhisper('ChatEnd', (response) => {
-						console.log('ChatEnd', response);
-						let checkGuest = containsGuest(this.guestList, response) ;
-						if(checkGuest.isOldGuest === true) {
-							
-							let currentGuestIndex = checkGuest.index;console.log('currentGuestIndex', checkGuest)
-							document.getElementsByClassName('chat_people')[currentGuestIndex].classList.add("guest-leave-chat");
-							alert('ChatEnd');
-						}
-
 					});
 
 			},
@@ -228,9 +230,6 @@
 				.catch( (error) => {
 					console.log(error);
 				});
-
-				
-
 				
 			},
 			isObjEmpty(obj){
@@ -253,7 +252,7 @@
 
 				if( checkGuest.isOldGuest === true ) 
 				{	
-					let currentGuestIndex = checkGuest.index;console.log('mounted',checkGuest)
+					let currentGuestIndex = checkGuest.index;
 					this.guestList[ currentGuestIndex ].chat.push({
 						user: 'guest',
 						content: result.message
@@ -275,16 +274,27 @@
 					}
 
 					this.guestList.push(newGuest);
-					console.log(this.guestList)
+					
 				}
+
+
+					Echo.private(`admin-sent-message-${result.id}`)
+						.listenForWhisper('ChatEnd', (response) => {
+								console.log('ChatEnd', response);
+								let checkGuest = containsGuest(this.guestList, response) ;
+								let currentGuestIndex = checkGuest.index;
+
+								//bôi đen ô chat deleted
+								Vue.set(this.guestList[currentGuestIndex],'chatDelete', true);
+
+								this.$store.commit('SET_DELETED_CHAT_ID', result.id);
+
+					});
+
+
 			});
 
-			// Echo.join(`guest-sent-message`)
-   //      .here( (users) => {
-   //      		console.log(users)
-   //      }).joining( (user) => {
-   //      		console.log(user)
-   //      });
+
 
 			vm.$on('closeContextMenu', () => {
 						this.isContextMenu = false
@@ -292,23 +302,6 @@
 
 		},
 		created() {
-			//let i = 0;
-			// setInterval( ( ) => {
-			// 	if( i % 2 === 0 && i < 5 ) {
-			// 		this.guestList[0].chat.push( {
-			// 			user: 'guest',
-			// 			content: randomStr(10)
-			// 		} ); 
-			// 		i++;
-			// 	} else if( i % 2 !== 0 && i < 5) {
-			// 		this.guestList[1].chat.push( {
-			// 			user: 'guest',
-			// 			content: randomStr(10)
-			// 		} );
-			// 		i++;
-			// 	}
-
-			// }, 10, i);
 
 			axios.get('/api/getGuestList')
 				.then( (response) => {
@@ -326,18 +319,24 @@
 						});
 
 				});
-				
+
+			for (var i = 0; i < this.guestList.length; i++) {
+				console.log( this.guestList[i].id)
+				console.log( this.deletedChatId.includes(this.guestList[i].id))
+					if( this.deletedChatId.includes(this.guestList[i].id) ) {
+						Vue.set(this.guestList[i],'chatDelete', true);
+					}
+			}
+				console.log(this.guestList)
 				//Edge case
 				if( this.guestList.length > 0)
-				{
-					// if(this.selectedGuestIndex.length > 0) {
-					// 	this.guestList[this.selectedGuestIndex].active = true
-					// }
-					// else {
-						this.$store.commit('SET_SELECTED_GUEST', this.guestList[0]); 
-						this.$store.commit('SET_SELECTED_GUEST_INDEX', 0); 
+				{		
+						let selectedGuest = this.$Helper.isObjEmpty(this.selectedGuest) ?  this.guestList[0] : this.selectedGuest ;
+						let selectedGuestIndex = this.selectedGuestIndex || 0;
+						this.$store.commit('SET_SELECTED_GUEST', selectedGuest); 
+						this.$store.commit('SET_SELECTED_GUEST_INDEX', selectedGuestIndex); 
 						this.selectGuest(this.selectedGuest, this.selectedGuestIndex);
-					// }
+
 				} else {
 						this.$store.commit('SET_SELECTED_GUEST', '')
 				}
@@ -353,7 +352,7 @@
 		watch: {
 			guestList: {
 				deep: true,
-				handler(newVal, oldVal) {console.log(newVal, oldVal)
+				handler(newVal, oldVal) {console.log('watch')
 					Vue.nextTick( () => {
 						 var div = document.getElementsByClassName('msg_history')[0];
 						div.scrollTop = div.scrollHeight;
@@ -631,3 +630,8 @@
 	background-color: cyan;
 }
 </style>
+
+<!--
+(1): phải Echo.private().listen() trước thì Echo.private.whisper() sau mới dc. Ko sẽ error: 
+"Client event triggered before channel 'subscription_succeeded'"
+

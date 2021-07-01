@@ -2071,8 +2071,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 //
 //
 //
-//
-//
  // import Helper from '../helper';
 // let $Helper = new Helper;
 // console.log(Helper)
@@ -2135,24 +2133,34 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       isContextMenu: false,
       eventContextMenu: {},
       foo: 'foo',
-      guestIndex: 0,
-      guestId: 0
+      guestIndex: '',
+      guestId: ''
     };
   },
-  computed: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['selectedGuest', 'selectedGuestIndex'])),
+  computed: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['selectedGuest', 'selectedGuestIndex', 'deletedChatId'])),
   methods: {
     showContextMenu: function showContextMenu(index, guestId, e) {
-      // console.log(guestID);
+      // console.log(guestId);debugger
       this.isContextMenu = true;
       this.eventContextMenu = e;
       this.guestIndex = index;
       this.guestId = guestId;
+      Echo["private"]("admin-sent-message-".concat(this.guestId)).listen('AdminSentMessage', function (e) {
+        console.log();
+      });
     },
     closeContextMenu: function closeContextMenu() {
       this.isContextMenu = false;
     },
-    deleteChat: function deleteChat() {
-      Echo["private"]("admin-sent-message-".concat(this.guestId)).whisper('ChatEnd');
+    deleteChat: function deleteChat(data) {
+      Echo["private"]("admin-sent-message-".concat(this.guestId)).whisper('ChatEndX', {
+        id: this.guestId
+      });
+      axios.post('/api/deleteChat', data).then(function (response) {
+        console.log(response.data);
+      })["catch"](function (error) {
+        console.log(error);
+      });
       this.$store.commit('SET_SELECTED_GUEST', '');
       this.$store.commit('SET_SELECTED_GUEST_INDEX', '');
       this.guestList.splice(this.guestIndex, 1);
@@ -2174,16 +2182,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
           _this.guestList[_this.selectedGuestIndex].isTyping = true;
         } else {
           _this.guestList[_this.selectedGuestIndex].isTyping = false;
-        }
-      }).listenForWhisper('ChatEnd', function (response) {
-        console.log('ChatEnd', response);
-        var checkGuest = containsGuest(_this.guestList, response);
-
-        if (checkGuest.isOldGuest === true) {
-          var currentGuestIndex = checkGuest.index;
-          console.log('currentGuestIndex', checkGuest);
-          document.getElementsByClassName('chat_people')[currentGuestIndex].classList.add("guest-leave-chat");
-          alert('ChatEnd');
         }
       });
     },
@@ -2228,7 +2226,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
       if (checkGuest.isOldGuest === true) {
         var currentGuestIndex = checkGuest.index;
-        console.log('mounted', checkGuest);
 
         _this3.guestList[currentGuestIndex].chat.push({
           user: 'guest',
@@ -2248,16 +2245,18 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         };
 
         _this3.guestList.push(newGuest);
-
-        console.log(_this3.guestList);
       }
-    }); // Echo.join(`guest-sent-message`)
-    //      .here( (users) => {
-    //      		console.log(users)
-    //      }).joining( (user) => {
-    //      		console.log(user)
-    //      });
 
+      Echo["private"]("admin-sent-message-".concat(result.id)).listenForWhisper('ChatEnd', function (response) {
+        console.log('ChatEnd', response);
+        var checkGuest = containsGuest(_this3.guestList, response);
+        var currentGuestIndex = checkGuest.index; //bôi đen ô chat deleted
+
+        Vue.set(_this3.guestList[currentGuestIndex], 'chatDelete', true);
+
+        _this3.$store.commit('SET_DELETED_CHAT_ID', result.id);
+      });
+    });
     vm.$on('closeContextMenu', function () {
       _this3.isContextMenu = false;
     });
@@ -2265,22 +2264,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
   created: function created() {
     var _this4 = this;
 
-    //let i = 0;
-    // setInterval( ( ) => {
-    // 	if( i % 2 === 0 && i < 5 ) {
-    // 		this.guestList[0].chat.push( {
-    // 			user: 'guest',
-    // 			content: randomStr(10)
-    // 		} ); 
-    // 		i++;
-    // 	} else if( i % 2 !== 0 && i < 5) {
-    // 		this.guestList[1].chat.push( {
-    // 			user: 'guest',
-    // 			content: randomStr(10)
-    // 		} );
-    // 		i++;
-    // 	}
-    // }, 10, i);
     axios.get('/api/getGuestList').then(function (response) {
       //console.log(response.data.result);
       response.data.result.forEach(function (e) {
@@ -2294,19 +2277,28 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
           // isShown: false,
           isTyping: false
         });
-      }); //Edge case
+      });
+
+      for (var i = 0; i < _this4.guestList.length; i++) {
+        console.log(_this4.guestList[i].id);
+        console.log(_this4.deletedChatId.includes(_this4.guestList[i].id));
+
+        if (_this4.deletedChatId.includes(_this4.guestList[i].id)) {
+          Vue.set(_this4.guestList[i], 'chatDelete', true);
+        }
+      }
+
+      console.log(_this4.guestList); //Edge case
 
       if (_this4.guestList.length > 0) {
-        // if(this.selectedGuestIndex.length > 0) {
-        // 	this.guestList[this.selectedGuestIndex].active = true
-        // }
-        // else {
-        _this4.$store.commit('SET_SELECTED_GUEST', _this4.guestList[0]);
+        var selectedGuest = _this4.$Helper.isObjEmpty(_this4.selectedGuest) ? _this4.guestList[0] : _this4.selectedGuest;
+        var selectedGuestIndex = _this4.selectedGuestIndex || 0;
 
-        _this4.$store.commit('SET_SELECTED_GUEST_INDEX', 0);
+        _this4.$store.commit('SET_SELECTED_GUEST', selectedGuest);
 
-        _this4.selectGuest(_this4.selectedGuest, _this4.selectedGuestIndex); // }
+        _this4.$store.commit('SET_SELECTED_GUEST_INDEX', selectedGuestIndex);
 
+        _this4.selectGuest(_this4.selectedGuest, _this4.selectedGuestIndex);
       } else {
         _this4.$store.commit('SET_SELECTED_GUEST', '');
       }
@@ -2318,7 +2310,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     guestList: {
       deep: true,
       handler: function handler(newVal, oldVal) {
-        console.log(newVal, oldVal);
+        console.log('watch');
         Vue.nextTick(function () {
           var div = document.getElementsByClassName('msg_history')[0];
           div.scrollTop = div.scrollHeight;
@@ -2597,20 +2589,11 @@ __webpack_require__.r(__webpack_exports__);
       }); //(1)
     },
     removeItem: function removeItem() {
-      var _this = this;
-
+      // console.log(this.guestId);debugger
       var data = {
         guest_id: this.guestId
       };
-      axios.post('/api/deleteChat', data).then(function (response) {
-        console.log(response.data);
-
-        _this.$emit('delete');
-      })["catch"](function (error) {
-        console.log(error);
-      }); // setTimeout(()=>{
-      //    this.$emit('delete-chat') 
-      // })
+      this.$emit('delete', data);
     }
   },
   watch: {
@@ -7116,7 +7099,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\n\r\n/*---------chat window---------------*/\n.inbox_people[data-v-e7418c82] {\r\n\tbackground: #fff;\r\n\t/*float: left;*/\r\n\toverflow: hidden;\r\n\twidth: 30%;\r\n\tborder-right: 1px solid #ddd;\r\n\tdisplay: table-cell;\n}\n.inbox_msg[data-v-e7418c82] {\r\n\tborder: 1px solid #ddd;\r\n\tclear: both;\r\n\toverflow: hidden;\r\n\tdisplay: table-row;\n}\n.top_spac[data-v-e7418c82] {\r\n\tmargin: 20px 0 0;\n}\n.recent_heading[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 40%;\n}\n.srch_bar[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\ttext-align: right;\r\n\twidth: 60%;\r\n\tpadding:\n}\n.headind_srch[data-v-e7418c82] {\r\n\tpadding: 10px 29px 10px 20px;\r\n\toverflow: hidden;\r\n\tborder-bottom: 1px solid #c4c4c4;\n}\n.recent_heading h4[data-v-e7418c82] {\r\n\tcolor: #0465ac;\r\n\tfont-size: 16px;\r\n\tmargin: auto;\r\n\tline-height: 29px;\n}\n.srch_bar input[data-v-e7418c82] {\r\n\toutline: none;\r\n\tborder: 1px solid #cdcdcd;\r\n\tborder-width: 0 0 1px 0;\r\n\twidth: 80%;\r\n\tpadding: 2px 0 4px 6px;\r\n\tbackground: none;\n}\n.srch_bar .input-group-addon button[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tpadding: 0;\r\n\tcolor: #707070;\r\n\tfont-size: 18px;\n}\n.srch_bar .input-group-addon[data-v-e7418c82] {\r\n\tmargin: 0 0 0 -27px;\n}\n.chat_ib h5[data-v-e7418c82] {\r\n\tfont-size: 15px;\r\n\tcolor: #464646;\r\n\tmargin: 0 0 8px 0;\n}\n.chat_ib h5 span[data-v-e7418c82] {\r\n\tfont-size: 13px;\r\n\tfloat: right;\n}\n.chat_ib p[data-v-e7418c82] {\r\n\tfont-size: 12px;\r\n\tcolor: #989898;\r\n\tmargin: auto;\r\n\tdisplay: inline-block;\r\n\twhite-space: nowrap;\r\n\toverflow: hidden;\r\n\ttext-overflow: ellipsis;\n}\n.chat_img[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 11%;\n}\n.chat_img img[data-v-e7418c82] {\r\n\twidth: 100%\n}\n.chat_ib[data-v-e7418c82] {\r\n\tfloat: left;\r\n\tpadding: 0 0 0 15px;\r\n\twidth: 88%;\n}\n.chat_people[data-v-e7418c82] {\r\n\tborder-bottom: 1px solid #ddd;\r\n\tmargin: 0;\r\n\tpadding: 18px 16px 10px;\r\n\toverflow: hidden;\r\n\tclear: both;\n}\n.chat_list[data-v-e7418c82] {\r\n\t/*border-bottom: 1px solid #ddd;*/\r\n\t/*margin: 0;\r\n\tpadding: 18px 16px 10px;*/\r\n\tcursor: pointer;\n}\n.inbox_chat[data-v-e7418c82] {\r\n\t/*height: 550px;\r\n\toverflow-y: scroll;*/\n}\n.active_chat[data-v-e7418c82] {\r\n\tbackground: #e8f6ff;\n}\n.incoming_msg_img[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\twidth: 6%;\n}\n.incoming_msg_img img[data-v-e7418c82] {\r\n\twidth: 100%;\n}\n.received_msg[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\tpadding: 0 0 0 10px;\r\n\tvertical-align: top;\r\n\twidth: 92%;\n}\n.received_withd_msg p[data-v-e7418c82] {\r\n\tbackground: #ebebeb none repeat scroll 0 0;\r\n\tborder-radius: 0 15px 15px 15px;\r\n\tcolor: #646464;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.time_date[data-v-e7418c82] {\r\n\tcolor: #747474;\r\n\tdisplay: block;\r\n\tfont-size: 12px;\r\n\tmargin: 8px 0 0;\n}\n.received_withd_msg[data-v-e7418c82] {\r\n\twidth: 57%;\n}\n.mesgs[data-v-e7418c82]{\r\n\t/*float: left;*/\r\n\tpadding: 30px 15px 0 25px;\r\n\twidth:70%;\r\n\tdisplay: table-cell;\r\n\t/*max-height: 600px;\r\n\toverflow-y: scroll;*/\n}\n.sent_msg p[data-v-e7418c82] {\r\n\tbackground:#0465ac;\r\n\tborder-radius: 12px 15px 15px 0;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tcolor: #fff;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.outgoing_msg[data-v-e7418c82] {\r\n\toverflow: hidden;\r\n\tmargin: 26px 0 26px;\n}\n.sent_msg[data-v-e7418c82] {\r\n\tfloat: right;\r\n\twidth: 46%;\n}\n.input_msg_write input[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tcolor: #4c4c4c;\r\n\tfont-size: 15px;\r\n\tmin-height: 48px;\r\n\twidth: 100%;\r\n\toutline:none;\n}\n.type_msg[data-v-e7418c82] {\r\n\tborder-top: 1px solid #c4c4c4;\r\n\tposition: relative;\n}\n.msg_send_btn[data-v-e7418c82] {\r\n\tbackground: #05728f none repeat scroll 0 0;\r\n\tborder:none;\r\n\tborder-radius: 50%;\r\n\tcolor: #fff;\r\n\tcursor: pointer;\r\n\tfont-size: 15px;\r\n\theight: 33px;\r\n\tposition: absolute;\r\n\tright: 0;\r\n\ttop: 11px;\r\n\twidth: 33px;\n}\n.messaging[data-v-e7418c82] {\r\n\tpadding: 0 0 50px 0;\r\n\tdisplay: table;\n}\n.guest-leave-chat[data-v-e7418c82]{\r\n\tbackground-color: cyan;\n}\r\n", ""]);
+exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\n\r\n/*---------chat window---------------*/\n.inbox_people[data-v-e7418c82] {\r\n\tbackground: #fff;\r\n\t/*float: left;*/\r\n\toverflow: hidden;\r\n\twidth: 30%;\r\n\tborder-right: 1px solid #ddd;\r\n\tdisplay: table-cell;\n}\n.inbox_msg[data-v-e7418c82] {\r\n\tborder: 1px solid #ddd;\r\n\tclear: both;\r\n\toverflow: hidden;\r\n\tdisplay: table-row;\n}\n.top_spac[data-v-e7418c82] {\r\n\tmargin: 20px 0 0;\n}\n.recent_heading[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 40%;\n}\n.srch_bar[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\ttext-align: right;\r\n\twidth: 60%;\r\n\tpadding:\n}\n.headind_srch[data-v-e7418c82] {\r\n\tpadding: 10px 29px 10px 20px;\r\n\toverflow: hidden;\r\n\tborder-bottom: 1px solid #c4c4c4;\n}\n.recent_heading h4[data-v-e7418c82] {\r\n\tcolor: #0465ac;\r\n\tfont-size: 16px;\r\n\tmargin: auto;\r\n\tline-height: 29px;\n}\n.srch_bar input[data-v-e7418c82] {\r\n\toutline: none;\r\n\tborder: 1px solid #cdcdcd;\r\n\tborder-width: 0 0 1px 0;\r\n\twidth: 80%;\r\n\tpadding: 2px 0 4px 6px;\r\n\tbackground: none;\n}\n.srch_bar .input-group-addon button[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tpadding: 0;\r\n\tcolor: #707070;\r\n\tfont-size: 18px;\n}\n.srch_bar .input-group-addon[data-v-e7418c82] {\r\n\tmargin: 0 0 0 -27px;\n}\n.chat_ib h5[data-v-e7418c82] {\r\n\tfont-size: 15px;\r\n\tcolor: #464646;\r\n\tmargin: 0 0 8px 0;\n}\n.chat_ib h5 span[data-v-e7418c82] {\r\n\tfont-size: 13px;\r\n\tfloat: right;\n}\n.chat_ib p[data-v-e7418c82] {\r\n\tfont-size: 12px;\r\n\tcolor: #989898;\r\n\tmargin: auto;\r\n\tdisplay: inline-block;\r\n\twhite-space: nowrap;\r\n\toverflow: hidden;\r\n\ttext-overflow: ellipsis;\n}\n.chat_img[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 11%;\n}\n.chat_img img[data-v-e7418c82] {\r\n\twidth: 100%\n}\n.chat_ib[data-v-e7418c82] {\r\n\tfloat: left;\r\n\tpadding: 0 0 0 15px;\r\n\twidth: 88%;\n}\n.chat_people[data-v-e7418c82] {\r\n\tborder-bottom: 1px solid #ddd;\r\n\tmargin: 0;\r\n\tpadding: 18px 16px 10px;\r\n\toverflow: hidden;\r\n\tclear: both;\n}\n.chat_list[data-v-e7418c82] {\r\n\t/*border-bottom: 1px solid #ddd;*/\r\n\t/*margin: 0;\r\n\tpadding: 18px 16px 10px;*/\r\n\tcursor: pointer;\n}\n.inbox_chat[data-v-e7418c82] {\r\n\t/*height: 550px;\r\n\toverflow-y: scroll;*/\n}\n.active_chat[data-v-e7418c82] {\r\n\tbackground: #e8f6ff;\n}\n.incoming_msg_img[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\twidth: 6%;\n}\n.incoming_msg_img img[data-v-e7418c82] {\r\n\twidth: 100%;\n}\n.received_msg[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\tpadding: 0 0 0 10px;\r\n\tvertical-align: top;\r\n\twidth: 92%;\n}\n.received_withd_msg p[data-v-e7418c82] {\r\n\tbackground: #ebebeb none repeat scroll 0 0;\r\n\tborder-radius: 0 15px 15px 15px;\r\n\tcolor: #646464;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.time_date[data-v-e7418c82] {\r\n\tcolor: #747474;\r\n\tdisplay: block;\r\n\tfont-size: 12px;\r\n\tmargin: 8px 0 0;\n}\n.received_withd_msg[data-v-e7418c82] {\r\n\twidth: 57%;\n}\n.mesgs[data-v-e7418c82]{\r\n\t/*float: left;*/\r\n\tpadding: 30px 15px 0 25px;\r\n\twidth:70%;\r\n\tdisplay: table-cell;\r\n\t/*max-height: 600px;\r\n\toverflow-y: scroll;*/\n}\n.sent_msg p[data-v-e7418c82] {\r\n\tbackground:#0465ac;\r\n\tborder-radius: 12px 15px 15px 0;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tcolor: #fff;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.outgoing_msg[data-v-e7418c82] {\r\n\toverflow: hidden;\r\n\tmargin: 26px 0 26px;\n}\n.sent_msg[data-v-e7418c82] {\r\n\tfloat: right;\r\n\twidth: 46%;\n}\n.input_msg_write input[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tcolor: #4c4c4c;\r\n\tfont-size: 15px;\r\n\tmin-height: 48px;\r\n\twidth: 100%;\r\n\toutline:none;\n}\n.type_msg[data-v-e7418c82] {\r\n\tborder-top: 1px solid #c4c4c4;\r\n\tposition: relative;\n}\n.msg_send_btn[data-v-e7418c82] {\r\n\tbackground: #05728f none repeat scroll 0 0;\r\n\tborder:none;\r\n\tborder-radius: 50%;\r\n\tcolor: #fff;\r\n\tcursor: pointer;\r\n\tfont-size: 15px;\r\n\theight: 33px;\r\n\tposition: absolute;\r\n\tright: 0;\r\n\ttop: 11px;\r\n\twidth: 33px;\n}\n.messaging[data-v-e7418c82] {\r\n\tpadding: 0 0 50px 0;\r\n\tdisplay: table;\n}\n.guest-leave-chat[data-v-e7418c82]{\r\n\tbackground-color: cyan;\n}\r\n", ""]);
 
 // exports
 
@@ -48741,7 +48724,10 @@ var render = function() {
                       "div",
                       {
                         staticClass: "chat_people",
-                        class: { active_chat: guest.active },
+                        class: [
+                          { active_chat: guest.active },
+                          { "guest-leave-chat": guest.chatDelete }
+                        ],
                         attrs: { id: "guest-" + index },
                         on: {
                           click: function($event) {
@@ -66907,7 +66893,8 @@ var _helper = new _helper__WEBPACK_IMPORTED_MODULE_2__["default"]();
 /* harmony default export */ __webpack_exports__["default"] = (new vuex__WEBPACK_IMPORTED_MODULE_1__["default"].Store({
   state: {
     selectedGuest: {},
-    selectedGuestIndex: ''
+    selectedGuestIndex: '',
+    deletedChatId: []
   },
   mutations: {
     SET_SELECTED_GUEST: function SET_SELECTED_GUEST(state, payload) {
@@ -66915,11 +66902,14 @@ var _helper = new _helper__WEBPACK_IMPORTED_MODULE_2__["default"]();
     },
     SET_SELECTED_GUEST_INDEX: function SET_SELECTED_GUEST_INDEX(state, payload) {
       this.state.selectedGuestIndex = payload;
+    },
+    SET_DELETED_CHAT_ID: function SET_DELETED_CHAT_ID(state, payload) {
+      this.state.deletedChatId.push(payload);
     }
   },
   actions: {},
   plugins: [Object(vuex_persistedstate__WEBPACK_IMPORTED_MODULE_3__["default"])({
-    paths: ['selectedGuest', 'selectedGuestIndex']
+    paths: ['selectedGuest', 'selectedGuestIndex', 'deletedChatId']
   })]
 }));
 

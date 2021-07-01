@@ -29,6 +29,7 @@ class AdminSentMessage implements ShouldBroadcastNow
         $this->message = $message;
         $this->guest_id = $guest_id;
         
+        $this->dontBroadcastToCurrentUser();
     }
 
     /**
