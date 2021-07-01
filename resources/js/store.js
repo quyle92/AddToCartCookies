@@ -45,6 +45,7 @@ export default  new Vuex.Store({
  			},
  		],
  		guest:'',
+ 		guestId:''
  		
 
 
@@ -136,8 +137,11 @@ export default  new Vuex.Store({
 		TOGGLE_IS_PRECHAT( state, payload) {
 			this.state.isPreChat = payload;
 		},
-		SET_GUEST( state, payload) {console.log('SET_GUEST', payload)
+		SET_GUEST( state, payload) {
 			this.state.guest = payload;
+		},
+		SET_GUEST_ID(state, payload) {
+			this.state.guestId = payload;
 		}
 
 
@@ -160,7 +164,7 @@ export default  new Vuex.Store({
 		//     setItem: (key, value) => Cookies.set(key, value, { expires: 1/(86400/3), secure: true }),
 		//     removeItem: key => Cookies.remove(key)
 	 //    },
-		paths:['messages', 'isPreChat', 'isChatEnd', 'guest', ]
+		paths:['messages', 'isPreChat', 'isChatEnd', 'guest', 'guestId']
 	})],
 });
 

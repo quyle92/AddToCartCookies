@@ -32,7 +32,7 @@ class ChatController extends Controller
 
              return response()->json([
                 'msg' => 'success',
-                'auth' => Auth::guard('guest')->check()
+                'guest' => Auth::guard('guest')->user()
             ]);
       
         }
@@ -99,15 +99,15 @@ class ChatController extends Controller
             $new_message = array(
                 'user' =>'admin',
                 'content' => $request->message
-            );
+            ); 
             $current_guest =  Guest::findOrFail( $guest_id );
-            
+    
             $current_messages = $current_guest->chat->messages;
             array_push($current_messages, $new_message);
-            $current_guest->chat->messages = $current_messages;//dd($current_messages);
+            $current_guest->chat->messages = $current_messages;
             $current_guest->push();
-
-            event( new \App\Events\AdminSentMessage($message, $guest) );
+// dd($current_guest->chat->messages );
+            event( new \App\Events\AdminSentMessage($message, $guest_id) );
 
             return response()->json([
                 'msg' => 'success'

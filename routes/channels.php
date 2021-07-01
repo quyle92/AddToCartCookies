@@ -42,12 +42,8 @@ Broadcast::channel('guest-sent-message', function ($user) {
     return  $user;
 });
 
-Broadcast::channel('admin-whisper-to-{guest}', function ($user, $guest) {
-// dd($user);
-    return  true;
-});
 
-Broadcast::channel('admin-sent-message-{guest}', function ( $user, $guest) {
+Broadcast::channel('admin-sent-message-{guestId}', function ( $user, $guestId) {
 
     return  true;
 });//(1)
@@ -76,3 +72,6 @@ Note
 //Pusher :  ["Event sent",{"event":"client-typing","data":{"name":"admin","message":""},"channel":"private-admin-sent-message-nam"}] 
 //==> this is client event 
 
+//Too few arguments to function App\Providers\BroadcastServiceProvider::{closure}(), 1 passed in F:\webdocs\test\AddToCartCookies\vendor\laravel\framework\src\Illuminate\Broadcasting\Broadcasters\Broadcaster.php on line 77 and exactly 2 expected
+//==> lỗi này là do variable passed to  channel = null. 
+//VD: Broadcast::channel('admin-sent-message-{guestId}'... thì guestId = null nên sẽ báo error

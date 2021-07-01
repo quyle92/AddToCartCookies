@@ -14,53 +14,52 @@
 						</div>
 					</div>
 					<div class="inbox_chat">
-						<div >
 							<div class="chat_list" >	
-								<div class="chat_people" :class="{active_chat:guest.active}" 
+								<div class="chat_people" 
+									:class="{active_chat:guest.active}" 
 									v-for="(guest, index) in guestList" 
 									@click="selectGuest(guest, index)" 
 									@contextmenu.prevent="showContextMenu( index, guest.id, $event)"
 									:id="'guest-' + index"
-									
 								>
-
 									<div class="chat_img"> 
 										<img src="https://ptetutorials.com/images/user-profile.png" alt="sunil">
 									</div>
 									<div class="chat_ib">
 										<h5>{{guest.name}}<span class="chat_date">Dec 25</span></h5>
-										<p>{{guest.chat !== undefined ? guest.chat[guest.chat.length -1 ].content : ''}}.</p>
+										<p>{{guest.chat.length > 0 ? guest.chat[guest.chat.length -1 ].content : ''}}.</p>
 									</div>
 								</div>
 								
 								
 							</div>
-						</div>
 					</div>
 				</div>
-				<div class="mesgs"  v-for="(guest, index) in guestList" :key='index' v-if="guest.isShown" >
-					<div  class="msg_history" style="height: 400px; overflow-y: scroll;">
-						<div   v-for='(item) in guest.chat' >
-							<div class="incoming_msg"  v-if="item.user ==='guest'" >
-								<div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> 
-								</div>
-								<div class="received_msg">
-									<div class="received_withd_msg">
-										<p>{{item.content}}</p>
-										<span class="time_date"> 11:01 AM    |    June 9</span>
+				<div class="mesgs"  >
+						<div  class="msg_history" style="height: 400px; overflow-y: scroll;">
+							<div class="incoming_msg_img" v-if="isObjEmpty(selectedGuest) || selectedGuest.chat.length === 0"></div>
+							<div   v-for='(item) in selectedGuest.chat' >
+								
+								<div class="incoming_msg"  v-if="item.user ==='guest'" >
+									<div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> 
+									</div>
+									<div class="received_msg">
+										<div class="received_withd_msg">
+											<p>{{item.content}}</p>
+											<span class="time_date"> 11:01 AM    |    June 9</span>
+										</div>
 									</div>
 								</div>
-							</div>
-							<div class="outgoing_msg"  v-if="item.user ==='admin'" >
-								<div class="sent_msg">
-									<p>{{item.content}}</p>
-									<span class="time_date"> 11:01 AM    |    June 9</span> </div>
+								<div class="outgoing_msg"  v-if="item.user ==='admin'" >
+									<div class="sent_msg">
+										<p>{{item.content}}</p>
+										<span class="time_date"> 11:01 AM    |    June 9</span> </div>
 								</div>
 							</div>
 						</div>
 
-						<small v-if="guest.isTyping"><i class="fas fa-pen-nib fa-fw fa-spin"></i>guest is typing...</small>
-						<div class="type_msg">
+						<small v-if="selectedGuest.isTyping"><i class="fas fa-pen-nib fa-fw fa-spin"></i>guest is typing...</small>
+						<div class="type_msg" v-if="selectedGuest">
 							<div class="input_msg_write">
 								<input type="text" class="write_msg" placeholder="Type a message" @keyup.enter="send" v-model="message" @input="type"/>
 								<button class="msg_send_btn" type="button"  @keyup.enter="send"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
@@ -83,7 +82,9 @@
 
 <script>
 	import { mapState } from 'vuex'
-
+// import Helper from '../helper';
+// let $Helper = new Helper;
+// console.log(Helper)
 	export default {
 		props:{
 
@@ -91,59 +92,57 @@
 		data: function() {
 			return {
 				guestList:[
-				{
-					name: 'Adam',
-					chat: [
-					{
-						user: 'guest',
-						content: 'hi there,'
-					},
-					{
-						user: 'admin',
-						content: 'Hey bro!'
-					},
-					{
-						user: 'guest',
-						content: 'how are you?'
-					},
-					{
-						user: 'admin',
-						content: 'Great! I am glad to see you too!'
-					}
-					],
-					isShown: true,
-					active: true,
-					isTyping: false,
+				// {
+				// 	name: 'Adam',
+				// 	chat: [
+				// 	{
+				// 		user: 'guest',
+				// 		content: 'hi there,'
+				// 	},
+				// 	{
+				// 		user: 'admin',
+				// 		content: 'Hey bro!'
+				// 	},
+				// 	{
+				// 		user: 'guest',
+				// 		content: 'how are you?'
+				// 	},
+				// 	{
+				// 		user: 'admin',
+				// 		content: 'Great! I am glad to see you too!'
+				// 	}
+				// 	],
+				// 	isShown: true,
+				// 	active: true,
+				// 	isTyping: false,
 					
-				},
-				{
-					name: 'Bob',
-					chat: [
-					{
-						user: 'guest',
-						content: 'I am Bob'
-					},
-					{
-						user: 'admin',
-						content: 'hi there'
-					},
-					{
-						user: 'guest',
-						content: 'Nice to meet you!'
-					},
-					{
-						user: 'admin',
-						content: 'how are you?'
-					}
-					],
-					isShown: false,
-					active: false,
-					isTyping: false,
-				}
+				// },
+				// {
+				// 	name: 'Bob',
+				// 	chat: [
+				// 	{
+				// 		user: 'guest',
+				// 		content: 'I am Bob'
+				// 	},
+				// 	{
+				// 		user: 'admin',
+				// 		content: 'hi there'
+				// 	},
+				// 	{
+				// 		user: 'guest',
+				// 		content: 'Nice to meet you!'
+				// 	},
+				// 	{
+				// 		user: 'admin',
+				// 		content: 'how are you?'
+				// 	}
+				// 	],
+				// 	isShown: false,
+				// 	active: false,
+				// 	isTyping: false,
+				// }
 				],
 				message:'',
-				selectedGuest: '',
-				selectedGuestIndex:'',
 				msgReceived:true,
 				isContextMenu: false,
 				eventContextMenu: {},
@@ -154,7 +153,7 @@
 		},
 		computed: {
 			...mapState([
-
+					'selectedGuest', 'selectedGuestIndex'
 			])
 		},
 		methods: {
@@ -170,28 +169,26 @@
 					this.isContextMenu = false;
 
 			},
-			deleteChat(){
-				//need to have this here, else chat DOM(id='msg_history') will be broken b/c of its v-if="guest.isShown"
-				if( this.selectedGuest.isShown === true ){
-					this.guestList[this.selectedGuestIndex-1].isShown = true
-				}
-
+			deleteChat(){	
+				Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd');
+				this.$store.commit('SET_SELECTED_GUEST', '');
+				this.$store.commit('SET_SELECTED_GUEST_INDEX', '');
 				this.guestList.splice(this.guestIndex, 1);
 			},
 			selectGuest(guest, index) {
-				this.selectedGuest = guest;
-				this.selectedGuestIndex = index;
+				// this.selectedGuest = guest;
+				this.$store.commit('SET_SELECTED_GUEST', guest);
+				this.$store.commit('SET_SELECTED_GUEST_INDEX', index);
 				this.guestList.map( e => {
-					e.isShown = false;
+					//e.isShown = false;
 					e.active = false;
 
 				});
-				this.guestList[index].isShown = true;
 				this.guestList[index].active = true;
 
-				Echo.private(`admin-sent-message-${this.selectedGuest.name}`)
+				Echo.private(`admin-sent-message-${this.selectedGuest.id}`)
 					.listenForWhisper('typing', (e) => {
-						console.log(e.message);
+						//console.log(e.message);
 						if(e.message.length > 0){
 							this.guestList[this.selectedGuestIndex].isTyping = true;
 						} else
@@ -201,15 +198,19 @@
 					}).listenForWhisper('ChatEnd', (response) => {
 						console.log('ChatEnd', response);
 						let checkGuest = containsGuest(this.guestList, response) ;
-						let currentGuestIndex = checkGuest.index;
-						document.getElementsByClassName('chat_people')[currentGuestIndex].classList.add("guest-leave-chat");
-						alert('ChatEnd')
+						if(checkGuest.isOldGuest === true) {
+							
+							let currentGuestIndex = checkGuest.index;console.log('currentGuestIndex', checkGuest)
+							document.getElementsByClassName('chat_people')[currentGuestIndex].classList.add("guest-leave-chat");
+							alert('ChatEnd');
+						}
+
 					});
 
 			},
 			send() {
 				if( this.message === '' ) return;
-				console.log(this.selectedGuest.id)
+				//console.log(this.selectedGuest.id)
 				axios.post('/adminSentMessage', {
 					guest_id: this.selectedGuest.id,
 					guest: this.selectedGuest.name,
@@ -232,8 +233,11 @@
 
 				
 			},
+			isObjEmpty(obj){
+				return this.$Helper.isObjEmpty(obj);
+			},
 			type() {
-				Echo.private(`admin-sent-message-${this.selectedGuest.name}`)
+				Echo.private(`admin-sent-message-${this.selectedGuest.id}`)
 				.whisper('typing', {
 					name: 'admin',
 					message: this.message
@@ -248,8 +252,8 @@
 				let checkGuest = containsGuest(this.guestList, result) ;
 
 				if( checkGuest.isOldGuest === true ) 
-				{	console.log('isOldGuest')
-					let currentGuestIndex = checkGuest.index;
+				{	
+					let currentGuestIndex = checkGuest.index;console.log('mounted',checkGuest)
 					this.guestList[ currentGuestIndex ].chat.push({
 						user: 'guest',
 						content: result.message
@@ -264,7 +268,7 @@
 							user: 'guest',
 							content: result.message
 						}],
-						isShown: false,
+						// isShown: false,
 						active: false,
 						isTyping: false,
 						
@@ -286,44 +290,57 @@
 						this.isContextMenu = false
 			});
 
-
 		},
 		created() {
-			let i = 0;
-			setInterval( ( ) => {
-				if( i % 2 === 0 && i < 5 ) {
-					this.guestList[0].chat.push( {
-						user: 'guest',
-						content: randomStr(10)
-					} ); 
-					i++;
-				} else if( i % 2 !== 0 && i < 5) {
-					this.guestList[1].chat.push( {
-						user: 'guest',
-						content: randomStr(10)
-					} );
-					i++;
-				}
+			//let i = 0;
+			// setInterval( ( ) => {
+			// 	if( i % 2 === 0 && i < 5 ) {
+			// 		this.guestList[0].chat.push( {
+			// 			user: 'guest',
+			// 			content: randomStr(10)
+			// 		} ); 
+			// 		i++;
+			// 	} else if( i % 2 !== 0 && i < 5) {
+			// 		this.guestList[1].chat.push( {
+			// 			user: 'guest',
+			// 			content: randomStr(10)
+			// 		} );
+			// 		i++;
+			// 	}
 
-			}, 10, i);
+			// }, 10, i);
 
 			axios.get('/api/getGuestList')
-			.then( (response) => {
-				//console.log(response.data.result);
+				.then( (response) => {
+					//console.log(response.data.result);
 
-				response.data.result.forEach( e => {
-					this.guestList.push({
-						id: e.id,
-						name: e.name,
-						chat: e?.chat?.messages,
-						active: false,
-						isShown: false,
-						isTyping: false,
+					response.data.result.forEach( e => {
+						this.guestList.push({
+							id: e.id,
+							name: e.name,
+							chat: e?.chat?.messages ?? [],
+							active: false,
+							// isShown: false,
+							isTyping: false,
 
-					});
+						});
 
 				});
-				//console.log(this.guestList)
+				
+				//Edge case
+				if( this.guestList.length > 0)
+				{
+					// if(this.selectedGuestIndex.length > 0) {
+					// 	this.guestList[this.selectedGuestIndex].active = true
+					// }
+					// else {
+						this.$store.commit('SET_SELECTED_GUEST', this.guestList[0]); 
+						this.$store.commit('SET_SELECTED_GUEST_INDEX', 0); 
+						this.selectGuest(this.selectedGuest, this.selectedGuestIndex);
+					// }
+				} else {
+						this.$store.commit('SET_SELECTED_GUEST', '')
+				}
 
 
 			})
@@ -336,11 +353,10 @@
 		watch: {
 			guestList: {
 				deep: true,
-				handler() {console.log('handler', document.getElementsByClassName('msg_history')[0])
-					Vue.nextTick(function () {
-						 //var div = document.getElementsByClassName('msg_history')[0];
-						// console.log( document.getElementsByClassName('msg_history')[0])
-						//div.scrollTop = div.scrollHeight;
+				handler(newVal, oldVal) {console.log(newVal, oldVal)
+					Vue.nextTick( () => {
+						 var div = document.getElementsByClassName('msg_history')[0];
+						div.scrollTop = div.scrollHeight;
 					});
 				}
 			},
@@ -362,8 +378,10 @@
 	}
 
 	function containsGuest(guestList, obj) 
-	{
-		for( let i = 0; i < guestList.length; i ++ ) {
+	{	console.log('containsGuest')
+		console.log(guestList)
+		console.log(obj);
+		for( let i = 0; i < guestList.length; i ++ ) {console.log(guestList[i], obj.id)
 			if(guestList[i].id === obj.id) {
 				return {
 					isOldGuest: true,

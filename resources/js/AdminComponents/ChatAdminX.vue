@@ -16,24 +16,20 @@
 					<div class="inbox_chat">
 						<div >
 							<div class="chat_list" >	
-								<div class="chat_people" :class="{active_chat:guest.active}" 
+								<div class="chat_people" 
+									:class="{active_chat:guest.active}" 
 									v-for="(guest, index) in guestList" 
 									@click="selectGuest(guest, index)" 
-									@contextmenu="showContextMenu( 1, $event)"
+									@contextmenu.prevent="showContextMenu( index, guest.id, $event)"
 									:id="'guest-' + index"
-									
 								>
-							<!-- 	<button type="button" class="btn btn-danger"
-		 @click.prevent="test($event)"
-		 @contextmenu="showContextMenu( 1, $event)"
-		 >
-			button</button> -->
+
 									<div class="chat_img"> 
 										<img src="https://ptetutorials.com/images/user-profile.png" alt="sunil">
 									</div>
 									<div class="chat_ib">
 										<h5>{{guest.name}}<span class="chat_date">Dec 25</span></h5>
-										<p>{{guest.chat[guest.chat.length -1 ].content}}.</p>
+										<p>{{guest.chat !== undefined ? guest.chat[guest.chat.length -1 ].content : ''}}.</p>
 									</div>
 								</div>
 								
@@ -43,7 +39,7 @@
 					</div>
 				</div>
 				<div class="mesgs"  v-for="(guest, index) in guestList" :key='index' v-if="guest.isShown" >
-					<div  class="msg_history" style="height: 600px; overflow-y: scroll;">
+					<div  class="msg_history" style="height: 400px; overflow-y: scroll;">
 						<div   v-for='(item) in guest.chat' >
 							<div class="incoming_msg"  v-if="item.user ==='guest'" >
 								<div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> 
@@ -74,11 +70,13 @@
 			</div>
 		</div>
 <context-menu
-	
 	:is-context-menu="isContextMenu"
 	:event-context-menu="eventContextMenu"
+	:guest-index="guestIndex"
+	:guest-id="guestId"
+	@delete="deleteChat"
 ></context-menu>
-		<!-- <test :event-context-menu='eventContextMenu' :is-content-menu="isContextMenu"></test> -->
+
 	</div>
 
 </template>
@@ -93,55 +91,55 @@
 		data: function() {
 			return {
 				guestList:[
-				{
-					name: 'Adam',
-					chat: [
-					{
-						user: 'guest',
-						content: 'hi there,'
-					},
-					{
-						user: 'admin',
-						content: 'Hey bro!'
-					},
-					{
-						user: 'guest',
-						content: 'how are you?'
-					},
-					{
-						user: 'admin',
-						content: 'Great! I am glad to see you too!'
-					}
-					],
-					isShown: true,
-					active: true,
-					isTyping: false,
+				// {
+				// 	name: 'Adam',
+				// 	chat: [
+				// 	{
+				// 		user: 'guest',
+				// 		content: 'hi there,'
+				// 	},
+				// 	{
+				// 		user: 'admin',
+				// 		content: 'Hey bro!'
+				// 	},
+				// 	{
+				// 		user: 'guest',
+				// 		content: 'how are you?'
+				// 	},
+				// 	{
+				// 		user: 'admin',
+				// 		content: 'Great! I am glad to see you too!'
+				// 	}
+				// 	],
+				// 	isShown: true,
+				// 	active: true,
+				// 	isTyping: false,
 					
-				},
-				{
-					name: 'Bob',
-					chat: [
-					{
-						user: 'guest',
-						content: 'I am Bob'
-					},
-					{
-						user: 'admin',
-						content: 'hi there'
-					},
-					{
-						user: 'guest',
-						content: 'Nice to meet you!'
-					},
-					{
-						user: 'admin',
-						content: 'how are you?'
-					}
-					],
-					isShown: false,
-					active: false,
-					isTyping: false,
-				}
+				// },
+				// {
+				// 	name: 'Bob',
+				// 	chat: [
+				// 	{
+				// 		user: 'guest',
+				// 		content: 'I am Bob'
+				// 	},
+				// 	{
+				// 		user: 'admin',
+				// 		content: 'hi there'
+				// 	},
+				// 	{
+				// 		user: 'guest',
+				// 		content: 'Nice to meet you!'
+				// 	},
+				// 	{
+				// 		user: 'admin',
+				// 		content: 'how are you?'
+				// 	}
+				// 	],
+				// 	isShown: false,
+				// 	active: false,
+				// 	isTyping: false,
+				// }
 				],
 				message:'',
 				selectedGuest: '',
@@ -149,7 +147,9 @@
 				msgReceived:true,
 				isContextMenu: false,
 				eventContextMenu: {},
-				foo: 'foo'
+				foo: 'foo',
+				guestIndex: 0,
+				guestId: 0
 			}
 		},
 		computed: {
@@ -158,21 +158,27 @@
 			])
 		},
 		methods: {
-			test(e) {
-				this.foo="bar";
-				this.eventContextMenu = e;
-			},
-			showContextMenu(guestID, e){
+			showContextMenu(index, guestId, e){
 					// console.log(guestID);
 					this.isContextMenu = true;
 					this.eventContextMenu = e;
+					this.guestIndex = index
+					this.guestId = guestId
 
 			},
-			closeContextMenu() {console.log('closeContextMenu')
+			closeContextMenu() {
 					this.isContextMenu = false;
+
+			},
+			deleteChat(){
+				//need to have this here, else chat DOM(id='msg_history') will be broken b/c of its v-if="guest.isShown"
+				if( this.selectedGuest.isShown === true && this.guestList.length > 1){
+					this.guestList[this.selectedGuestIndex-1].isShown = true
+				}
+
+				this.guestList.splice(this.guestIndex, 1);
 			},
 			selectGuest(guest, index) {
-				// this.isContextMenu = false;
 				this.selectedGuest = guest;
 				this.selectedGuestIndex = index;
 				this.guestList.map( e => {
@@ -183,9 +189,9 @@
 				this.guestList[index].isShown = true;
 				this.guestList[index].active = true;
 
-				Echo.private(`admin-sent-message-${this.selectedGuest.name}`)
+				Echo.private(`admin-sent-message-${this.selectedGuest.id}`)
 					.listenForWhisper('typing', (e) => {
-						console.log(e.message);
+						//console.log(e.message);
 						if(e.message.length > 0){
 							this.guestList[this.selectedGuestIndex].isTyping = true;
 						} else
@@ -193,38 +199,41 @@
 							this.guestList[this.selectedGuestIndex].isTyping = false
 						}
 					}).listenForWhisper('ChatEnd', (response) => {
-						console.log(response);
+						console.log('ChatEnd', response);
 						let checkGuest = containsGuest(this.guestList, response) ;
-						let currentGuestIndex = checkGuest.index;
+						let currentGuestIndex = checkGuest.index;console.log('currentGuestIndex', currentGuestIndex)
 						document.getElementsByClassName('chat_people')[currentGuestIndex].classList.add("guest-leave-chat");
 						alert('ChatEnd')
 					});
 
 			},
 			send() {
-				this.guestList[this.selectedGuestIndex].chat.push({
-					user: 'admin',
-					content: this.message
-				});
-
+				if( this.message === '' ) return;
+				//console.log(this.selectedGuest.id)
 				axios.post('/adminSentMessage', {
+					guest_id: this.selectedGuest.id,
 					guest: this.selectedGuest.name,
 					message: this.message,
 				})
 				.then( (response) => {
-
+						this.guestList[this.selectedGuestIndex].chat.push({
+							user: 'admin',
+							content: this.message
+						});
+						this.message = '';
+						//remove typing notification on guest side 
+						this.type();
 				})
 				.catch( (error) => {
 					console.log(error);
 				});
 
-				this.message = '';
+				
 
-				//remove typing notification on guest side 
-				this.type();
+				
 			},
 			type() {
-				Echo.private(`admin-sent-message-${this.selectedGuest.name}`)
+				Echo.private(`admin-sent-message-${this.selectedGuest.id}`)
 				.whisper('typing', {
 					name: 'admin',
 					message: this.message
@@ -239,7 +248,7 @@
 				let checkGuest = containsGuest(this.guestList, result) ;
 
 				if( checkGuest.isOldGuest === true ) 
-				{
+				{	
 					let currentGuestIndex = checkGuest.index;
 					this.guestList[ currentGuestIndex ].chat.push({
 						user: 'guest',
@@ -249,6 +258,7 @@
 				else 
 				{		
 					let newGuest = {
+						id: result.id,
 						name: result.guest,
 						chat: [{
 							user: 'guest',
@@ -260,32 +270,42 @@
 						
 					}
 
-					this.guestList.push(newGuest)
+					this.guestList.push(newGuest);
+					console.log(this.guestList)
 				}
-			})
+			});
 
+			// Echo.join(`guest-sent-message`)
+   //      .here( (users) => {
+   //      		console.log(users)
+   //      }).joining( (user) => {
+   //      		console.log(user)
+   //      });
 
+			vm.$on('closeContextMenu', () => {
+						this.isContextMenu = false
+			});
 
 
 		},
 		created() {
-			let i = 0;
-			setInterval( ( ) => {
-				if( i % 2 === 0 && i < 5 ) {
-					this.guestList[0].chat.push( {
-						user: 'guest',
-						content: randomStr(10)
-					} ); 
-					i++;
-				} else if( i % 2 !== 0 && i < 5) {
-					this.guestList[1].chat.push( {
-						user: 'guest',
-						content: randomStr(10)
-					} );
-					i++;
-				}
+			//let i = 0;
+			// setInterval( ( ) => {
+			// 	if( i % 2 === 0 && i < 5 ) {
+			// 		this.guestList[0].chat.push( {
+			// 			user: 'guest',
+			// 			content: randomStr(10)
+			// 		} ); 
+			// 		i++;
+			// 	} else if( i % 2 !== 0 && i < 5) {
+			// 		this.guestList[1].chat.push( {
+			// 			user: 'guest',
+			// 			content: randomStr(10)
+			// 		} );
+			// 		i++;
+			// 	}
 
-			}, 10, i);
+			// }, 10, i);
 
 			axios.get('/api/getGuestList')
 			.then( (response) => {
@@ -295,7 +315,7 @@
 					this.guestList.push({
 						id: e.id,
 						name: e.name,
-						chat: e.chat.messages,
+						chat: e?.chat?.messages,
 						active: false,
 						isShown: false,
 						isTyping: false,
@@ -317,9 +337,10 @@
 			guestList: {
 				deep: true,
 				handler() {
-					Vue.nextTick(function () {
-						const div = document.getElementsByClassName('msg_history')[0];
-						div.scrollTop = div.scrollHeight;
+					Vue.nextTick( () => {console.log('watch',this.guestList);
+						 //var div = document.getElementsByClassName('msg_history')[0];
+						// console.log( document.getElementsByClassName('msg_history')[0])
+						//div.scrollTop = div.scrollHeight;
 					});
 				}
 			},
@@ -341,9 +362,11 @@
 	}
 
 	function containsGuest(guestList, obj) 
-	{
-		for( let i = 0; i < guestList.length; i ++ ) {
-			if(guestList[i].name === obj.guest) {
+	{	console.log('containsGuest')
+		console.log(guestList)
+		console.log(obj);
+		for( let i = 0; i < guestList.length; i ++ ) {console.log(guestList[i], obj.id)
+			if(guestList[i].id === obj.id) {
 				return {
 					isOldGuest: true,
 					index: i

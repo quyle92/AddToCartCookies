@@ -2424,7 +2424,7 @@ __webpack_require__.r(__webpack_exports__);
       guestName: ''
     };
   },
-  computed: Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['messages', 'isPreChat', 'isChatEnd', 'guest']),
+  computed: Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['messages', 'isPreChat', 'isChatEnd', 'guest', 'guestId']),
   methods: {
     submit: function submit() {
       var _this = this;
@@ -2432,7 +2432,7 @@ __webpack_require__.r(__webpack_exports__);
       axios.post('/joinChat', {
         guest: this.guestName
       }).then(function (response) {
-        console.log(response.data);
+        _this.$store.commit('SET_GUEST_ID', response.data.guest.id);
 
         _this.$store.commit('TOGGLE_IS_CHAT_END', false);
 
@@ -2454,7 +2454,7 @@ __webpack_require__.r(__webpack_exports__);
       } // get incoming messages
 
 
-      Echo["private"]("admin-sent-message-".concat(this.guest)).listen('AdminSentMessage', function (result) {
+      Echo["private"]("admin-sent-message-".concat(this.guestId)).listen('AdminSentMessage', function (result) {
         console.log(result);
         var data = {
           user: 'admin',
@@ -2467,17 +2467,21 @@ __webpack_require__.r(__webpack_exports__);
           vueChatScroll();
         });
       }).listenForWhisper('typing', function (e) {
-        console.log(e.message);
+        console.log('typing', e.message);
 
         if (e.message.length > 0) {
           _this2.isTyping = true;
         } else {
           _this2.isTyping = false;
         }
+      }).listenForWhisper('ChatEnd', function (response) {
+        console.log('ChatEnd');
+
+        _this2.closeChatEnd();
       });
     },
     type: function type() {
-      Echo["private"]("admin-sent-message-".concat(this.guest)).whisper('typing', {
+      Echo["private"]("admin-sent-message-".concat(this.guestId)).whisper('typing', {
         name: 'guest',
         message: this.message
       });
@@ -2510,23 +2514,21 @@ __webpack_require__.r(__webpack_exports__);
       });
     },
     closeChatEnd: function closeChatEnd() {
-      console.log(this.guest);
+      Echo["private"]("admin-sent-message-".concat(this.guestId)).whisper('ChatEnd', {
+        guest: this.guestId
+      });
+      Echo.leave("admin-sent-message-".concat(this.guestId)); //(1)
+
       this.$store.commit('REMOVE_MESSAGES');
       this.$store.commit('TOGGLE_IS_CHAT_END', true);
       this.$store.commit('TOGGLE_IS_PRECHAT', true);
-      this.showChatToggle = true; //from set_timeout
-
-      Echo["private"]("admin-sent-message-".concat(this.guest)).whisper('ChatEnd', {
-        guest: this.guest
-      });
-      Echo.leave("admin-sent-message-".concat(this.guest));
-      Echo.leave("admin-whisper-to-".concat(this.guest));
       this.$store.commit('SET_GUEST', '');
+      this.$store.commit('SET_GUEST_ID', '');
+      this.showChatToggle = true;
     }
   },
   mounted: function mounted() {
     if (this.guest.length > 0) {
-      console.log('mounted', this.guest);
       this.registerGuest();
     }
   },
@@ -2551,16 +2553,25 @@ __webpack_require__.r(__webpack_exports__);
         // 	if(this.messages.length > 1){
         // 		this.$store.commit('TOGGLE_IS_CHAT_END', true);
         // 		this.disabled = true;
-        // 		// Echo.private(`admin-sent-message-${this.guest}`).stopListening('AdminSentMessage')
-        // 		Echo.private(`admin-sent-message-${this.guest}`).whisper('ChatEnd',{ guest: this.guest });
-        // 		Echo.leave(`admin-sent-message-${this.guest}`)
-        // 		Echo.leave(`admin-whisper-to-${this.guest}`)//(1)
+        // 		// Echo.private(`admin-sent-message-${this.guestId}`).stopListening('AdminSentMessage')
+        // 		Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ guest: this.guest });
+        // 		Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
         // 	}	
         // }, 3000);
 
       }
+    },
+    guestId: function guestId(val) {
+      var _this4 = this;
+
+      console.log('watch', val); //receive whisper from admin
+
+      if (val.length > 0) Echo["private"]("admin-sent-message-".concat(this.guestId)).listenForWhisper('ChatEnd', function (response) {
+        _this4.closeChatEnd();
+      });
     }
-  }
+  } //end
+
 });
 
 function vueChatScroll() {
@@ -53383,7 +53394,6 @@ var render = function() {
     _c("div", { staticClass: "row" }, [
       _c("div", { staticClass: "col-md-4 chat-widget" }, [
         _c("div", { staticClass: "card" }, [
-          _vm._v(_vm._s(_vm.isPreChat) + "\n\t\t\t\t\t"),
           _c(
             "div",
             {
@@ -68831,7 +68841,8 @@ var ls = new secure_ls__WEBPACK_IMPORTED_MODULE_4___default.a({
       user: 'guest',
       msg: 'Yes, I need help'
     }],
-    guest: ''
+    guest: '',
+    guestId: ''
   },
   getters: {},
   mutations: {
@@ -68899,8 +68910,10 @@ var ls = new secure_ls__WEBPACK_IMPORTED_MODULE_4___default.a({
       this.state.isPreChat = payload;
     },
     SET_GUEST: function SET_GUEST(state, payload) {
-      console.log('SET_GUEST', payload);
       this.state.guest = payload;
+    },
+    SET_GUEST_ID: function SET_GUEST_ID(state, payload) {
+      this.state.guestId = payload;
     }
   },
   actions: {
@@ -68919,7 +68932,7 @@ var ls = new secure_ls__WEBPACK_IMPORTED_MODULE_4___default.a({
     //     setItem: (key, value) => Cookies.set(key, value, { expires: 1/(86400/3), secure: true }),
     //     removeItem: key => Cookies.remove(key)
     //    },
-    paths: ['messages', 'isPreChat', 'isChatEnd', 'guest']
+    paths: ['messages', 'isPreChat', 'isChatEnd', 'guest', 'guestId']
   })]
 }));
 

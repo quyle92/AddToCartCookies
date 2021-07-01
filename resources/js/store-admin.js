@@ -4,66 +4,28 @@ Vue.use(Vuex);
 
 import Helper from './helper';
 let _helper = new Helper()
+import createPersistedState from "vuex-persistedstate";
 
 export default new Vuex.Store({
   state: {
-    guestList:[
-        {
-          name: 'Adam',
-          msg: [
-            {
-              user: 'guest',
-              content: 'hi there,'
-            },
-            {
-              user: 'admin',
-              content: 'Hey bro!'
-            },
-            {
-              user: 'guest',
-              content: 'how are you?'
-            },
-            {
-              user: 'admin',
-              content: 'Great! I am glad to see you too!'
-            }
-          ],
-          isShown: true,
-          active: true,
-          isTyping: false
-        },
-        {
-          name: 'Bob',
-          msg: [
-            {
-              user: 'guest',
-              content: 'I am Bob'
-            },
-            {
-              user: 'admin',
-              content: 'hi there'
-            },
-            {
-              user: 'guest',
-              content: 'Nice to meet you!'
-            },
-            {
-              user: 'admin',
-              content: 'how are you?'
-            }
-          ],
-          isShown: false,
-          active: false,
-          isTyping: false
-        }
-      ],
+    selectedGuest: {},
+    selectedGuestIndex:''
   },
   mutations: {
+    SET_SELECTED_GUEST(state, payload) {
+      this.state.selectedGuest = payload;
+    },
+    SET_SELECTED_GUEST_INDEX(state, payload) {
+      this.state.selectedGuestIndex = payload;
+    }
   },
   actions: {
+
   },
   plugins: [
-
+    createPersistedState({
+        paths:[ 'selectedGuest' , 'selectedGuestIndex' ]
+    })
   ],
 
 })

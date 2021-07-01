@@ -2,7 +2,7 @@
 	<div class="container">
 		<div class="row">
 			<div class="col-md-4 chat-widget">
-				<div class="card">{{isPreChat}}
+				<div class="card">
 					<div class="card-header" id="accordion"  @click.prevent="toggle">---{{guest}}
 						<div  v-bind:class="[isPreChat ? showIt : hideIt]"  class="pull-left">
 							<i class="fas fa-lg fa-comment-dots"></i>  Fill in the form below to start chatting
@@ -112,11 +112,11 @@ export default {
 			timer: null,
 			showChatToggle: true,
 			disabled: false,
-			guestName: ''
+			guestName: '',
 		}
 	},
 	computed: mapState(
-		['messages', 'isPreChat', 'isChatEnd', 'guest', ]
+		['messages', 'isPreChat', 'isChatEnd', 'guest', 'guestId']
 	),
 	methods: {
 		submit(){
@@ -125,7 +125,7 @@ export default {
 			    guest: this.guestName,
 				})
 				.then( (response) => {
-					console.log(response.data);
+					this.$store.commit('SET_GUEST_ID', response.data.guest.id);
 					this.$store.commit('TOGGLE_IS_CHAT_END', false);
 					this.$store.commit('TOGGLE_IS_PRECHAT', false);
 					this.registerGuest();
@@ -134,14 +134,14 @@ export default {
 				    console.log(error);
 				});
 
-  	},
-  	registerGuest() {console.log('registerGuest')
+  		},
+  	registerGuest() {console.log('registerGuest');
 		this.disabled = false;
   		if(this.guest.length === 0) {
   			this.$store.commit('SET_GUEST', this.guestName);
   		}
 	   // get incoming messages
-  		Echo.private(`admin-sent-message-${this.guest}`)
+  		Echo.private(`admin-sent-message-${this.guestId}`)
 	  		.listen('AdminSentMessage', (result) => {
 	  			console.log(result);	
 	  			let data = {
@@ -155,18 +155,21 @@ export default {
 
 	  		})
 	  		.listenForWhisper('typing', (e) => {
-	  			console.log(e.message);
+	  			console.log('typing', e.message);
 	  			if(e.message.length > 0){
 	  				this.isTyping = true;
 	  			} else
 	  			{
 	  				this.isTyping = false
 	  			}
-	  	});
+		  	}).listenForWhisper('ChatEnd', (response) => {console.log('ChatEnd')
+					this.closeChatEnd();
+			});
+	  		
 	  		
 	},
   	type() {
-  		Echo.private(`admin-sent-message-${this.guest}`)
+  		Echo.private(`admin-sent-message-${this.guestId}`)
   		.whisper('typing', {
   			name: 'guest',
   			message: this.message
@@ -209,21 +212,24 @@ export default {
 
   		
 	},
-	closeChatEnd() {console.log(this.guest);
+	closeChatEnd() {
+		Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ guest: this.guestId });
+		Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
+
 		this.$store.commit('REMOVE_MESSAGES');
 		this.$store.commit('TOGGLE_IS_CHAT_END', true);
-		this.$store.commit('TOGGLE_IS_PRECHAT', true)
-		this.showChatToggle = true;
-		
-		//from set_timeout
-		Echo.private(`admin-sent-message-${this.guest}`).whisper('ChatEnd',{ guest: this.guest });
-		Echo.leave(`admin-sent-message-${this.guest}`)
-		Echo.leave(`admin-whisper-to-${this.guest}`);
+		this.$store.commit('TOGGLE_IS_PRECHAT', true);
 		this.$store.commit('SET_GUEST', '');
+		this.$store.commit('SET_GUEST_ID', '');
+		
+		this.showChatToggle = true;
+
+
+		
 	}
 }, 
 mounted() {
-	if( this.guest.length > 0 ){console.log('mounted', this.guest)
+	if( this.guest.length > 0 ) {
 		this.registerGuest();
 	}
 },
@@ -253,16 +259,27 @@ watch: {
 			// 	if(this.messages.length > 1){
 			// 		this.$store.commit('TOGGLE_IS_CHAT_END', true);
 			// 		this.disabled = true;
-			// 		// Echo.private(`admin-sent-message-${this.guest}`).stopListening('AdminSentMessage')
-			// 		Echo.private(`admin-sent-message-${this.guest}`).whisper('ChatEnd',{ guest: this.guest });
-			// 		Echo.leave(`admin-sent-message-${this.guest}`)
-			// 		Echo.leave(`admin-whisper-to-${this.guest}`)//(1)
+			// 		// Echo.private(`admin-sent-message-${this.guestId}`).stopListening('AdminSentMessage')
+			// 		Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ guest: this.guest });
+			// 		Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
 			// 	}	
 			// }, 3000);
 		}
 	},
+	guestId(val) {console.log('watch',val)
+		//receive whisper from admin
+		if( val.length > 0 )
+			Echo.private(`admin-sent-message-${this.guestId}`)
+				.listenForWhisper('ChatEnd', (response) => {
+					this.closeChatEnd();
+				});
+	}
+
 
 }
+
+
+//end
 }
 
 function vueChatScroll() {

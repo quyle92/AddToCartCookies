@@ -16,17 +16,18 @@ class AdminSentMessage implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $message;
-    public $guest;
+    public $guest_id;
     /**
      * Create a new event instance.
      *
      * @return void
      */
     
-    public function __construct($message, $guest)
+    public function __construct($message, $guest_id)
     {   
+        
         $this->message = $message;
-        $this->guest = $guest;
+        $this->guest_id = $guest_id;
         
     }
 
@@ -37,7 +38,7 @@ class AdminSentMessage implements ShouldBroadcastNow
      */
     public function broadcastOn()
     {   
-        // dd($this->guest);
-        return new PrivateChannel('admin-sent-message-' . $this->guest);
+
+        return new PrivateChannel('admin-sent-message-' . $this->guest_id);
     }
 }

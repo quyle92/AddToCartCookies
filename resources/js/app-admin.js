@@ -17,6 +17,10 @@ import router from './router-admin';
 
 window.vm = new Vue();
 
+//helper.js
+import Helper from './helper';
+Vue.prototype.$Helper = new Helper();
+
 import {
   Button,
   HasError,
