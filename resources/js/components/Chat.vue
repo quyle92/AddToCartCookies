@@ -193,8 +193,6 @@ export default {
   		Vue.nextTick( function () {
   			vueChatScroll();
   		});
-  		
-  		
 
   		axios.post('/guestSentMessage', {
   			guest: this.guest,
@@ -214,8 +212,8 @@ export default {
   		
 	},
 	closeChatEnd() {
-		Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ id: this.guestId });
-		Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
+		// Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ id: this.guestId });
+		// Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
 
 		this.$store.commit('REMOVE_MESSAGES');
 		this.$store.commit('TOGGLE_IS_CHAT_END', true);
@@ -233,6 +231,14 @@ mounted() {
 	if( this.guest.length > 0 ) {
 		this.registerGuest();
 	}
+
+	//if the messages in localStorage is > 30, it will be deleled
+	let time = this.messages[this.messages.length - 1].time;
+	if (new Date(Date.parse(time)).addMinutes(30) < new Date()) {
+		this.closeChatEnd();
+	}
+
+
 },
 updated() {
 	Vue.nextTick(function () {
@@ -256,15 +262,16 @@ watch: {
 			    this.timer = null;
 			}
 
-			// this.timer = setTimeout(() => {
-			// 	if(this.messages.length > 1){
-			// 		this.$store.commit('TOGGLE_IS_CHAT_END', true);
-			// 		this.disabled = true;
-			// 		// Echo.private(`admin-sent-message-${this.guestId}`).stopListening('AdminSentMessage')
-			// 		Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ guest: this.guest });
-			// 		Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
-			// 	}	
-			// }, 3000);
+			// automatically end chat after 15s
+			this.timer = setTimeout(() => {
+				if(this.messages.length > 1){
+					this.$store.commit('TOGGLE_IS_CHAT_END', true);
+					this.disabled = true;
+					// Echo.private(`admin-sent-message-${this.guestId}`).stopListening('AdminSentMessage')
+					Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ guest: this.guest });
+					Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
+				}	
+			}, 15000);
 		}
 	},
 	guestId(val) {

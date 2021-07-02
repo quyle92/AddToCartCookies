@@ -46,9 +46,9 @@ window.Echo = new Echo({
 });
 window.Pusher.logToConsole = true
 
-Date.prototype.addHours = function(h) {
-  this.setTime(this.getTime() + (h*60*60*1000));
-  return this;
+Date.prototype.addMinutes= function(m){
+    this.setMinutes(this.getMinutes()+m);
+    return this;
 }
 /**
  * The following block of code may be used to automatically register your

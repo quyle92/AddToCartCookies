@@ -2514,11 +2514,8 @@ __webpack_require__.r(__webpack_exports__);
       });
     },
     closeChatEnd: function closeChatEnd() {
-      Echo["private"]("admin-sent-message-".concat(this.guestId)).whisper('ChatEnd', {
-        id: this.guestId
-      });
-      Echo.leave("admin-sent-message-".concat(this.guestId)); //(1)
-
+      // Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ id: this.guestId });
+      // Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
       this.$store.commit('REMOVE_MESSAGES');
       this.$store.commit('TOGGLE_IS_CHAT_END', true);
       this.$store.commit('TOGGLE_IS_PRECHAT', true);
@@ -2530,6 +2527,13 @@ __webpack_require__.r(__webpack_exports__);
   mounted: function mounted() {
     if (this.guest.length > 0) {
       this.registerGuest();
+    } //if the messages in localStorage is > 30, it will be deleled
+
+
+    var time = this.messages[this.messages.length - 1].time;
+
+    if (new Date(Date.parse(time)).addMinutes(30) < new Date()) {
+      this.closeChatEnd();
     }
   },
   updated: function updated() {
@@ -2545,20 +2549,27 @@ __webpack_require__.r(__webpack_exports__);
     messages: {
       deep: true,
       handler: function handler() {
+        var _this4 = this;
+
         if (this.timer) {
           clearTimeout(this.timer); //cancel the previous timer.
 
           this.timer = null;
-        } // this.timer = setTimeout(() => {
-        // 	if(this.messages.length > 1){
-        // 		this.$store.commit('TOGGLE_IS_CHAT_END', true);
-        // 		this.disabled = true;
-        // 		// Echo.private(`admin-sent-message-${this.guestId}`).stopListening('AdminSentMessage')
-        // 		Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ guest: this.guest });
-        // 		Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
-        // 	}	
-        // }, 3000);
+        } // automatically end chat after 15s
 
+
+        this.timer = setTimeout(function () {
+          if (_this4.messages.length > 1) {
+            _this4.$store.commit('TOGGLE_IS_CHAT_END', true);
+
+            _this4.disabled = true; // Echo.private(`admin-sent-message-${this.guestId}`).stopListening('AdminSentMessage')
+
+            Echo["private"]("admin-sent-message-".concat(_this4.guestId)).whisper('ChatEnd', {
+              guest: _this4.guest
+            });
+            Echo.leave("admin-sent-message-".concat(_this4.guestId)); //(1)
+          }
+        }, 15000);
       }
     },
     guestId: function guestId(val) {}
@@ -67956,8 +67967,8 @@ window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_3__["default"]({
 });
 window.Pusher.logToConsole = true;
 
-Date.prototype.addHours = function (h) {
-  this.setTime(this.getTime() + h * 60 * 60 * 1000);
+Date.prototype.addMinutes = function (m) {
+  this.setMinutes(this.getMinutes() + m);
   return this;
 };
 /**
@@ -68828,10 +68839,12 @@ var ls = new secure_ls__WEBPACK_IMPORTED_MODULE_4___default.a({
     listOfGuests: [],
     messages: [{
       user: 'admin',
-      msg: 'Hi there, may I help you?'
+      msg: 'Hi there, may I help you??',
+      time: new Date()
     }, {
       user: 'guest',
-      msg: 'Yes, I need help'
+      msg: 'Yes, I need help',
+      time: new Date()
     }],
     guest: '',
     guestId: ''

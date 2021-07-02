@@ -37,11 +37,13 @@ export default  new Vuex.Store({
       	messages:[
  			{
  				user: 'admin',
- 				msg:'Hi there, may I help you?'
+ 				msg:'Hi there, may I help you??',
+ 				time: new Date()
  			},
  			{
  				user: 'guest',
- 				msg:'Yes, I need help'
+ 				msg:'Yes, I need help',
+ 				time: new Date()
  			},
  		],
  		guest:'',

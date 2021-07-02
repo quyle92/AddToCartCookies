@@ -177,12 +177,13 @@
 					.whisper('ChatEndX',{id: this.guestId});
 
 				axios.post('/api/deleteChat', data)
-                .then( (response) => {
-                console.log(response.data)
+                	.then( (response) => {
+                		console.log(response.data)
                 
-            }).catch( (error) => {
-                console.log(error);
-            });
+            		}).catch( (error) => {
+                		console.log(error);
+            		});
+
 				this.$store.commit('SET_SELECTED_GUEST', '');
 				this.$store.commit('SET_SELECTED_GUEST_INDEX', '');
 				this.guestList.splice(this.guestIndex, 1);
@@ -247,7 +248,7 @@
 
 			Echo.private(`guest-sent-message`)
 			.listen('GuestSentMessage', (result) => {
-				console.log(result);
+
 				let checkGuest = containsGuest(this.guestList, result) ;
 
 				if( checkGuest.isOldGuest === true ) 
@@ -285,7 +286,9 @@
 								let currentGuestIndex = checkGuest.index;
 
 								//bôi đen ô chat deleted
-								Vue.set(this.guestList[currentGuestIndex],'chatDelete', true);
+								if(this.guestList[currentGuestIndex] !== undefined) {
+									Vue.set(this.guestList[currentGuestIndex],'chatDelete', true);
+								}
 
 								this.$store.commit('SET_DELETED_CHAT_ID', result.id);
 
@@ -305,7 +308,6 @@
 
 			axios.get('/api/getGuestList')
 				.then( (response) => {
-					//console.log(response.data.result);
 
 					response.data.result.forEach( e => {
 						this.guestList.push({
@@ -327,7 +329,7 @@
 						Vue.set(this.guestList[i],'chatDelete', true);
 					}
 			}
-				console.log(this.guestList)
+
 				//Edge case
 				if( this.guestList.length > 0)
 				{		
@@ -354,7 +356,7 @@
 				deep: true,
 				handler(newVal, oldVal) {console.log('watch')
 					Vue.nextTick( () => {
-						 var div = document.getElementsByClassName('msg_history')[0];
+						var div = document.getElementsByClassName('msg_history')[0];//debugger
 						div.scrollTop = div.scrollHeight;
 					});
 				}
