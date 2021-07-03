@@ -2148,10 +2148,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       //hide popover  nếu click lại lần 2
       var selectedProduct = _.find(this.productsOnCart, {
         'isEdit': true
-      }); //console.log(this.productsOnCart[0], selectedProduct)
+      });
 
-
-      if (_.isEqual(selectedProduct, item)) {
+      if (selectedProduct !== undefined && selectedProduct.fullNumber === item.fullNumber) {
         item.isEdit = false; //$on: popover.vue
 
         vm.$emit('cancel');
@@ -2163,6 +2162,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         e.isEdit === true ? e.isEdit = false : '';
       });
       this.$store.state.selectedProduct = item;
+      this.$store.commit('SET_LAST_SELECTED_PRODUCT', _objectSpread({}, item));
       this.$store.state.sizeColor = {
         size: item.size,
         color: item.color
@@ -2170,7 +2170,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       var style_id = item.style_id;
 
       if (this.styleSet.length > 0) {
-        //check if selectedStyleSet is in selectedStyleSet, if not call to server
+        //check if selectedStyleSet is in styleSet, if not call to server
         for (var i = 0; i < this.styleSet.length; i++) {
           if (this.styleSet[i][0].style_id === item.style_id) {
             this.$store.state.selectedStyleSet = this.styleSet[i];
@@ -2236,11 +2236,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       }
     },
     checkInput: function checkInput(e, item) {
-      var inputVal = e.target.value;
+      var inputVal = parseInt(e.target.value);
 
-      if (!isNaN(inputVal) && inputVal > 1 && inputVal <= item.maxQuantity) {
+      if (!isNaN(inputVal) && inputVal > 0 && inputVal <= item.maxQuantity && Number.isInteger(inputVal)) {
         item.quantity = +inputVal;
-        this.selectedProduct = item;
+        this.$store.state.selectedProduct = item;
         this.updateLocalStorage();
       } else {
         alert('stop: invalid');
@@ -2747,8 +2747,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
   props: ['keyIndex'],
   data: function data() {
     return {
-      count: 0 //lastSelectedProduct: {}
-
+      count: 0
     };
   },
   computed: _objectSpread(_objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['selectedProduct', 'outOfStockSize', 'outOfStockColor', 'sizeColor', 'sizeList', 'colorList', 'selectedStyle', 'maxQuantityArr', 'lastSelectedProduct'])), {}, {
@@ -2794,7 +2793,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       if (this.outOfStockSize.includes(size)) return;
 
       if (this.count === 0) {
-        this.$store.commit('SET_LAST_SELECTED_PRODUCT', _objectSpread({}, this.selectedProduct)); //console.log( this.lastSelectedProduct, this.lastSelectedProduct.size) (2)
+        this.$store.commit('SET_LAST_SELECTED_PRODUCT', {});
+        this.$store.commit('SET_LAST_SELECTED_PRODUCT', _objectSpread({}, this.selectedProduct)); // console.log( this.lastSelectedProduct, this.lastSelectedProduct.size) //(2)
       }
 
       this.count++;
@@ -68175,20 +68175,53 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
             _this2.selectedProduct.maxQuantity = item.quantity;
           }
         }
-      }); //$on at ProductPage
+      });
+      var productsOnCart = this.productsOnCart;
+      var selectedSizeFromOtherProducts = [];
+      productsOnCart.forEach(function (e) {
+        if (e.fullNumber !== _this2.selectedProduct.fullNumber) selectedSizeFromOtherProducts.push({
+          'style_id': e.style_id,
+          'size': e.size
+        });
+      });
+      console.log(selectedSizeFromOtherProducts);
+      var selectedColorFromOtherProducts = [];
+      productsOnCart.forEach(function (e) {
+        if (e.fullNumber !== _this2.selectedProduct.fullNumber) selectedColorFromOtherProducts.push({
+          'style_id': e.style_id,
+          'color': e.color
+        });
+      });
+      console.log(selectedColorFromOtherProducts); //$on at ProductPage
 
       vm.$emit('getSelectedPriceOriginal', this.selectedProduct.price); //size: xem colors nào bị 0 quantity thì disabled nó
 
       var outOfStockColor = [];
       this.selectedStyleSet.forEach(function (item) {
         item.size === _this2.sizeColor.size && item.quantity === 0 ? outOfStockColor.push(item.color) : '';
-      });
+      }); //cart page: disable color that already been selected from other items (with same style_id) in cart
+
+      if (this.selectedProduct.hasOwnProperty('isEdit')) {
+        for (var i = 0; i < selectedSizeFromOtherProducts.length; i++) {
+          if (selectedSizeFromOtherProducts[i].size === this.sizeColor.size && selectedSizeFromOtherProducts[i].style_id === this.selectedProduct.style_id) {
+            outOfStockColor.push(selectedColorFromOtherProducts[i].color);
+          }
+        }
+      }
+
       this.$store.state.outOfStockColor = outOfStockColor; //color: xem sizes nào bị 0 quantity thì disabled nó
 
       var outOfStockSize = [];
       this.selectedStyleSet.forEach(function (item) {
         item.color === _this2.sizeColor.color && item.quantity === 0 ? outOfStockSize.push(item.size) : '';
-      });
+      }); //cart page: disable color that already been selected from other items (with same style_id) in cart
+
+      if (this.selectedProduct.hasOwnProperty('isEdit')) {
+        for (var i = 0; i < selectedColorFromOtherProducts.length; i++) {
+          if (selectedColorFromOtherProducts[i] === this.sizeColor.color && selectedColorFromOtherProducts[i].style_id === this.selectedProduct.style_id) outOfStockSize.push(selectedSizeFromOtherProducts[i].size);
+        }
+      }
+
       this.$store.state.outOfStockSize = outOfStockSize;
     },
     neitherSizeColor: function neitherSizeColor() {
@@ -68224,9 +68257,10 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       var productsOnStorage = this.productsOnCart; //replace existing product by new one
 
       if (!this.$Helper.isObjEmpty(this.lastSelectedProduct)) {
-        productsOnStorage = productsOnStorage.filter(function (e) {
+        productsOnStorage = JSON.parse(localStorage.getItem('products')).filter(function (e) {
           return e.fullNumber !== _this3.lastSelectedProduct.fullNumber;
-        });
+        }); //console.log(productsOnStorage);debugger
+
         productsOnStorage.push(this.selectedProduct);
       } //updade existing product quantity
 
@@ -68863,8 +68897,7 @@ var ls = new secure_ls__WEBPACK_IMPORTED_MODULE_4___default.a({
       });
       this.state.outOfStockSizeAll = _helper.getOutOfStockVariation(sizeList, selectedStyleSet);
       this.state.outOfStockColorAll = _helper.getOutOfStockVariation(colorList, selectedStyleSet);
-      this.state.selectedStyleSet = selectedStyleSet; //this.state.selectedProduct = selectedStyleSet[0];
-      //remove item where its quantity is < 0
+      this.state.selectedStyleSet = selectedStyleSet; //remove item where its quantity is < 0
 
       var inStockStyleSet = selectedStyleSet.filter(function (e) {
         return e.quantity > 0;

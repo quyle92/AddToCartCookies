@@ -169,8 +169,7 @@ export default {
 			'priceRange' , 
 			'selectedStyleSet' ,
 			'productsOnCart',
-			'maxQuantityArr'
-
+			'maxQuantityArr',
   		]),
   	totalQty(){
   		let result = 0;
@@ -201,8 +200,8 @@ export default {
   	showPopover(item, index)
   	{	
   		//hide popover  nếu click lại lần 2
-  		let selectedProduct= _.find(this.productsOnCart, {'isEdit': true});//console.log(this.productsOnCart[0], selectedProduct)
-  		if( _.isEqual(selectedProduct, item) ){
+  		let selectedProduct= _.find(this.productsOnCart, {'isEdit': true});
+  		if( selectedProduct !== undefined && selectedProduct.fullNumber === item.fullNumber ){
   			item.isEdit = false;
   			//$on: popover.vue
   			vm.$emit('cancel')
@@ -216,16 +215,17 @@ export default {
   		});
   		
   		this.$store.state.selectedProduct  = item;
+  		this.$store.commit('SET_LAST_SELECTED_PRODUCT', {...item});
   		
   		this.$store.state.sizeColor = {
   			size: item.size,
   			color: item.color
   		};
 
-  		let style_id = item.style_id;
+  		let style_id = item.style_id
   		if( this.styleSet.length > 0  )
   		{		
-  				//check if selectedStyleSet is in selectedStyleSet, if not call to server
+  				//check if selectedStyleSet is in styleSet, if not call to server
 	  			for (var i = 0; i < this.styleSet.length; i++) {
 	  				if( this.styleSet[i][0].style_id === item.style_id ){
 	  						this.$store.state.selectedStyleSet = this.styleSet[i];
@@ -309,10 +309,10 @@ export default {
         
   	},
   	checkInput(e, item){
-				let inputVal = e.target.value
-        if(  ! isNaN(inputVal) && inputVal > 1 && inputVal <= item.maxQuantity ){
+				let inputVal = parseInt(e.target.value);
+        if(  ! isNaN(inputVal) && inputVal > 0 && inputVal <= item.maxQuantity && Number.isInteger(inputVal) ){
           item.quantity = +inputVal;
-          this.selectedProduct = item;
+          this.$store.state.selectedProduct = item;
           this.updateLocalStorage();
         }
         else{

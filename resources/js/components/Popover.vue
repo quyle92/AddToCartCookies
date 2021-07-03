@@ -53,7 +53,6 @@ export default {
   data: function() {
     return {
  		count: 0,
- 		//lastSelectedProduct: {}
  	  }
   },
     computed:{
@@ -111,9 +110,10 @@ export default {
   		if( this.outOfStockSize.includes(size) ) return;
 
   		if( this.count === 0 ) {
+  			this.$store.commit('SET_LAST_SELECTED_PRODUCT', {});
   			this.$store.commit('SET_LAST_SELECTED_PRODUCT', {...this.selectedProduct});
   			
-//console.log( this.lastSelectedProduct, this.lastSelectedProduct.size) (2)
+// console.log( this.lastSelectedProduct, this.lastSelectedProduct.size) //(2)
   		}
   		this.count++;
 

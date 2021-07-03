@@ -76,7 +76,6 @@ export default  new Vuex.Store({
 			this.state.outOfStockColorAll = _helper.getOutOfStockVariation(colorList, selectedStyleSet);
 
 			this.state.selectedStyleSet = selectedStyleSet;
-			//this.state.selectedProduct = selectedStyleSet[0];
 
 			//remove item where its quantity is < 0
            	let inStockStyleSet = selectedStyleSet.filter( e =>  e.quantity > 0 ); 

@@ -21,7 +21,6 @@ export default {
 			'outOfStockSizeAll',
 			'selectedProduct',
 			'lastSelectedProduct',
-			
 			]),
 	},
 	methods: {
@@ -69,7 +68,7 @@ export default {
 
             },
             bothSizeColor( ){  
-            	
+
 				this.selectedStyleSet.forEach( item => {
 					if (item.size === this.sizeColor.size && item.color === this.sizeColor.color )
 					{	
@@ -95,25 +94,57 @@ export default {
 					
 				});
 
-				
+				let productsOnCart =  this.productsOnCart;
 
+				let selectedSizeFromOtherProducts = [];
+				productsOnCart.forEach( e => {
+					if(e.fullNumber !==  this.selectedProduct.fullNumber)
+						selectedSizeFromOtherProducts.push({'style_id': e.style_id, 'size': e.size});
+				});
+console.log(selectedSizeFromOtherProducts)
+				let selectedColorFromOtherProducts = [];
+				productsOnCart.forEach( e => {
+					if(e.fullNumber !==  this.selectedProduct.fullNumber)
+						selectedColorFromOtherProducts.push({'style_id': e.style_id, 'color': e.color});
+				});
+
+console.log(selectedColorFromOtherProducts)
 				//$on at ProductPage
 				vm.$emit('getSelectedPriceOriginal', this.selectedProduct.price );
 
 		        //size: xem colors nào bị 0 quantity thì disabled nó
 		        let outOfStockColor = [];
 		        this.selectedStyleSet.forEach( item => {
-		        	item.size === this.sizeColor.size && item.quantity === 0
+		        	item.size === this.sizeColor.size && item.quantity === 0 
 		        	? outOfStockColor.push(item.color) : '';
 		        });
+		        //cart page: disable color that already been selected from other items (with same style_id) in cart
+		        if( this.selectedProduct.hasOwnProperty('isEdit') ) {
+			        for (var i = 0; i < selectedSizeFromOtherProducts.length; i++) {
+			        	if ( selectedSizeFromOtherProducts[i].size === this.sizeColor.size 
+			        		&& selectedSizeFromOtherProducts[i].style_id === this.selectedProduct.style_id) {
+			        		outOfStockColor.push(selectedColorFromOtherProducts[i].color)
+			        	}
+			        }
+			    }
+
 		        this.$store.state.outOfStockColor = outOfStockColor;
 
 		        //color: xem sizes nào bị 0 quantity thì disabled nó
 		        let outOfStockSize = [];
 		        this.selectedStyleSet.forEach( item => {
-		        	item.color === this.sizeColor.color && item.quantity === 0
+		        	item.color === this.sizeColor.color && item.quantity === 0 
 		        	? outOfStockSize.push(item.size) : '';
 		        });
+		        //cart page: disable color that already been selected from other items (with same style_id) in cart
+		        if( this.selectedProduct.hasOwnProperty('isEdit') ) {
+			        for (var i = 0; i < selectedColorFromOtherProducts.length; i++) {
+			        	if ( selectedColorFromOtherProducts[i] === this.sizeColor.color
+			        	&& selectedColorFromOtherProducts[i].style_id === this.selectedProduct.style_id )
+			        		outOfStockSize.push(selectedSizeFromOtherProducts[i].size)
+			        }
+			    }
+
 		        this.$store.state.outOfStockSize = outOfStockSize;
 	      	},
           	neitherSizeColor(){
@@ -153,10 +184,10 @@ export default {
 	        	//replace existing product by new one
 	        	if( ! this.$Helper.isObjEmpty( this.lastSelectedProduct ) ) {
 
-			  		productsOnStorage = productsOnStorage.filter( e => {
+			  		productsOnStorage = JSON.parse( localStorage.getItem('products') ).filter( e => {
 			  			return e.fullNumber !== this.lastSelectedProduct.fullNumber;
 			  		});
-
+			  		//console.log(productsOnStorage);debugger
 			  		productsOnStorage.push( this.selectedProduct );
 
 	        	}
