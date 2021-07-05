@@ -101,14 +101,13 @@ export default {
 					if(e.fullNumber !==  this.selectedProduct.fullNumber)
 						selectedSizeFromOtherProducts.push({'style_id': e.style_id, 'size': e.size});
 				});
-console.log(selectedSizeFromOtherProducts)
+
 				let selectedColorFromOtherProducts = [];
 				productsOnCart.forEach( e => {
 					if(e.fullNumber !==  this.selectedProduct.fullNumber)
 						selectedColorFromOtherProducts.push({'style_id': e.style_id, 'color': e.color});
 				});
 
-console.log(selectedColorFromOtherProducts)
 				//$on at ProductPage
 				vm.$emit('getSelectedPriceOriginal', this.selectedProduct.price );
 
@@ -139,7 +138,7 @@ console.log(selectedColorFromOtherProducts)
 		        //cart page: disable color that already been selected from other items (with same style_id) in cart
 		        if( this.selectedProduct.hasOwnProperty('isEdit') ) {
 			        for (var i = 0; i < selectedColorFromOtherProducts.length; i++) {
-			        	if ( selectedColorFromOtherProducts[i] === this.sizeColor.color
+			        	if ( selectedColorFromOtherProducts[i].color === this.sizeColor.color
 			        	&& selectedColorFromOtherProducts[i].style_id === this.selectedProduct.style_id )
 			        		outOfStockSize.push(selectedSizeFromOtherProducts[i].size)
 			        }
@@ -169,9 +168,6 @@ console.log(selectedColorFromOtherProducts)
                 let maxPrice = Math.round(_.max(priceRange));
               	this.$store.commit('SET_PRICE_RANGE', {'minPrice': minPrice, 'maxPrice' : maxPrice});
 
-                //$on at ProductPages
-				// vm.$emit('getPriceRangeOriginal', [...priceRange ] );
-
                 //cho selectedPrice = '' để priceRange đc render trên template
                 this.$store.commit('SET_SELECTED_PRICE', '');
            	},
@@ -184,11 +180,10 @@ console.log(selectedColorFromOtherProducts)
 	        	//replace existing product by new one
 	        	if( ! this.$Helper.isObjEmpty( this.lastSelectedProduct ) ) {
 
-			  		productsOnStorage = JSON.parse( localStorage.getItem('products') ).filter( e => {
-			  			return e.fullNumber !== this.lastSelectedProduct.fullNumber;
-			  		});
-			  		//console.log(productsOnStorage);debugger
-			  		productsOnStorage.push( this.selectedProduct );
+			  		JSON.parse( localStorage.getItem('products') ).forEach( (el, idx) => {
+			  			if(el.fullNumber === this.lastSelectedProduct.fullNumber)
+			  				JSON.parse( localStorage.getItem('products') )[idx] = this.selectedProduct
+			  		})
 
 	        	}
 

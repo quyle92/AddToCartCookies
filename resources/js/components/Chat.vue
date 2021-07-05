@@ -3,7 +3,7 @@
 		<div class="row">
 			<div class="col-md-4 chat-widget">
 				<div class="card">
-					<div class="card-header" id="accordion"  @click.prevent="toggle">---{{guest}}
+					<div class="card-header" id="accordion"  @click.prevent="toggle">
 						<div  v-bind:class="[isPreChat ? showIt : hideIt]"  class="pull-left">
 							<i class="fas fa-lg fa-comment-dots"></i>  Fill in the form below to start chatting
 						</div>
@@ -67,11 +67,12 @@
 						</li>
 						<div class="alert alert-warning alert-dismissible fade show" role="alert" v-if="isChatEnd">
 						  <strong>Chat Ended!</strong> Thanks for your conversation.
-						  <button type="button" class="close" data-dismiss="alert" aria-label="Close" 
+						  <button type="button" class="close"  aria-label="Close" 
 						  @click.prevent="closeChatEnd">
 						    <span aria-hidden="true">&times;</span>
 						  </button>
 						</div>
+						
 					</ul>
 
 				</div>
@@ -79,7 +80,7 @@
 				<small v-if="isTyping"><i class="fas fa-pen-nib fa-fw fa-spin"></i>admin is typing...</small>
 				<div class="card-footer">
 					<div class="input-group" v-if="!disabled">
-						<input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." @keyup.enter="send" v-model="message" @input="type" />
+						<input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." @keyup.enter="send" v-model="message" @input="type" v-focus/>
 						<span class="input-group-btn">
 							<button class="btn btn-warning btn-sm" id="btn-chat" @click.prevent="send">
 							Send</button>
@@ -135,7 +136,7 @@ export default {
 				});
 
   		},
-  	registerGuest() {console.log('registerGuest');
+  	registerGuest() {
 		this.disabled = false;
   		if(this.guest.length === 0) {
   			this.$store.commit('SET_GUEST', this.guestName);
@@ -155,7 +156,7 @@ export default {
 
 	  		})
 	  		.listenForWhisper('typing', (e) => {
-	  			console.log('typing', e.message);
+	  			console.log(e)
 	  			if(e.message.length > 0){
 	  				this.isTyping = true;
 	  			} else
@@ -163,8 +164,9 @@ export default {
 	  				this.isTyping = false
 	  			}
 		  	}) 	
-		  	.listenForWhisper('ChatEndX', (response) => {console.log('ChatEnd')
-					this.closeChatEnd();
+		  	.listenForWhisper('ChatEndX', (response) => {console.log('ChatEnd');
+		  		this.$store.commit('TOGGLE_IS_CHAT_END', true);
+					//this.closeChatEnd();
 			});
 	  		
 	  		
@@ -212,8 +214,8 @@ export default {
   		
 	},
 	closeChatEnd() {
-		// Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ id: this.guestId });
-		// Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
+		Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ guest: this.guest, id: this.guestId });
+		Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
 
 		this.$store.commit('REMOVE_MESSAGES');
 		this.$store.commit('TOGGLE_IS_CHAT_END', true);
@@ -222,6 +224,8 @@ export default {
 		this.$store.commit('SET_GUEST_ID', '');
 		
 		this.showChatToggle = true;
+		this.messages = '';
+		this.isTyping = false;
 
 
 		
@@ -249,6 +253,14 @@ updated() {
 created() {
 
 },
+directives: {
+  focus: {
+    // directive definition
+    update: function (el) {console.log(el);
+      el.focus()
+    }
+  }
+},
 watch: {
 	IncomingMessages() {
 		vueChatScroll();
@@ -268,10 +280,11 @@ watch: {
 					this.$store.commit('TOGGLE_IS_CHAT_END', true);
 					this.disabled = true;
 					// Echo.private(`admin-sent-message-${this.guestId}`).stopListening('AdminSentMessage')
-					Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ guest: this.guest });
+					Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ guest: this.guest, 
+						id: this.guestId });
 					Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
 				}	
-			}, 15000);
+			}, 113000);
 		}
 	},
 	guestId(val) {

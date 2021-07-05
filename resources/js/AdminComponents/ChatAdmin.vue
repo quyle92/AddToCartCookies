@@ -14,7 +14,7 @@
 						</div>
 					</div>
 					<div class="inbox_chat">
-							<div class="chat_list" >	
+							<div class="chat_list" style="height: 400px; overflow-y: scroll;">	
 								<div class="chat_people" 
 									:class="[{active_chat:guest.active}, {'guest-leave-chat': guest.chatDelete}]" 
 									v-for="(guest, index) in guestList" 
@@ -90,55 +90,6 @@
 		data: function() {
 			return {
 				guestList:[
-				// {
-				// 	name: 'Adam',
-				// 	chat: [
-				// 	{
-				// 		user: 'guest',
-				// 		content: 'hi there,'
-				// 	},
-				// 	{
-				// 		user: 'admin',
-				// 		content: 'Hey bro!'
-				// 	},
-				// 	{
-				// 		user: 'guest',
-				// 		content: 'how are you?'
-				// 	},
-				// 	{
-				// 		user: 'admin',
-				// 		content: 'Great! I am glad to see you too!'
-				// 	}
-				// 	],
-				// 	isShown: true,
-				// 	active: true,
-				// 	isTyping: false,
-					
-				// },
-				// {
-				// 	name: 'Bob',
-				// 	chat: [
-				// 	{
-				// 		user: 'guest',
-				// 		content: 'I am Bob'
-				// 	},
-				// 	{
-				// 		user: 'admin',
-				// 		content: 'hi there'
-				// 	},
-				// 	{
-				// 		user: 'guest',
-				// 		content: 'Nice to meet you!'
-				// 	},
-				// 	{
-				// 		user: 'admin',
-				// 		content: 'how are you?'
-				// 	}
-				// 	],
-				// 	isShown: false,
-				// 	active: false,
-				// 	isTyping: false,
-				// }
 				],
 				message:'',
 				msgReceived:true,
@@ -186,6 +137,7 @@
 
 				this.$store.commit('SET_SELECTED_GUEST', '');
 				this.$store.commit('SET_SELECTED_GUEST_INDEX', '');
+				this.$store.commit('REMOVE_DELETED_CHAT_ID', this.guestId);
 				this.guestList.splice(this.guestIndex, 1);
 			},
 			selectGuest(guest, index) {
@@ -201,14 +153,15 @@
 
 				Echo.private(`admin-sent-message-${this.selectedGuest.id}`)
 					.listenForWhisper('typing', (e) => {
-						//console.log(e.message);
+						console.log('typing',e.message);
 						if(e.message.length > 0){
-							this.guestList[this.selectedGuestIndex].isTyping = true;
+							this.selectedGuest.isTyping = true;
 						} else
 						{
-							this.guestList[this.selectedGuestIndex].isTyping = false
+							this.selectedGuest.isTyping = false
 						}
 					});
+
 
 			},
 			send() {
@@ -225,8 +178,10 @@
 							content: this.message
 						});
 						this.message = '';
+						this.$store.commit('SET_SELECTED_GUEST', this.guestList[this.selectedGuestIndex]);
 						//remove typing notification on guest side 
 						this.type();
+
 				})
 				.catch( (error) => {
 					console.log(error);
@@ -258,6 +213,11 @@
 						user: 'guest',
 						content: result.message
 					});
+					this.guestList[ currentGuestIndex ].isTyping = false;
+
+					//Edge case
+					if(this.guestList[currentGuestIndex].id === this.selectedGuest.id)
+						this.$store.commit('SET_SELECTED_GUEST', this.guestList[currentGuestIndex]);
 				} 
 				else 
 				{		
@@ -278,21 +238,7 @@
 					
 				}
 
-
-					Echo.private(`admin-sent-message-${result.id}`)
-						.listenForWhisper('ChatEnd', (response) => {
-								console.log('ChatEnd', response);
-								let checkGuest = containsGuest(this.guestList, response) ;
-								let currentGuestIndex = checkGuest.index;
-
-								//bôi đen ô chat deleted
-								if(this.guestList[currentGuestIndex] !== undefined) {
-									Vue.set(this.guestList[currentGuestIndex],'chatDelete', true);
-								}
-
-								this.$store.commit('SET_DELETED_CHAT_ID', result.id);
-
-					});
+					
 
 
 			});
@@ -323,8 +269,6 @@
 				});
 
 			for (var i = 0; i < this.guestList.length; i++) {
-				console.log( this.guestList[i].id)
-				console.log( this.deletedChatId.includes(this.guestList[i].id))
 					if( this.deletedChatId.includes(this.guestList[i].id) ) {
 						Vue.set(this.guestList[i],'chatDelete', true);
 					}
@@ -332,12 +276,10 @@
 
 				//Edge case
 				if( this.guestList.length > 0)
-				{		
+				{		console.log('created ',this.$Helper.isObjEmpty(this.selectedGuest))
 						let selectedGuest = this.$Helper.isObjEmpty(this.selectedGuest) ?  this.guestList[0] : this.selectedGuest ;
 						let selectedGuestIndex = this.selectedGuestIndex || 0;
-						this.$store.commit('SET_SELECTED_GUEST', selectedGuest); 
-						this.$store.commit('SET_SELECTED_GUEST_INDEX', selectedGuestIndex); 
-						this.selectGuest(this.selectedGuest, this.selectedGuestIndex);
+						this.selectGuest(selectedGuest, selectedGuestIndex);
 
 				} else {
 						this.$store.commit('SET_SELECTED_GUEST', '')
@@ -354,11 +296,32 @@
 		watch: {
 			guestList: {
 				deep: true,
-				handler(newVal, oldVal) {console.log('watch')
+				handler(newVal, oldVal) {
 					Vue.nextTick( () => {
 						var div = document.getElementsByClassName('msg_history')[0];//debugger
 						div.scrollTop = div.scrollHeight;
 					});
+
+					for (var i = 0; i < this.guestList.length; i++) {
+
+						Echo.private(`admin-sent-message-${this.guestList[i].id}`)
+							.listenForWhisper('ChatEnd', (response) => {
+									console.log('ChatEnd', response);
+									let checkGuest = containsGuest(this.guestList, response) ;
+									let currentGuestIndex = checkGuest.index;console.log(checkGuest)
+
+									//bôi đen ô chat deleted
+									if(this.guestList[currentGuestIndex] !== undefined) {
+										Vue.set(this.guestList[currentGuestIndex],'chatDelete', true);
+									}
+
+									this.$store.commit('SET_DELETED_CHAT_ID', response.id);
+
+									Echo.leave(`admin-sent-message-${response.id}`)
+
+						});
+
+					}
 				}
 			},
 		}

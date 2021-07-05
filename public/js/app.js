@@ -1956,6 +1956,9 @@ module.exports = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm.js");
+/* harmony import */ var _directive__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../directive */ "./resources/js/directive.js");
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
@@ -2105,8 +2108,15 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
 
- //import clickOutside from '../directive';
+
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   props: ['products'],
@@ -2141,7 +2151,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     }
   }),
   methods: {
-    onClose: function onClose() {},
+    onClose: function onClose(item, index) {
+      this.showPopover(item, index);
+    },
     showPopover: function showPopover(item, index) {
       var _this = this;
 
@@ -2235,8 +2247,20 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         alert('stop: min reache');
       }
     },
+    isNumber: function isNumber(e) {
+      evt = evt ? evt : window.event;
+      var charCode = evt.which ? evt.which : evt.keyCode;
+
+      if (charCode > 31 && (charCode < 48 || charCode > 57) && charCode !== 46) {
+        evt.preventDefault();
+        ;
+      } else {
+        return true;
+      }
+    },
     checkInput: function checkInput(e, item) {
       var inputVal = parseInt(e.target.value);
+      console.log(_typeof(inputVal));
 
       if (!isNaN(inputVal) && inputVal > 0 && inputVal <= item.maxQuantity && Number.isInteger(inputVal)) {
         item.quantity = +inputVal;
@@ -2249,15 +2273,13 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     }
   },
   watch: {
-    getSelectedSize: function getSelectedSize(selectedSize) {
-      var _this2 = this;
-
-      this.productsOnCart.map(function (item) {
-        if (item.fullNumber === _this2.selectedFullNumber) {
-          item.size = selectedSize;
-        }
-      });
-    },
+    // getSelectedSize(selectedSize) {
+    // 	this.productsOnCart.map( (item) => {
+    // 		if( item.fullNumber === this.selectedFullNumber ){
+    // 			item.size = selectedSize;
+    // 		}
+    // 	})
+    // },
     productsOnCart: {
       deep: true,
       handler: function handler(newObj, oldObj) {//console.log('watch',newObj);
@@ -2265,7 +2287,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     }
   },
   created: function created() {
-    var _this3 = this;
+    var _this2 = this;
 
     var fullNumberArr = [];
     if (!localStorage.getItem('products')) return;
@@ -2290,9 +2312,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       }
 
       products = _.orderBy(products, ['style_id', 'date'], ['asc', 'asc']);
-      _this3.$store.state.productsOnCart = products;
+      _this2.$store.state.productsOnCart = products;
 
-      _this3.updateLocalStorage();
+      _this2.updateLocalStorage();
     })["catch"](function (error) {
       console.log(error);
     });
@@ -2312,6 +2334,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm.js");
+//
 //
 //
 //
@@ -2446,7 +2469,6 @@ __webpack_require__.r(__webpack_exports__);
     registerGuest: function registerGuest() {
       var _this2 = this;
 
-      console.log('registerGuest');
       this.disabled = false;
 
       if (this.guest.length === 0) {
@@ -2467,7 +2489,7 @@ __webpack_require__.r(__webpack_exports__);
           vueChatScroll();
         });
       }).listenForWhisper('typing', function (e) {
-        console.log('typing', e.message);
+        console.log(e);
 
         if (e.message.length > 0) {
           _this2.isTyping = true;
@@ -2477,7 +2499,8 @@ __webpack_require__.r(__webpack_exports__);
       }).listenForWhisper('ChatEndX', function (response) {
         console.log('ChatEnd');
 
-        _this2.closeChatEnd();
+        _this2.$store.commit('TOGGLE_IS_CHAT_END', true); //this.closeChatEnd();
+
       });
     },
     type: function type() {
@@ -2514,14 +2537,20 @@ __webpack_require__.r(__webpack_exports__);
       });
     },
     closeChatEnd: function closeChatEnd() {
-      // Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ id: this.guestId });
-      // Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
+      Echo["private"]("admin-sent-message-".concat(this.guestId)).whisper('ChatEnd', {
+        guest: this.guest,
+        id: this.guestId
+      });
+      Echo.leave("admin-sent-message-".concat(this.guestId)); //(1)
+
       this.$store.commit('REMOVE_MESSAGES');
       this.$store.commit('TOGGLE_IS_CHAT_END', true);
       this.$store.commit('TOGGLE_IS_PRECHAT', true);
       this.$store.commit('SET_GUEST', '');
       this.$store.commit('SET_GUEST_ID', '');
       this.showChatToggle = true;
+      this.messages = '';
+      this.isTyping = false;
     }
   },
   mounted: function mounted() {
@@ -2542,6 +2571,15 @@ __webpack_require__.r(__webpack_exports__);
     });
   },
   created: function created() {},
+  directives: {
+    focus: {
+      // directive definition
+      update: function update(el) {
+        console.log(el);
+        el.focus();
+      }
+    }
+  },
   watch: {
     IncomingMessages: function IncomingMessages() {
       vueChatScroll();
@@ -2565,11 +2603,12 @@ __webpack_require__.r(__webpack_exports__);
             _this4.disabled = true; // Echo.private(`admin-sent-message-${this.guestId}`).stopListening('AdminSentMessage')
 
             Echo["private"]("admin-sent-message-".concat(_this4.guestId)).whisper('ChatEnd', {
-              guest: _this4.guest
+              guest: _this4.guest,
+              id: _this4.guestId
             });
             Echo.leave("admin-sent-message-".concat(_this4.guestId)); //(1)
           }
-        }, 15000);
+        }, 113000);
       }
     },
     guestId: function guestId(val) {}
@@ -53040,6 +53079,8 @@ var render = function() {
                           _c(
                             "div",
                             {
+                              ref: "button",
+                              refInFor: true,
                               staticClass: "variation",
                               attrs: { "data-fullNumber": "item.fullNumber" },
                               on: {
@@ -53049,7 +53090,7 @@ var render = function() {
                               }
                             },
                             [
-                              _c("span", [
+                              _c("span", { ref: "span", refInFor: true }, [
                                 _vm._v(
                                   "Variation:" +
                                     _vm._s(item.size) +
@@ -53069,6 +53110,20 @@ var render = function() {
                           _vm._v(" "),
                           item.isEdit
                             ? _c("popover", {
+                                directives: [
+                                  {
+                                    name: "closable",
+                                    rawName: "v-closable:[item]",
+                                    value: {
+                                      exclude: ["button", "span"],
+                                      handler: "onClose",
+                                      args: [item, index]
+                                    },
+                                    expression:
+                                      "{\n    exclude: ['button', 'span'],\n    handler: 'onClose',\n    args:[item,index]\n  }",
+                                    arg: item
+                                  }
+                                ],
                                 staticClass: "position-absolute bg-white",
                                 staticStyle: { "z-index": "999" },
                                 attrs: { keyIndex: index }
@@ -53125,6 +53180,9 @@ var render = function() {
                               on: {
                                 change: function($event) {
                                   return _vm.checkInput($event, item)
+                                },
+                                keypress: function($event) {
+                                  return _vm.isNumber($event)
                                 }
                               }
                             }),
@@ -53410,7 +53468,6 @@ var render = function() {
               }
             },
             [
-              _vm._v("---" + _vm._s(_vm.guest) + "\n\t\t\t\t\t\t"),
               _c(
                 "div",
                 {
@@ -53642,7 +53699,6 @@ var render = function() {
                                     staticClass: "close",
                                     attrs: {
                                       type: "button",
-                                      "data-dismiss": "alert",
                                       "aria-label": "Close"
                                     },
                                     on: {
@@ -53686,7 +53742,8 @@ var render = function() {
                               rawName: "v-model",
                               value: _vm.message,
                               expression: "message"
-                            }
+                            },
+                            { name: "focus", rawName: "v-focus" }
                           ],
                           staticClass: "form-control input-sm",
                           attrs: {
@@ -68015,6 +68072,7 @@ var app = new Vue({
   data: function data() {
     return {};
   },
+  methods: {},
   mounted: function mounted() {}
 }); // const cart = new Vue({
 //   el: '#dropdown-cart'
@@ -68184,15 +68242,13 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
           'size': e.size
         });
       });
-      console.log(selectedSizeFromOtherProducts);
       var selectedColorFromOtherProducts = [];
       productsOnCart.forEach(function (e) {
         if (e.fullNumber !== _this2.selectedProduct.fullNumber) selectedColorFromOtherProducts.push({
           'style_id': e.style_id,
           'color': e.color
         });
-      });
-      console.log(selectedColorFromOtherProducts); //$on at ProductPage
+      }); //$on at ProductPage
 
       vm.$emit('getSelectedPriceOriginal', this.selectedProduct.price); //size: xem colors nào bị 0 quantity thì disabled nó
 
@@ -68218,7 +68274,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
       if (this.selectedProduct.hasOwnProperty('isEdit')) {
         for (var i = 0; i < selectedColorFromOtherProducts.length; i++) {
-          if (selectedColorFromOtherProducts[i] === this.sizeColor.color && selectedColorFromOtherProducts[i].style_id === this.selectedProduct.style_id) outOfStockSize.push(selectedSizeFromOtherProducts[i].size);
+          if (selectedColorFromOtherProducts[i].color === this.sizeColor.color && selectedColorFromOtherProducts[i].style_id === this.selectedProduct.style_id) outOfStockSize.push(selectedSizeFromOtherProducts[i].size);
         }
       }
 
@@ -68244,9 +68300,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       this.$store.commit('SET_PRICE_RANGE', {
         'minPrice': minPrice,
         'maxPrice': maxPrice
-      }); //$on at ProductPages
-      // vm.$emit('getPriceRangeOriginal', [...priceRange ] );
-      //cho selectedPrice = '' để priceRange đc render trên template
+      }); //cho selectedPrice = '' để priceRange đc render trên template
 
       this.$store.commit('SET_SELECTED_PRICE', '');
     },
@@ -68257,11 +68311,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       var productsOnStorage = this.productsOnCart; //replace existing product by new one
 
       if (!this.$Helper.isObjEmpty(this.lastSelectedProduct)) {
-        productsOnStorage = JSON.parse(localStorage.getItem('products')).filter(function (e) {
-          return e.fullNumber !== _this3.lastSelectedProduct.fullNumber;
-        }); //console.log(productsOnStorage);debugger
-
-        productsOnStorage.push(this.selectedProduct);
+        JSON.parse(localStorage.getItem('products')).forEach(function (el, idx) {
+          if (el.fullNumber === _this3.lastSelectedProduct.fullNumber) JSON.parse(localStorage.getItem('products'))[idx] = _this3.selectedProduct;
+        });
       } //updade existing product quantity
 
 
@@ -68693,6 +68745,91 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "staticRenderFns", function() { return _node_modules_vue_loader_lib_loaders_templateLoader_js_vue_loader_options_node_modules_vue_loader_lib_index_js_vue_loader_options_ProductPage_vue_vue_type_template_id_26955003_scoped_true___WEBPACK_IMPORTED_MODULE_0__["staticRenderFns"]; });
 
 
+
+/***/ }),
+
+/***/ "./resources/js/directive.js":
+/*!***********************************!*\
+  !*** ./resources/js/directive.js ***!
+  \***********************************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.common.js");
+/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(vue__WEBPACK_IMPORTED_MODULE_0__);
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+ // This variable will hold the reference to
+// document's click handler
+
+var handleOutsideClick;
+vue__WEBPACK_IMPORTED_MODULE_0___default.a.directive('closable', {
+  bind: function bind(el, binding, vnode) {
+    //console.log([...binding.value.args])
+    // Here's the click/touchstart handler
+    // (it is registered below)
+    handleOutsideClick = function handleOutsideClick(e) {
+      e.stopPropagation(); // Get the handler method name and the exclude array
+      // from the object used in v-closable
+
+      var _binding$value = binding.value,
+          handler = _binding$value.handler,
+          exclude = _binding$value.exclude;
+      var i = 0; // This variable indicates if the clicked element is excluded
+
+      var clickedOnExcludedEl = false;
+      exclude.forEach(function (refName) {
+        // We only run this code if we haven't detected
+        // any excluded element yet
+        if (!clickedOnExcludedEl) {
+          // Get the element using the reference name
+          var excludedEl = vnode.context.$refs[refName]; // excludedEl = excludedEl[i].$el; 
+
+          if (excludedEl[i].$el !== undefined) {
+            excludedEl = excludedEl[i].$refs.insidePopover;
+          } // See if this excluded element
+          // is the same element the user just clicked on
+
+
+          clickedOnExcludedEl = excludedEl.includes(e.target);
+        }
+      }); // We check to see if the clicked element is not
+      // the dialog element and not excluded
+
+      if (!el.contains(e.target) && !clickedOnExcludedEl) {
+        var _vnode$context;
+
+        // If the clicked element is outside the dialog
+        // and not the button, then call the outside-click handler
+        // from the same component this directive is used in
+        (_vnode$context = vnode.context)[handler].apply(_vnode$context, _toConsumableArray(binding.value.args));
+      }
+    }; // Register click/touchstart event listeners on the whole page
+
+
+    document.addEventListener('click', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
+  },
+  unbind: function unbind() {
+    // If the element that has v-closable is removed, then
+    // unbind click/touchstart listeners from the whole page
+    document.removeEventListener('click', handleOutsideClick);
+    document.removeEventListener('touchstart', handleOutsideClick);
+  }
+}); // ref: https://tahazsh.com/detect-outside-click-in-vue
+// https://stackoverflow.com/questions/53013471/vuejs-2-custom-directive-to-close-when-clicked-outside-not-working
 
 /***/ }),
 

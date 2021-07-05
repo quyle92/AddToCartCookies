@@ -43,8 +43,9 @@
 										<div class="variation" 
 										data-fullNumber="item.fullNumber"
 										@click="showPopover(item, index)"
+										 ref="button"
 										>
-											<span>Variation:{{item.size}} | {{item.color}} </span>
+											<span  ref="span">Variation:{{item.size}} | {{item.color}} </span>
 											<i class="fa fa-sort-up ml-1" v-if="item.isEdit"></i>
 											<i class="fa fa-sort-down ml-1" v-else></i>
 
@@ -54,6 +55,11 @@
 										style="z-index:999" 
 										:keyIndex="index"
 										v-if="item.isEdit"
+										 v-closable:[item]="{
+    exclude: ['button', 'span'],
+    handler: 'onClose',
+    args:[item,index]
+  }"
 										/>
 									</td>
 									<td class="price" data-title="Price" ref="mySecondLevelRefName">
@@ -71,6 +77,7 @@
 											:data-max="max" 
 											:value="item.quantity" 
 											@change="checkInput( $event, item)"
+											 @keypress="isNumber($event)"
 											>
 											<div class="button plus">
 												<button type="button" class="btn btn-primary btn-number" data-type="plus" data-field="quant[1]" 
@@ -144,7 +151,7 @@
 <script>
 import { mapState } from 'vuex'
 import { mapGetters } from 'vuex'
-//import clickOutside from '../directive';
+import clickOutside from '../directive';
 
 export default {
   props: [
@@ -194,8 +201,8 @@ export default {
 
   },
   methods:{
-  	onClose(){
-
+  	onClose(item, index){
+  		this.showPopover(item, index)
   	},
   	showPopover(item, index)
   	{	
@@ -308,8 +315,18 @@ export default {
         }
         
   	},
+  	isNumber(e) {
+  		evt = (evt) ? evt : window.event;
+      var charCode = (evt.which) ? evt.which : evt.keyCode;
+      if ((charCode > 31 && (charCode < 48 || charCode > 57)) && charCode !== 46) {
+        evt.preventDefault();;
+      } else {
+        return true;
+      }
+  	},
   	checkInput(e, item){
 				let inputVal = parseInt(e.target.value);
+				console.log(typeof(inputVal))
         if(  ! isNaN(inputVal) && inputVal > 0 && inputVal <= item.maxQuantity && Number.isInteger(inputVal) ){
           item.quantity = +inputVal;
           this.$store.state.selectedProduct = item;
@@ -325,13 +342,13 @@ export default {
   },
   
   watch:{
-  	getSelectedSize(selectedSize) {
-  		this.productsOnCart.map( (item) => {
-  			if( item.fullNumber === this.selectedFullNumber ){
-  				item.size = selectedSize;
-  			}
-  		})
-  	},
+  	// getSelectedSize(selectedSize) {
+  	// 	this.productsOnCart.map( (item) => {
+  	// 		if( item.fullNumber === this.selectedFullNumber ){
+  	// 			item.size = selectedSize;
+  	// 		}
+  	// 	})
+  	// },
   	productsOnCart: {
   		deep: true,
   		handler: function (newObj, oldObj) {

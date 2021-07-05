@@ -54,7 +54,7 @@
                                             <td width="75%" align="left" bgcolor="#eeeeee" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 800; line-height: 24px; padding: 10px;"> Order Confirmation # </td>
                                             <td width="25%" align="left" bgcolor="#eeeeee" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 800; line-height: 24px; padding: 10px;"> {{$transaction_id}} </td>
                                         </tr>
-                                        <tr>
+                                        <!-- <tr>
                                             <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> Purchased Item (1) </td>
                                             <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 24px; padding: 15px 10px 5px 10px;"> $100.00 </td>
                                         </tr>
@@ -65,11 +65,11 @@
                                         <tr>
                                             <td width="75%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 24px; padding: 5px 10px;"> Sales Tax </td>
                                             <td width="25%" align="left" style="font-family: Open Sans, Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 400; line-height: 24px; padding: 5px 10px;"> $5.00 </td>
-                                        </tr>
+                                        </tr> -->
                                     </table>
                                 </td>
                             </tr>
-                            <tr>
+                            <!-- <tr>
                                 <td align="left" style="padding-top: 20px;">
                                     <table cellspacing="0" cellpadding="0" border="0" width="100%">
                                         <tr>
@@ -78,7 +78,7 @@
                                         </tr>
                                     </table>
                                 </td>
-                            </tr>
+                            </tr> -->
                         </table>
                     </td>
                 </tr>
