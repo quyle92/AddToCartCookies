@@ -80,7 +80,7 @@
 				<small v-if="isTyping"><i class="fas fa-pen-nib fa-fw fa-spin"></i>admin is typing...</small>
 				<div class="card-footer">
 					<div class="input-group" v-if="!disabled">
-						<input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." @keyup.enter="send" v-model="message" @input="type" v-focus/>
+						<input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." @keyup.enter="send" v-model="message" @input="type" v-focus :disabled="isError"/>
 						<span class="input-group-btn">
 							<button class="btn btn-warning btn-sm" id="btn-chat" @click.prevent="send">
 							Send</button>
@@ -114,6 +114,7 @@ export default {
 			showChatToggle: true,
 			disabled: false,
 			guestName: '',
+			isError: false,
 		}
 	},
 	computed: mapState(
@@ -164,9 +165,9 @@ export default {
 	  				this.isTyping = false
 	  			}
 		  	}) 	
-		  	.listenForWhisper('ChatEndX', (response) => {console.log('ChatEnd');
+		  	.listenForWhisper('ChatEndX', (response) => {
 		  		this.$store.commit('TOGGLE_IS_CHAT_END', true);
-					//this.closeChatEnd();
+
 			});
 	  		
 	  		
@@ -202,18 +203,25 @@ export default {
   			
   		})
   		.then( (response) => {
-  			this.message = '';
-
-			//remove typing notification on admin side 
-			this.type();
+					//remove typing notification on admin side 
+					this.type();
   		})
   		.catch( (error) => {
   			console.log(error);
+  			this.isError = true;
+  			alert('Sth Wrong happen. You cannot send chat messages now!')
   		});
 
+  		this.message = '';
   		
 	},
 	closeChatEnd() {
+		axios.patch(`/api/chatEnd/${this.guestId}`);
+
+		this.showChatToggle = true;
+		this.$store.commit('ADD_MESSAGES', '');
+		this.isTyping = false;
+
 		Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ guest: this.guest, id: this.guestId });
 		Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
 
@@ -223,9 +231,7 @@ export default {
 		this.$store.commit('SET_GUEST', '');
 		this.$store.commit('SET_GUEST_ID', '');
 		
-		this.showChatToggle = true;
-		this.messages = '';
-		this.isTyping = false;
+		
 
 
 		
@@ -236,9 +242,9 @@ mounted() {
 		this.registerGuest();
 	}
 
-	//if the messages in localStorage is > 30, it will be deleled
+	//if the messages in localStorage is > 30 mins, it will be deleled
 	let time = this.messages[this.messages.length - 1].time;
-	if (new Date(Date.parse(time)).addMinutes(30) < new Date()) {
+	if (this.messages.length > 1 && new Date(Date.parse(time)).addMinutes(30) < new Date()) {
 		this.closeChatEnd();
 	}
 
@@ -256,7 +262,7 @@ created() {
 directives: {
   focus: {
     // directive definition
-    update: function (el) {console.log(el);
+    update: function (el) {
       el.focus()
     }
   }

@@ -19,8 +19,11 @@ use Illuminate\Support\Facades\Log;
 | contains the "web" middleware group. Now create something great!
 |
 */
-Route::get('test', function (){
-    return view('test');
+Route::get('test', function () {
+    $guest = App\Guest::first();
+    $guest->chat->is_read = 1;
+    $guest->chat->save(); 
+    dd(App\Chat::first()->is_read);
 });
 // Route::post('authentication', 'ChatController@joinChat');
 // Route::post('checkAuthentication', 'ChatController@guestSentMessage');

@@ -12,9 +12,9 @@ class Chat extends Model
      *
      * @var array
      */
-    protected $fillable = ['guest_id', 'messages'];
+    protected $fillable = ['guest_id', 'messages', 'is_chat_end', 'is_read'];
 
-    protected $visible = ['messages'];
+    protected $visible = ['messages', 'is_chat_end', 'is_read'];
 
     protected $casts = [
         'messages' => 'array'

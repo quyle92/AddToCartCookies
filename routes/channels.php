@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Session;
 */
 
 Broadcast::channel('App.User.{id}', function ($user, $id) {
+    // dd('App.User.{id}', $id);
     return (int) $user->id === (int) $id;
 });
 
@@ -28,14 +29,6 @@ Route::post('/broadcasting/auth/admin', function (Illuminate\Http\Request $req) 
     
 
 });//(2)
-
-// Route::post('/broadcasting/auth/guest', function (Illuminate\Http\Request $req) {
-// // dd( Session::all() );
-//     return Broadcast::auth($req);
-
-// });
-
-
 
 Broadcast::channel('guest-sent-message', function ($user) {
 

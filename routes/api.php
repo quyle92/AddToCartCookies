@@ -24,3 +24,5 @@ Route::apiResources([
 
 Route::get('/getGuestList', 'ChatController@getGuestList' ); 
 Route::post('/deleteChat', 'ChatController@deleteChat' ); 
+Route::patch('/markAsRead/{guest}', 'ChatController@markAsRead' ); 
+Route::patch('/chatEnd/{guest}', 'ChatController@chatEnd' ); 

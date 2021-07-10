@@ -16,18 +16,18 @@
 					<div class="inbox_chat">
 							<div class="chat_list" style="height: 400px; overflow-y: scroll;">	
 								<div class="chat_people" 
-									:class="[{active_chat:guest.active}, {'guest-leave-chat': guest.chatDelete}]" 
+									:class="[{active_chat:guest.active}, {'guest-leave-chat': guest.isChatEnd}]" 
 									v-for="(guest, index) in guestList" 
-									@click="selectGuest(guest, index)" 
+									@click="selectGuest(guest, index, $event)" 
 									@contextmenu.prevent="showContextMenu( index, guest.id, $event)"
 									:id="'guest-' + index"
 								>
 									<div class="chat_img"> 
 										<img src="https://ptetutorials.com/images/user-profile.png" alt="sunil">
 									</div>
-									<div class="chat_ib">
-										<h5>{{guest.name}}<span class="chat_date">Dec 25</span></h5>
-										<p>{{guest.chat.length > 0 ? guest.chat[guest.chat.length -1 ].content : ''}}.</p>
+									<div class="chat_ib" ref="chat_ib">
+										<h5 :style="[! guest.isRead ? hightlightText: {}]">{{guest.name}}<span class="chat_date">Dec 25</span></h5>
+										<p :style="[! guest.isRead ? hightlightText: {}]">{{guest.chat.length > 0 ? guest.chat[guest.chat.length -1 ].content : ''}}.</p>
 									</div>
 								</div>
 							</div>
@@ -59,7 +59,7 @@
 						<small v-if="selectedGuest.isTyping"><i class="fas fa-pen-nib fa-fw fa-spin"></i>guest is typing...</small>
 						<div class="type_msg" v-if="selectedGuest">
 							<div class="input_msg_write">
-								<input type="text" class="write_msg" placeholder="Type a message" @keyup.enter="send" v-model="message" @input="type"/>
+								<input type="text" class="write_msg" placeholder="Type a message" @keyup.enter="send" v-model="message" @input="type" :disabled="isError"/>
 								<button class="msg_send_btn" type="button"  @keyup.enter="send"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
 							</div>
 						</div>
@@ -89,8 +89,7 @@
 		},
 		data: function() {
 			return {
-				guestList:[
-				],
+				guestList:[],
 				message:'',
 				msgReceived:true,
 				isContextMenu: false,
@@ -98,25 +97,28 @@
 				foo: 'foo',
 				guestIndex: '',
 				guestId: '',
+				isError: false,
+				hightlightText: {'font-weight': 'bold!important', 'font-size':'16px!important'},
+				deletedChatId:''
 			}
 		},
 		computed: {
 			...mapState([
-					'selectedGuest', 'selectedGuestIndex', 'deletedChatId'
+					'selectedGuest', 'selectedGuestIndex', 
 			])
 		},
 		methods: {
 			showContextMenu(index, guestId, e){
-					// console.log(guestId);debugger
-					this.isContextMenu = true;
-					this.eventContextMenu = e;
-					this.guestIndex = index
-					this.guestId = guestId
+				// console.log(guestId);debugger
+				this.isContextMenu = true;
+				this.eventContextMenu = e;
+				this.guestIndex = index
+				this.guestId = guestId
 
-					Echo.private(`admin-sent-message-${this.guestId}`)
-	          .listen('AdminSentMessage', (e) => {
-	              console.log()
-	          });
+				Echo.private(`admin-sent-message-${this.guestId}`)
+          			.listen('AdminSentMessage', (e) => {
+		              console.log()
+		          	});
         
 			},
 			closeContextMenu() {
@@ -140,12 +142,12 @@
 				this.$store.commit('REMOVE_DELETED_CHAT_ID', this.guestId);
 				this.guestList.splice(this.guestIndex, 1);
 			},
-			selectGuest(guest, index) {
-				// this.selectedGuest = guest;
+			selectGuest(guest, index, e) {
+				guest.isRead = true;
 				this.$store.commit('SET_SELECTED_GUEST', guest);
 				this.$store.commit('SET_SELECTED_GUEST_INDEX', index);
 				this.guestList.map( e => {
-					//e.isShown = false;
+
 					e.active = false;
 
 				});
@@ -157,16 +159,19 @@
 						if(e.message.length > 0){
 							this.selectedGuest.isTyping = true;
 						} else
-						{
+						{	
 							this.selectedGuest.isTyping = false
 						}
 					});
 
 
+				axios.patch(`/api/markAsRead/${this.selectedGuest.id}`);
+
+
 			},
 			send() {
 				if( this.message === '' ) return;
-				//console.log(this.selectedGuest.id)
+				
 				axios.post('/adminSentMessage', {
 					guest_id: this.selectedGuest.id,
 					guest: this.selectedGuest.name,
@@ -177,7 +182,7 @@
 							user: 'admin',
 							content: this.message
 						});
-						this.message = '';
+						
 						this.$store.commit('SET_SELECTED_GUEST', this.guestList[this.selectedGuestIndex]);
 						//remove typing notification on guest side 
 						this.type();
@@ -185,7 +190,11 @@
 				})
 				.catch( (error) => {
 					console.log(error);
+					this.isError = true
+					alert('Errors. Please fix it!')
 				});
+
+				this.message = '';
 				
 			},
 			isObjEmpty(obj){
@@ -228,7 +237,6 @@
 							user: 'guest',
 							content: result.message
 						}],
-						// isShown: false,
 						active: false,
 						isTyping: false,
 						
@@ -243,10 +251,15 @@
 
 			});
 
+			let adminId = $('meta[name="admin-id').attr('content');
+			Echo.private('App.User.' +  adminId).notification((notification) => {
+	        	console.log('notification: ', notification);
+	    	});
+
 
 
 			vm.$on('closeContextMenu', () => {
-						this.isContextMenu = false
+				this.isContextMenu = false
 			});
 
 		},
@@ -254,36 +267,40 @@
 
 			axios.get('/api/getGuestList')
 				.then( (response) => {
-
-					response.data.result.forEach( e => {
-						this.guestList.push({
+					
+				response.data.result.forEach( e => {
+					this.guestList.push({
 							id: e.id,
 							name: e.name,
 							chat: e?.chat?.messages ?? [],
 							active: false,
-							// isShown: false,
 							isTyping: false,
-
-						});
+							isChatEnd: e.chat.is_chat_end,
+							isRead: e.chat.is_read
+					});
 
 				});
 
-			for (var i = 0; i < this.guestList.length; i++) {
-					if( this.deletedChatId.includes(this.guestList[i].id) ) {
-						Vue.set(this.guestList[i],'chatDelete', true);
-					}
+			//Edge case
+			if( this.guestList.length > 0)
+			{		
+				//check if the guest is not in chat list or he has been out
+				let selectedGuest = this.$Helper.isObjEmpty(this.selectedGuest) || this.guestList.filter( o => o.id === this.selectedGuest.id ).length === 0 ?  this.guestList[0] : this.selectedGuest ;
+
+				if( selectedGuest.id === this.guestList[0].id )
+				{
+					this.$store.commit('SET_SELECTED_GUEST_INDEX', 0)
+				}
+				console.log(this.selectedGuest);
+				console.log(this.guestList[0]);
+				let selectedGuestIndex = this.selectedGuestIndex || 0;
+				this.selectGuest(selectedGuest, selectedGuestIndex);
+
+			} else {
+				this.$store.commit('SET_SELECTED_GUEST', '')
 			}
 
-				//Edge case
-				if( this.guestList.length > 0)
-				{		console.log('created ',this.$Helper.isObjEmpty(this.selectedGuest))
-						let selectedGuest = this.$Helper.isObjEmpty(this.selectedGuest) ?  this.guestList[0] : this.selectedGuest ;
-						let selectedGuestIndex = this.selectedGuestIndex || 0;
-						this.selectGuest(selectedGuest, selectedGuestIndex);
 
-				} else {
-						this.$store.commit('SET_SELECTED_GUEST', '')
-				}
 
 
 			})
@@ -306,20 +323,20 @@
 
 						Echo.private(`admin-sent-message-${this.guestList[i].id}`)
 							.listenForWhisper('ChatEnd', (response) => {
-									console.log('ChatEnd', response);
-									let checkGuest = containsGuest(this.guestList, response) ;
-									let currentGuestIndex = checkGuest.index;console.log(checkGuest)
+								console.log('ChatEnd', response);
+								let checkGuest = containsGuest(this.guestList, response) ;
+								let currentGuestIndex = checkGuest.index;console.log(checkGuest)
 
-									//bôi đen ô chat deleted
-									if(this.guestList[currentGuestIndex] !== undefined) {
-										Vue.set(this.guestList[currentGuestIndex],'chatDelete', true);
-									}
+								//bôi đen ô chat deleted
+								if(this.guestList[currentGuestIndex] !== undefined) {
+									Vue.set(this.guestList[currentGuestIndex],'isChatEnd', true);
+								}
 
-									this.$store.commit('SET_DELETED_CHAT_ID', response.id);
-
-									Echo.leave(`admin-sent-message-${response.id}`)
+								Echo.leave(`admin-sent-message-${response.id}`)
 
 						});
+
+						
 
 					}
 				}
@@ -342,9 +359,12 @@
 	}
 
 	function containsGuest(guestList, obj) 
-	{	console.log('containsGuest')
-		console.log(guestList)
-		console.log(obj);
+	{	
+		//console.log('containsGuest')
+		
+		//console.log(guestList)
+		
+		//console.log(obj);
 		for( let i = 0; i < guestList.length; i ++ ) {console.log(guestList[i], obj.id)
 			if(guestList[i].id === obj.id) {
 				return {
@@ -594,6 +614,8 @@
 .guest-leave-chat{
 	background-color: cyan;
 }
+
+
 </style>
 
 <!--

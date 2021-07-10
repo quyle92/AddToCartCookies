@@ -2444,7 +2444,8 @@ __webpack_require__.r(__webpack_exports__);
       timer: null,
       showChatToggle: true,
       disabled: false,
-      guestName: ''
+      guestName: '',
+      isError: false
     };
   },
   computed: Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['messages', 'isPreChat', 'isChatEnd', 'guest', 'guestId']),
@@ -2497,10 +2498,7 @@ __webpack_require__.r(__webpack_exports__);
           _this2.isTyping = false;
         }
       }).listenForWhisper('ChatEndX', function (response) {
-        console.log('ChatEnd');
-
-        _this2.$store.commit('TOGGLE_IS_CHAT_END', true); //this.closeChatEnd();
-
+        _this2.$store.commit('TOGGLE_IS_CHAT_END', true);
       });
     },
     type: function type() {
@@ -2529,14 +2527,20 @@ __webpack_require__.r(__webpack_exports__);
         guest: this.guest,
         message: this.message
       }).then(function (response) {
-        _this3.message = ''; //remove typing notification on admin side 
-
+        //remove typing notification on admin side 
         _this3.type();
       })["catch"](function (error) {
         console.log(error);
+        _this3.isError = true;
+        alert('Sth Wrong happen. You cannot send chat messages now!');
       });
+      this.message = '';
     },
     closeChatEnd: function closeChatEnd() {
+      axios.patch("/api/chatEnd/".concat(this.guestId));
+      this.showChatToggle = true;
+      this.$store.commit('ADD_MESSAGES', '');
+      this.isTyping = false;
       Echo["private"]("admin-sent-message-".concat(this.guestId)).whisper('ChatEnd', {
         guest: this.guest,
         id: this.guestId
@@ -2548,20 +2552,17 @@ __webpack_require__.r(__webpack_exports__);
       this.$store.commit('TOGGLE_IS_PRECHAT', true);
       this.$store.commit('SET_GUEST', '');
       this.$store.commit('SET_GUEST_ID', '');
-      this.showChatToggle = true;
-      this.messages = '';
-      this.isTyping = false;
     }
   },
   mounted: function mounted() {
     if (this.guest.length > 0) {
       this.registerGuest();
-    } //if the messages in localStorage is > 30, it will be deleled
+    } //if the messages in localStorage is > 30 mins, it will be deleled
 
 
     var time = this.messages[this.messages.length - 1].time;
 
-    if (new Date(Date.parse(time)).addMinutes(30) < new Date()) {
+    if (this.messages.length > 1 && new Date(Date.parse(time)).addMinutes(30) < new Date()) {
       this.closeChatEnd();
     }
   },
@@ -2575,7 +2576,6 @@ __webpack_require__.r(__webpack_exports__);
     focus: {
       // directive definition
       update: function update(el) {
-        console.log(el);
         el.focus();
       }
     }
@@ -53749,7 +53749,8 @@ var render = function() {
                           attrs: {
                             id: "btn-input",
                             type: "text",
-                            placeholder: "Type your message here..."
+                            placeholder: "Type your message here...",
+                            disabled: _vm.isError
                           },
                           domProps: { value: _vm.message },
                           on: {

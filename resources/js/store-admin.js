@@ -10,7 +10,7 @@ export default new Vuex.Store({
   state: {
     selectedGuest: {},
     selectedGuestIndex:'',
-    deletedChatId:[]
+    //deletedChatId:[]
   },
   mutations: {
     SET_SELECTED_GUEST(state, payload) {
@@ -22,18 +22,18 @@ export default new Vuex.Store({
     SET_DELETED_CHAT_ID(state, payload) {
       this.state.deletedChatId.push( payload );
     },
-    REMOVE_DELETED_CHAT_ID( state, payload) {
-      this.state.deletedChatId  = this.state.deletedChatId.filter( e => {
-         return e !== payload
-      })
-    }
+    // REMOVE_DELETED_CHAT_ID( state, payload) {
+    //   this.state.deletedChatId  = this.state.deletedChatId.filter( e => {
+    //      return e !== payload
+    //   })
+    // }
   },
   actions: {
 
   },
   plugins: [
     createPersistedState({
-        paths:[ 'selectedGuest' , 'selectedGuestIndex', 'deletedChatId' ]
+        paths:[ 'selectedGuest' , 'selectedGuestIndex' ]
     })
   ],
 

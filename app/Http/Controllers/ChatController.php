@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use DB; 
+use App\Notifications\BroadcastNofitication;
 
 class ChatController extends Controller
 {   
@@ -74,6 +75,7 @@ class ChatController extends Controller
             
             
             event( new \App\Events\GuestSentMessage($guest, $new_message ) );
+            User::first()->notify(new BroadcastNofitication($guest, $new_message));
 
             return response()->json([
                 'msg' => 'success'
@@ -98,7 +100,7 @@ class ChatController extends Controller
 
             $new_message = array(
                 'user' =>'admin',
-                'content' => $request->message
+                'content' => $request->message,
             ); 
             $current_guest =  Guest::findOrFail( $guest_id );
     
@@ -106,7 +108,7 @@ class ChatController extends Controller
             array_push($current_messages, $new_message);
             $current_guest->chat->messages = $current_messages;
             $current_guest->push();
-// dd($current_guest->chat->messages );
+
             event( new \App\Events\AdminSentMessage($message, $guest_id) );
 
             return response()->json([
@@ -132,6 +134,42 @@ class ChatController extends Controller
                 'result' => $guestList
             ]);
         }
+        catch(\Exception $err) 
+        {  
+            return response()->json([
+                'msg' => $err->getMessage()
+            ]);
+        }
+    }
+
+    public function markAsRead( Guest $guest)
+    {   
+        try 
+        {      
+            $guest->chat->is_read = 1;
+            $guest->push(); 
+            return response()->json([
+                'result' => 'success'
+            ]);
+        }   
+        catch(\Exception $err) 
+        {  
+            return response()->json([
+                'msg' => $err->getMessage()
+            ]);
+        }
+    }
+
+    public function chatEnd( Guest $guest)
+    {   
+        try 
+        {      
+            $guest->chat->is_chat_end = 1;
+            $guest->push(); 
+            return response()->json([
+                'result' => 'success'
+            ]);
+        }   
         catch(\Exception $err) 
         {  
             return response()->json([

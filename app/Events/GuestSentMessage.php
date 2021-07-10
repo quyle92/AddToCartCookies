@@ -41,7 +41,6 @@ class GuestSentMessage implements ShouldBroadcastNow
      */
     public function broadcastOn()
     {   
-        // dd($this->message);
         return new PrivateChannel("guest-sent-message");
     }
 }
