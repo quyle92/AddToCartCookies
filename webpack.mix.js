@@ -16,3 +16,6 @@ mix.js('resources/js/app.js', 'public/js')
 
 mix.js('resources/js/app-admin.js', 'public/js/app-admin.js')
     .sass('resources/sass/app-admin.scss', 'public/css/app-admin.css').version();
+
+mix.copy('node_modules/push.js/bin/push.min.js',
+        'public/js/push.min.js')

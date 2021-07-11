@@ -115,6 +115,7 @@ export default {
 			disabled: false,
 			guestName: '',
 			isError: false,
+			AlreadyEnd: false
 		}
 	},
 	computed: mapState(
@@ -165,7 +166,7 @@ export default {
 	  				this.isTyping = false
 	  			}
 		  	}) 	
-		  	.listenForWhisper('ChatEndX', (response) => {
+		  	.listenForWhisper('ChatEndFromAdmin', (response) => {
 		  		this.$store.commit('TOGGLE_IS_CHAT_END', true);
 
 			});
@@ -216,14 +217,17 @@ export default {
   		
 	},
 	closeChatEnd() {
-		axios.patch(`/api/chatEnd/${this.guestId}`);
+		
+		if(this.AlreadyEnd === true) {
+			this.deleteGuestIdAtServer();
+			this.endChatAtClient();
+		}
 
 		this.showChatToggle = true;
 		this.$store.commit('ADD_MESSAGES', '');
 		this.isTyping = false;
 
-		Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ guest: this.guest, id: this.guestId });
-		Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
+
 
 		this.$store.commit('REMOVE_MESSAGES');
 		this.$store.commit('TOGGLE_IS_CHAT_END', true);
@@ -235,6 +239,15 @@ export default {
 
 
 		
+	},
+	endChatAtClient() {
+		// Echo.private(`admin-sent-message-${this.guestId}`).stopListening('AdminSentMessage')
+			Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ guest: this.guest, 
+				id: this.guestId });
+			Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
+	},
+	deleteGuestIdAtServer(){
+		axios.patch(`/api/chatEnd/${this.guestId}`);
 	}
 }, 
 mounted() {
@@ -246,6 +259,7 @@ mounted() {
 	let time = this.messages[this.messages.length - 1].time;
 	if (this.messages.length > 1 && new Date(Date.parse(time)).addMinutes(30) < new Date()) {
 		this.closeChatEnd();
+
 	}
 
 
@@ -282,15 +296,14 @@ watch: {
 
 			// automatically end chat after 15s
 			this.timer = setTimeout(() => {
-				if(this.messages.length > 1){
+				if(this.messages.length > 1) {
 					this.$store.commit('TOGGLE_IS_CHAT_END', true);
 					this.disabled = true;
-					// Echo.private(`admin-sent-message-${this.guestId}`).stopListening('AdminSentMessage')
-					Echo.private(`admin-sent-message-${this.guestId}`).whisper('ChatEnd',{ guest: this.guest, 
-						id: this.guestId });
-					Echo.leave(`admin-sent-message-${this.guestId}`)//(1)
+					this.endChatAtClient();
+					this.deleteGuestIdAtServer();
+					this.AlreadyEnd === true;
 				}	
-			}, 113000);
+			}, 13000);
 		}
 	},
 	guestId(val) {

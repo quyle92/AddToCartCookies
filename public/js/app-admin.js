@@ -2111,22 +2111,47 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       this.isContextMenu = false;
     },
     deleteChat: function deleteChat(data) {
-      Echo["private"]("admin-sent-message-".concat(this.guestId)).whisper('ChatEndX', {
+      var _this = this;
+
+      Echo["private"]("admin-sent-message-".concat(this.guestId)).whisper('ChatEndFromAdmin', {
         id: this.guestId
       });
-      axios.post('/api/deleteChat', data).then(function (response) {
+      axios["delete"]('/api/deleteChat', data).then(function (response) {
         console.log(response.data);
+
+        _this.$store.commit('SET_SELECTED_GUEST', '');
+
+        _this.$store.commit('SET_SELECTED_GUEST_INDEX', '');
+
+        _this.guestList.splice(_this.guestIndex, 1);
       })["catch"](function (error) {
         console.log(error);
       });
-      this.$store.commit('SET_SELECTED_GUEST', '');
-      this.$store.commit('SET_SELECTED_GUEST_INDEX', '');
-      this.$store.commit('REMOVE_DELETED_CHAT_ID', this.guestId);
-      this.guestList.splice(this.guestIndex, 1);
+    },
+    deleteChatAll: function deleteChatAll() {
+      var _this2 = this;
+
+      for (var i = 0; i < this.guestList.length; i++) {
+        var id = this.guestList[i].id;
+        Echo["private"]("admin-sent-message-".concat(id)).whisper('ChatEndFromAdmin', {
+          id: id
+        });
+      }
+
+      axios["delete"]('/api/deleteChatAll').then(function (response) {
+        _this2.$store.commit('SET_SELECTED_GUEST', '');
+
+        _this2.$store.commit('SET_SELECTED_GUEST_INDEX', '');
+
+        _this2.guestList = [];
+      })["catch"](function (error) {
+        alert(error.response.data.msg);
+      });
     },
     selectGuest: function selectGuest(guest, index, e) {
-      var _this = this;
+      var _this3 = this;
 
+      console.log('selectedGuest');
       guest.isRead = true;
       this.$store.commit('SET_SELECTED_GUEST', guest);
       this.$store.commit('SET_SELECTED_GUEST_INDEX', index);
@@ -2138,15 +2163,15 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         console.log('typing', e.message);
 
         if (e.message.length > 0) {
-          _this.selectedGuest.isTyping = true;
+          _this3.selectedGuest.isTyping = true;
         } else {
-          _this.selectedGuest.isTyping = false;
+          _this3.selectedGuest.isTyping = false;
         }
       });
       axios.patch("/api/markAsRead/".concat(this.selectedGuest.id));
     },
     send: function send() {
-      var _this2 = this;
+      var _this4 = this;
 
       if (this.message === '') return;
       axios.post('/adminSentMessage', {
@@ -2154,18 +2179,18 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         guest: this.selectedGuest.name,
         message: this.message
       }).then(function (response) {
-        _this2.guestList[_this2.selectedGuestIndex].chat.push({
+        _this4.guestList[_this4.selectedGuestIndex].chat.push({
           user: 'admin',
-          content: _this2.message
+          content: _this4.message
         });
 
-        _this2.$store.commit('SET_SELECTED_GUEST', _this2.guestList[_this2.selectedGuestIndex]); //remove typing notification on guest side 
+        _this4.$store.commit('SET_SELECTED_GUEST', _this4.guestList[_this4.selectedGuestIndex]); //remove typing notification on guest side 
 
 
-        _this2.type();
+        _this4.type();
       })["catch"](function (error) {
         console.log(error);
-        _this2.isError = true;
+        _this4.isError = true;
         alert('Errors. Please fix it!');
       });
       this.message = '';
@@ -2181,22 +2206,33 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     }
   },
   mounted: function mounted() {
-    var _this3 = this;
+    var _this5 = this;
 
     Echo["private"]("guest-sent-message").listen('GuestSentMessage', function (result) {
-      var checkGuest = containsGuest(_this3.guestList, result);
+      var checkGuest = containsGuest(_this5.guestList, result);
 
       if (checkGuest.isOldGuest === true) {
         var currentGuestIndex = checkGuest.index;
 
-        _this3.guestList[currentGuestIndex].chat.push({
+        _this5.guestList[currentGuestIndex].chat.push({
           user: 'guest',
           content: result.message
         });
 
-        _this3.guestList[currentGuestIndex].isTyping = false; //Edge case
+        _this5.guestList[currentGuestIndex].isTyping = false; //Edge case
 
-        if (_this3.guestList[currentGuestIndex].id === _this3.selectedGuest.id) _this3.$store.commit('SET_SELECTED_GUEST', _this3.guestList[currentGuestIndex]);
+        if (_this5.guestList[currentGuestIndex].id === _this5.selectedGuest.id) _this5.$store.commit('SET_SELECTED_GUEST', _this5.guestList[currentGuestIndex]);
+        Push.create(result.guest, {
+          body: result.message,
+          icon: '/images/laravel.png',
+          timeout: 4000,
+          onClick: function onClick() {
+            window.focus();
+
+            _this5.selectGuest(_this5.guestList[currentGuestIndex], currentGuestIndex); //this.close();
+
+          }
+        });
       } else {
         var newGuest = {
           id: result.id,
@@ -2209,7 +2245,19 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
           isTyping: false
         };
 
-        _this3.guestList.push(newGuest);
+        _this5.guestList.push(newGuest);
+
+        Push.create(result.guest, {
+          body: result.message,
+          icon: '/images/laravel.png',
+          timeout: 4000,
+          onClick: function onClick() {
+            window.focus();
+
+            _this5.selectGuest(_this5.guestList[_this5.guestList.length - 1], _this5.guestList.length - 1); //this.close();
+
+          }
+        });
       }
     });
     var adminId = $('meta[name="admin-id').attr('content');
@@ -2217,20 +2265,21 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       console.log('notification: ', notification);
     });
     vm.$on('closeContextMenu', function () {
-      _this3.isContextMenu = false;
+      _this5.isContextMenu = false;
     });
   },
   created: function created() {
-    var _this4 = this;
+    var _this6 = this;
 
     axios.get('/api/getGuestList').then(function (response) {
+      console.log(response.data);
       response.data.result.forEach(function (e) {
-        var _e$chat$messages, _e$chat;
+        var _e$chat$messages;
 
-        _this4.guestList.push({
+        if (e.chat !== null) _this6.guestList.push({
           id: e.id,
           name: e.name,
-          chat: (_e$chat$messages = e === null || e === void 0 ? void 0 : (_e$chat = e.chat) === null || _e$chat === void 0 ? void 0 : _e$chat.messages) !== null && _e$chat$messages !== void 0 ? _e$chat$messages : [],
+          chat: (_e$chat$messages = e.chat.messages) !== null && _e$chat$messages !== void 0 ? _e$chat$messages : [],
           active: false,
           isTyping: false,
           isChatEnd: e.chat.is_chat_end,
@@ -2238,33 +2287,32 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         });
       }); //Edge case
 
-      if (_this4.guestList.length > 0) {
+      if (_this6.guestList.length > 0) {
         //check if the guest is not in chat list or he has been out
-        var selectedGuest = _this4.$Helper.isObjEmpty(_this4.selectedGuest) || _this4.guestList.filter(function (o) {
-          return o.id === _this4.selectedGuest.id;
-        }).length === 0 ? _this4.guestList[0] : _this4.selectedGuest;
+        var selectedGuest = _this6.$Helper.isObjEmpty(_this6.selectedGuest) || _this6.guestList.filter(function (o) {
+          return o.id === _this6.selectedGuest.id;
+        }).length === 0 ? _this6.guestList[0] : _this6.selectedGuest;
 
-        if (selectedGuest.id === _this4.guestList[0].id) {
-          _this4.$store.commit('SET_SELECTED_GUEST_INDEX', 0);
+        if (selectedGuest.id === _this6.guestList[0].id) {
+          _this6.$store.commit('SET_SELECTED_GUEST_INDEX', 0);
         }
 
-        console.log(_this4.selectedGuest);
-        console.log(_this4.guestList[0]);
-        var selectedGuestIndex = _this4.selectedGuestIndex || 0;
+        var selectedGuestIndex = _this6.selectedGuestIndex || 0;
 
-        _this4.selectGuest(selectedGuest, selectedGuestIndex);
+        _this6.selectGuest(selectedGuest, selectedGuestIndex);
       } else {
-        _this4.$store.commit('SET_SELECTED_GUEST', '');
+        _this6.$store.commit('SET_SELECTED_GUEST', '');
       }
     })["catch"](function (error) {
       console.log(error);
     });
+    document.addEventListener('click', function () {});
   },
   watch: {
     guestList: {
       deep: true,
       handler: function handler(newVal, oldVal) {
-        var _this5 = this;
+        var _this7 = this;
 
         Vue.nextTick(function () {
           var div = document.getElementsByClassName('msg_history')[0]; //debugger
@@ -2275,12 +2323,12 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         for (var i = 0; i < this.guestList.length; i++) {
           Echo["private"]("admin-sent-message-".concat(this.guestList[i].id)).listenForWhisper('ChatEnd', function (response) {
             console.log('ChatEnd', response);
-            var checkGuest = containsGuest(_this5.guestList, response);
+            var checkGuest = containsGuest(_this7.guestList, response);
             var currentGuestIndex = checkGuest.index;
             console.log(checkGuest); //bôi đen ô chat deleted
 
-            if (_this5.guestList[currentGuestIndex] !== undefined) {
-              Vue.set(_this5.guestList[currentGuestIndex], 'isChatEnd', true);
+            if (_this7.guestList[currentGuestIndex] !== undefined) {
+              Vue.set(_this7.guestList[currentGuestIndex], 'isChatEnd', true);
             }
 
             Echo.leave("admin-sent-message-".concat(response.id));
@@ -7069,7 +7117,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\n\r\n/*---------chat window---------------*/\n.inbox_people[data-v-e7418c82] {\r\n\tbackground: #fff;\r\n\t/*float: left;*/\r\n\toverflow: hidden;\r\n\twidth: 30%;\r\n\tborder-right: 1px solid #ddd;\r\n\tdisplay: table-cell;\n}\n.inbox_msg[data-v-e7418c82] {\r\n\tborder: 1px solid #ddd;\r\n\tclear: both;\r\n\toverflow: hidden;\r\n\tdisplay: table-row;\n}\n.top_spac[data-v-e7418c82] {\r\n\tmargin: 20px 0 0;\n}\n.recent_heading[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 40%;\n}\n.srch_bar[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\ttext-align: right;\r\n\twidth: 60%;\r\n\tpadding:\n}\n.headind_srch[data-v-e7418c82] {\r\n\tpadding: 10px 29px 10px 20px;\r\n\toverflow: hidden;\r\n\tborder-bottom: 1px solid #c4c4c4;\n}\n.recent_heading h4[data-v-e7418c82] {\r\n\tcolor: #0465ac;\r\n\tfont-size: 16px;\r\n\tmargin: auto;\r\n\tline-height: 29px;\n}\n.srch_bar input[data-v-e7418c82] {\r\n\toutline: none;\r\n\tborder: 1px solid #cdcdcd;\r\n\tborder-width: 0 0 1px 0;\r\n\twidth: 80%;\r\n\tpadding: 2px 0 4px 6px;\r\n\tbackground: none;\n}\n.srch_bar .input-group-addon button[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tpadding: 0;\r\n\tcolor: #707070;\r\n\tfont-size: 18px;\n}\n.srch_bar .input-group-addon[data-v-e7418c82] {\r\n\tmargin: 0 0 0 -27px;\n}\n.chat_ib h5[data-v-e7418c82] {\r\n\tfont-size: 15px;\r\n\tcolor: #464646;\r\n\tmargin: 0 0 8px 0;\n}\n.chat_ib h5 span[data-v-e7418c82] {\r\n\tfont-size: 13px;\r\n\tfloat: right;\n}\n.chat_ib p[data-v-e7418c82] {\r\n\tfont-size: 12px;\r\n\tcolor: #989898;\r\n\tmargin: auto;\r\n\tdisplay: inline-block;\r\n\twhite-space: nowrap;\r\n\toverflow: hidden;\r\n\ttext-overflow: ellipsis;\n}\n.chat_img[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 11%;\n}\n.chat_img img[data-v-e7418c82] {\r\n\twidth: 100%\n}\n.chat_ib[data-v-e7418c82] {\r\n\tfloat: left;\r\n\tpadding: 0 0 0 15px;\r\n\twidth: 88%;\n}\n.chat_people[data-v-e7418c82] {\r\n\tborder-bottom: 1px solid #ddd;\r\n\tmargin: 0;\r\n\tpadding: 18px 16px 10px;\r\n\toverflow: hidden;\r\n\tclear: both;\n}\n.chat_list[data-v-e7418c82] {\r\n\t/*border-bottom: 1px solid #ddd;*/\r\n\t/*margin: 0;\r\n\tpadding: 18px 16px 10px;*/\r\n\tcursor: pointer;\n}\n.inbox_chat[data-v-e7418c82] {\r\n\t/*height: 550px;\r\n\toverflow-y: scroll;*/\n}\n.active_chat[data-v-e7418c82] {\r\n\tbackground: #e8f6ff;\n}\n.incoming_msg_img[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\twidth: 6%;\n}\n.incoming_msg_img img[data-v-e7418c82] {\r\n\twidth: 100%;\n}\n.received_msg[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\tpadding: 0 0 0 10px;\r\n\tvertical-align: top;\r\n\twidth: 92%;\n}\n.received_withd_msg p[data-v-e7418c82] {\r\n\tbackground: #ebebeb none repeat scroll 0 0;\r\n\tborder-radius: 0 15px 15px 15px;\r\n\tcolor: #646464;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.time_date[data-v-e7418c82] {\r\n\tcolor: #747474;\r\n\tdisplay: block;\r\n\tfont-size: 12px;\r\n\tmargin: 8px 0 0;\n}\n.received_withd_msg[data-v-e7418c82] {\r\n\twidth: 57%;\n}\n.mesgs[data-v-e7418c82]{\r\n\t/*float: left;*/\r\n\tpadding: 30px 15px 0 25px;\r\n\twidth:70%;\r\n\tdisplay: table-cell;\r\n\t/*max-height: 600px;\r\n\toverflow-y: scroll;*/\n}\n.sent_msg p[data-v-e7418c82] {\r\n\tbackground:#0465ac;\r\n\tborder-radius: 12px 15px 15px 0;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tcolor: #fff;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.outgoing_msg[data-v-e7418c82] {\r\n\toverflow: hidden;\r\n\tmargin: 26px 0 26px;\n}\n.sent_msg[data-v-e7418c82] {\r\n\tfloat: right;\r\n\twidth: 46%;\n}\n.input_msg_write input[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tcolor: #4c4c4c;\r\n\tfont-size: 15px;\r\n\tmin-height: 48px;\r\n\twidth: 100%;\r\n\toutline:none;\n}\n.type_msg[data-v-e7418c82] {\r\n\tborder-top: 1px solid #c4c4c4;\r\n\tposition: relative;\n}\n.msg_send_btn[data-v-e7418c82] {\r\n\tbackground: #05728f none repeat scroll 0 0;\r\n\tborder:none;\r\n\tborder-radius: 50%;\r\n\tcolor: #fff;\r\n\tcursor: pointer;\r\n\tfont-size: 15px;\r\n\theight: 33px;\r\n\tposition: absolute;\r\n\tright: 0;\r\n\ttop: 11px;\r\n\twidth: 33px;\n}\n.messaging[data-v-e7418c82] {\r\n\tpadding: 0 0 50px 0;\r\n\tdisplay: table;\n}\n.guest-leave-chat[data-v-e7418c82]{\r\n\tbackground-color: cyan;\n}\r\n\r\n\r\n", ""]);
+exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\n\r\n/*---------chat window---------------*/\n.inbox_people[data-v-e7418c82] {\r\n\tbackground: #fff;\r\n\t/*float: left;*/\r\n\toverflow: hidden;\r\n\twidth: 30%;\r\n\tborder-right: 1px solid #ddd;\r\n\tdisplay: table-cell;\n}\n.inbox_msg[data-v-e7418c82] {\r\n\tborder: 1px solid #ddd;\r\n\tclear: both;\r\n\toverflow: hidden;\r\n\tdisplay: table-row;\n}\n.top_spac[data-v-e7418c82] {\r\n\tmargin: 20px 0 0;\n}\n.recent_heading[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 40%;\n}\n.srch_bar[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\ttext-align: right;\r\n\twidth: 60%;\r\n\tpadding:\n}\n.headind_srch[data-v-e7418c82] {\r\n\tpadding: 10px 29px 10px 20px;\r\n\toverflow: hidden;\r\n\tborder-bottom: 1px solid #c4c4c4;\n}\n.recent_heading h4[data-v-e7418c82] {\r\n\tcolor: #0465ac;\r\n\tfont-size: 16px;\r\n\tmargin: auto;\r\n\tline-height: 29px;\n}\n.srch_bar input[data-v-e7418c82] {\r\n\toutline: none;\r\n\tborder: 1px solid #cdcdcd;\r\n\tborder-width: 0 0 1px 0;\r\n\twidth: 80%;\r\n\tpadding: 2px 0 4px 6px;\r\n\tbackground: none;\n}\n.srch_bar .input-group-addon button[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tpadding: 0;\r\n\tcolor: #707070;\r\n\tfont-size: 18px;\n}\n.srch_bar .input-group-addon[data-v-e7418c82] {\r\n\tmargin: 0 0 0 -27px;\n}\n.chat_ib h5[data-v-e7418c82] {\r\n\tfont-size: 15px;\r\n\tcolor: #464646;\r\n\tmargin: 0 0 8px 0;\n}\n.chat_ib h5 span[data-v-e7418c82] {\r\n\tfont-size: 13px;\r\n\tfloat: right;\n}\n.chat_ib p[data-v-e7418c82] {\r\n\tfont-size: 12px;\r\n\tcolor: #989898;\r\n\tmargin: auto;\r\n\tdisplay: inline-block;\r\n\twhite-space: nowrap;\r\n\toverflow: hidden;\r\n\ttext-overflow: ellipsis;\n}\n.chat_img[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 11%;\n}\n.chat_img img[data-v-e7418c82] {\r\n\twidth: 100%\n}\n.chat_ib[data-v-e7418c82] {\r\n\tfloat: left;\r\n\tpadding: 0 0 0 15px;\r\n\twidth: 88%;\n}\n.chat_people[data-v-e7418c82] {\r\n\tborder-bottom: 1px solid #ddd;\r\n\tmargin: 0;\r\n\tpadding: 18px 16px 10px;\r\n\toverflow: hidden;\r\n\tclear: both;\n}\n.chat_list[data-v-e7418c82] {\r\n\t/*border-bottom: 1px solid #ddd;*/\r\n\t/*margin: 0;\r\n\tpadding: 18px 16px 10px;*/\r\n\tcursor: pointer;\n}\n.inbox_chat[data-v-e7418c82] {\r\n\t/*height: 550px;\r\n\toverflow-y: scroll;*/\n}\n.active_chat[data-v-e7418c82] {\r\n\tbackground: #e8f6ff;\n}\n.incoming_msg_img[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\twidth: 6%;\n}\n.incoming_msg_img img[data-v-e7418c82] {\r\n\twidth: 100%;\n}\n.received_msg[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\tpadding: 0 0 0 10px;\r\n\tvertical-align: top;\r\n\twidth: 92%;\n}\n.received_withd_msg p[data-v-e7418c82] {\r\n\tbackground: #ebebeb none repeat scroll 0 0;\r\n\tborder-radius: 0 15px 15px 15px;\r\n\tcolor: #646464;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.time_date[data-v-e7418c82] {\r\n\tcolor: #747474;\r\n\tdisplay: block;\r\n\tfont-size: 12px;\r\n\tmargin: 8px 0 0;\n}\n.received_withd_msg[data-v-e7418c82] {\r\n\twidth: 57%;\n}\n.mesgs[data-v-e7418c82]{\r\n\t/*float: left;*/\r\n\tpadding: 30px 15px 0 25px;\r\n\twidth:70%;\r\n\tdisplay: table-cell;\r\n\t/*max-height: 600px;\r\n\toverflow-y: scroll;*/\n}\n.sent_msg p[data-v-e7418c82] {\r\n\tbackground:#0465ac;\r\n\tborder-radius: 12px 15px 15px 0;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tcolor: #fff;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.outgoing_msg[data-v-e7418c82] {\r\n\toverflow: hidden;\r\n\tmargin: 26px 0 26px;\n}\n.sent_msg[data-v-e7418c82] {\r\n\tfloat: right;\r\n\twidth: 46%;\n}\n.input_msg_write input[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tcolor: #4c4c4c;\r\n\tfont-size: 15px;\r\n\tmin-height: 48px;\r\n\twidth: 100%;\r\n\toutline:none;\n}\n.type_msg[data-v-e7418c82] {\r\n\tborder-top: 1px solid #c4c4c4;\r\n\tposition: relative;\n}\n.msg_send_btn[data-v-e7418c82] {\r\n\tbackground: #05728f none repeat scroll 0 0;\r\n\tborder:none;\r\n\tborder-radius: 50%;\r\n\tcolor: #fff;\r\n\tcursor: pointer;\r\n\tfont-size: 15px;\r\n\theight: 33px;\r\n\tposition: absolute;\r\n\tright: 0;\r\n\ttop: 11px;\r\n\twidth: 33px;\n}\n.messaging[data-v-e7418c82] {\r\n\tpadding: 0 0 50px 0;\r\n\tdisplay: table;\n}\n.guest-leave-chat[data-v-e7418c82]{\r\n\tbackground-color: cyan;\n}\r\n\r\n\r\n", ""]);
 
 // exports
 
@@ -48683,7 +48731,25 @@ var render = function() {
         [
           _c("div", { staticClass: "inbox_msg" }, [
             _c("div", { staticClass: "inbox_people" }, [
-              _vm._m(0),
+              _c("div", { staticClass: "headind_srch" }, [
+                _c("div", { staticClass: "recent_heading" }, [
+                  _c(
+                    "button",
+                    {
+                      staticClass: "btn btn-danger btn-sm",
+                      on: {
+                        click: function($event) {
+                          $event.preventDefault()
+                          return _vm.deleteChatAll()
+                        }
+                      }
+                    },
+                    [_c("i", { staticClass: "fas fa-trash" })]
+                  )
+                ]),
+                _vm._v(" "),
+                _vm._m(0)
+              ]),
               _vm._v(" "),
               _c("div", { staticClass: "inbox_chat" }, [
                 _c(
@@ -48920,18 +48986,12 @@ var staticRenderFns = [
     var _vm = this
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "headind_srch" }, [
-      _c("div", { staticClass: "recent_heading" }, [
-        _c("h4", [_vm._v("Recent")])
-      ]),
-      _vm._v(" "),
-      _c("div", { staticClass: "srch_bar" }, [
-        _c("div", { staticClass: "stylish-input-group" }, [
-          _c("input", {
-            staticClass: "search-bar",
-            attrs: { type: "text", placeholder: "Search" }
-          })
-        ])
+    return _c("div", { staticClass: "srch_bar" }, [
+      _c("div", { staticClass: "stylish-input-group" }, [
+        _c("input", {
+          staticClass: "search-bar",
+          attrs: { type: "text", placeholder: "Search" }
+        })
       ])
     ])
   },
@@ -66903,12 +66963,7 @@ var _helper = new _helper__WEBPACK_IMPORTED_MODULE_2__["default"]();
     },
     SET_DELETED_CHAT_ID: function SET_DELETED_CHAT_ID(state, payload) {
       this.state.deletedChatId.push(payload);
-    } // REMOVE_DELETED_CHAT_ID( state, payload) {
-    //   this.state.deletedChatId  = this.state.deletedChatId.filter( e => {
-    //      return e !== payload
-    //   })
-    // }
-
+    }
   },
   actions: {},
   plugins: [Object(vuex_persistedstate__WEBPACK_IMPORTED_MODULE_3__["default"])({

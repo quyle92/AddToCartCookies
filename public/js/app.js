@@ -2445,7 +2445,8 @@ __webpack_require__.r(__webpack_exports__);
       showChatToggle: true,
       disabled: false,
       guestName: '',
-      isError: false
+      isError: false,
+      AlreadyEnd: false
     };
   },
   computed: Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['messages', 'isPreChat', 'isChatEnd', 'guest', 'guestId']),
@@ -2497,7 +2498,7 @@ __webpack_require__.r(__webpack_exports__);
         } else {
           _this2.isTyping = false;
         }
-      }).listenForWhisper('ChatEndX', function (response) {
+      }).listenForWhisper('ChatEndFromAdmin', function (response) {
         _this2.$store.commit('TOGGLE_IS_CHAT_END', true);
       });
     },
@@ -2537,21 +2538,30 @@ __webpack_require__.r(__webpack_exports__);
       this.message = '';
     },
     closeChatEnd: function closeChatEnd() {
-      axios.patch("/api/chatEnd/".concat(this.guestId));
+      if (this.AlreadyEnd === true) {
+        this.deleteGuestIdAtServer();
+        this.endChatAtClient();
+      }
+
       this.showChatToggle = true;
       this.$store.commit('ADD_MESSAGES', '');
       this.isTyping = false;
-      Echo["private"]("admin-sent-message-".concat(this.guestId)).whisper('ChatEnd', {
-        guest: this.guest,
-        id: this.guestId
-      });
-      Echo.leave("admin-sent-message-".concat(this.guestId)); //(1)
-
       this.$store.commit('REMOVE_MESSAGES');
       this.$store.commit('TOGGLE_IS_CHAT_END', true);
       this.$store.commit('TOGGLE_IS_PRECHAT', true);
       this.$store.commit('SET_GUEST', '');
       this.$store.commit('SET_GUEST_ID', '');
+    },
+    endChatAtClient: function endChatAtClient() {
+      // Echo.private(`admin-sent-message-${this.guestId}`).stopListening('AdminSentMessage')
+      Echo["private"]("admin-sent-message-".concat(this.guestId)).whisper('ChatEnd', {
+        guest: this.guest,
+        id: this.guestId
+      });
+      Echo.leave("admin-sent-message-".concat(this.guestId)); //(1)
+    },
+    deleteGuestIdAtServer: function deleteGuestIdAtServer() {
+      axios.patch("/api/chatEnd/".concat(this.guestId));
     }
   },
   mounted: function mounted() {
@@ -2600,15 +2610,15 @@ __webpack_require__.r(__webpack_exports__);
           if (_this4.messages.length > 1) {
             _this4.$store.commit('TOGGLE_IS_CHAT_END', true);
 
-            _this4.disabled = true; // Echo.private(`admin-sent-message-${this.guestId}`).stopListening('AdminSentMessage')
+            _this4.disabled = true;
 
-            Echo["private"]("admin-sent-message-".concat(_this4.guestId)).whisper('ChatEnd', {
-              guest: _this4.guest,
-              id: _this4.guestId
-            });
-            Echo.leave("admin-sent-message-".concat(_this4.guestId)); //(1)
+            _this4.endChatAtClient();
+
+            _this4.deleteGuestIdAtServer();
+
+            _this4.AlreadyEnd === true;
           }
-        }, 113000);
+        }, 13000);
       }
     },
     guestId: function guestId(val) {}
@@ -67997,7 +68007,8 @@ $(function () {
   });
 });
 
-__webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js");
+__webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js"); // window.Push = require('push.js/bin/push.js');
+
 
 window.Vue = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.common.js");
 

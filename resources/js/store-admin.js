@@ -22,11 +22,7 @@ export default new Vuex.Store({
     SET_DELETED_CHAT_ID(state, payload) {
       this.state.deletedChatId.push( payload );
     },
-    // REMOVE_DELETED_CHAT_ID( state, payload) {
-    //   this.state.deletedChatId  = this.state.deletedChatId.filter( e => {
-    //      return e !== payload
-    //   })
-    // }
+
   },
   actions: {
 

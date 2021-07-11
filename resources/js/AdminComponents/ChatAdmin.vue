@@ -5,7 +5,7 @@
 				<div class="inbox_people">
 					<div class="headind_srch">
 						<div class="recent_heading">
-							<h4>Recent</h4>
+							<button class="btn btn-danger btn-sm" @click.prevent="deleteChatAll()"><i class="fas fa-trash"></i></button>
 						</div>
 						<div class="srch_bar">
 							<div class="stylish-input-group">
@@ -127,22 +127,43 @@
 			},
 			deleteChat(data){	
 				Echo.private(`admin-sent-message-${this.guestId}`)
-					.whisper('ChatEndX',{id: this.guestId});
+					.whisper('ChatEndFromAdmin',{id: this.guestId});
 
-				axios.post('/api/deleteChat', data)
+				axios.delete('/api/deleteChat', data)
                 	.then( (response) => {
-                		console.log(response.data)
+                		console.log(response.data);
+                		this.$store.commit('SET_SELECTED_GUEST', '');
+						this.$store.commit('SET_SELECTED_GUEST_INDEX', '');
+						this.guestList.splice(this.guestIndex, 1);
                 
             		}).catch( (error) => {
                 		console.log(error);
             		});
 
-				this.$store.commit('SET_SELECTED_GUEST', '');
-				this.$store.commit('SET_SELECTED_GUEST_INDEX', '');
-				this.$store.commit('REMOVE_DELETED_CHAT_ID', this.guestId);
-				this.guestList.splice(this.guestIndex, 1);
+				
 			},
-			selectGuest(guest, index, e) {
+			deleteChatAll(){
+				for (var i = 0; i < this.guestList.length; i++) {
+					let id = this.guestList[i].id;
+					Echo.private(`admin-sent-message-${id}`)
+					.whisper('ChatEndFromAdmin',{id: id});
+				}
+
+				axios.delete('/api/deleteChatAll')
+                	.then( (response) => {
+                		this.$store.commit('SET_SELECTED_GUEST', '');
+						this.$store.commit('SET_SELECTED_GUEST_INDEX', '');
+
+						this.guestList = [];
+                
+            		}).catch( (error) => {
+                		alert(error.response.data.msg)
+            		});
+
+
+				
+			},
+			selectGuest(guest, index, e) {console.log('selectedGuest')
 				guest.isRead = true;
 				this.$store.commit('SET_SELECTED_GUEST', guest);
 				this.$store.commit('SET_SELECTED_GUEST_INDEX', index);
@@ -227,6 +248,17 @@
 					//Edge case
 					if(this.guestList[currentGuestIndex].id === this.selectedGuest.id)
 						this.$store.commit('SET_SELECTED_GUEST', this.guestList[currentGuestIndex]);
+
+					Push.create(result.guest, {
+		                body: result.message,
+		                icon: '/images/laravel.png',
+		                timeout: 4000,
+		                onClick:  () => {
+		                    window.focus();
+		                    this.selectGuest(this.guestList[currentGuestIndex], currentGuestIndex);
+		                    //this.close();
+		                }
+		            });
 				} 
 				else 
 				{		
@@ -243,6 +275,17 @@
 					}
 
 					this.guestList.push(newGuest);
+
+					Push.create(result.guest, {
+		                body: result.message,
+		                icon: '/images/laravel.png',
+		                timeout: 4000,
+		                onClick:  () => {
+		                    window.focus();
+		                    this.selectGuest(this.guestList[this.guestList.length - 1], this.guestList.length - 1);
+		                    //this.close();
+		                }
+		            });
 					
 				}
 
@@ -267,17 +310,18 @@
 
 			axios.get('/api/getGuestList')
 				.then( (response) => {
-					
+					console.log(response.data)
 				response.data.result.forEach( e => {
-					this.guestList.push({
-							id: e.id,
-							name: e.name,
-							chat: e?.chat?.messages ?? [],
-							active: false,
-							isTyping: false,
-							isChatEnd: e.chat.is_chat_end,
-							isRead: e.chat.is_read
-					});
+					if(e.chat !== null)
+						this.guestList.push({
+								id: e.id,
+								name: e.name,
+								chat: e.chat.messages ?? [],
+								active: false,
+								isTyping: false,
+								isChatEnd: e.chat.is_chat_end,
+								isRead: e.chat.is_read
+						});
 
 				});
 
@@ -291,8 +335,7 @@
 				{
 					this.$store.commit('SET_SELECTED_GUEST_INDEX', 0)
 				}
-				console.log(this.selectedGuest);
-				console.log(this.guestList[0]);
+			
 				let selectedGuestIndex = this.selectedGuestIndex || 0;
 				this.selectGuest(selectedGuest, selectedGuestIndex);
 
@@ -301,12 +344,15 @@
 			}
 
 
-
-
 			})
 			.catch( (error) => {
 				console.log(error);
 			});
+
+		document.addEventListener('click', () => {
+			
+		})
+
 
 
 		},

@@ -182,9 +182,7 @@ class ChatController extends Controller
     {   
         try 
         {
-            // dd($request->guest_id);
             $guest = Guest::findOrFail( $request->guest_id );
-            // dd($guest);
             $guest->delete();
 
             return response()->json([
@@ -197,6 +195,24 @@ class ChatController extends Controller
             return response()->json([
                 'msg' => $err->getMessage()
             ]);
+        }   
+    }
+
+    public function deleteChatAll(Request $request)
+    {   
+        try 
+        {
+            DB::table('guests')->delete();
+
+            return response()->json([
+                'result' => 'success',
+            ]);
+        }
+        catch(\Exception $err)
+        {   
+            return response()->json([
+                'msg' => $err->getMessage(),
+            ], 500);
         }   
     }
 

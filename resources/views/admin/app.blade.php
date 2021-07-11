@@ -10,6 +10,7 @@
         <meta name="admin-id" content="{{ Auth::check() ? Auth::user()->id : '' }}">
         <!-- Fonts -->
         <link href="{{mix('/css/app-admin.css')}}" rel="stylesheet">
+        <script src="{{asset('js/push.min.js')}}"> </script>
         <script>
             window.Laravel = {"csrfToken":"{{ csrf_token() }}"}
             window.LaravelDemo = {!! 

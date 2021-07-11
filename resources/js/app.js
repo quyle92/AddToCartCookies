@@ -13,6 +13,8 @@ $(function() {
 });
 require('./bootstrap');
 
+// window.Push = require('push.js/bin/push.js');
+
 window.Vue = require('vue');
 
 import store from './store';
