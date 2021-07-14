@@ -13,8 +13,12 @@ class Size extends Model
     {
         return $this->belongsToMany(Color::class, 'products')->withPivot('fullNumber', 'productName','picture', 'quantity', 'price');
     }
+
     public function styles()
     {
         return $this->belongsToMany(Style::class, 'products')->withPivot('fullNumber', 'productName','picture', 'quantity', 'price');
     }
+
+    
+    
 }

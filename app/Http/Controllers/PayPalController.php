@@ -7,9 +7,10 @@ use App\Order;
 use App\PayPal;
 use App\PaymentMethod;
 use App\Product;
+use App\Service\OrderProcess;
+use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
-use DB;
 /**
  * Class PayPalController
  * @package App\Http\Controllers
@@ -79,7 +80,7 @@ class PayPalController extends Controller
 
         if ($response->isSuccessful()) 
         {
-             $transaction_id = Order::order_process('paypal');
+             $transaction_id = (new OrderProcess)->order_process('paypal');
 
              return response()->view('thankyou', [
                 'transaction_id' => $transaction_id,

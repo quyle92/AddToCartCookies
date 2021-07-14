@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Order;
+use App\Services\OrderProcess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -16,7 +17,7 @@ class CODController extends Controller
 
         $this->processMissingFields($request);
 
-        $transaction_id = Order::order_process('cod');
+        $transaction_id = (new OrderProcess)->order_process('cod');
 
         return response()->view('thankyou', [
             'transaction_id' => $transaction_id,

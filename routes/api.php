@@ -20,6 +20,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::apiResources([
     'users' => Admin\API\UserController::class,
+    'posts' => Admin\API\PostController::class,
 ]);
 
 Route::get('/getGuestList', 'ChatController@getGuestList' ); 
@@ -27,3 +28,4 @@ Route::delete('/deleteChat', 'ChatController@deleteChat' );
 Route::patch('/markAsRead/{guest}', 'ChatController@markAsRead' ); 
 Route::patch('/chatEnd/{guest}', 'ChatController@chatEnd' ); 
 Route::delete('/deleteChatAll', 'ChatController@deleteChatAll' ); 
+
