@@ -42,5 +42,18 @@ class Post extends Model
         return $this->morphMany(Comment::class, 'commentable');
     }
 
+    /**
+     * Scope a query to only include popular users.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopePostsWithMostComments($query )
+    {
+        return $query->join('comments', 'posts.id', '=', 'comments.commentable_id')
+            ->where('commentable_type','=', 'App\Post')->selectRaw('posts.id, count(*) as comments_number')->groupBy('posts.id')->take(4)->get();
+    }
+
+
 
 }

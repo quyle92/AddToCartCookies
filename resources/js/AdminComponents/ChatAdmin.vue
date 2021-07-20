@@ -14,15 +14,15 @@
 						</div>
 					</div>
 					<div class="inbox_chat">
-							<div class="chat_list" style="height: 400px; overflow-y: scroll;">	
-								<div class="chat_people" 
-									:class="[{active_chat:guest.active}, {'guest-leave-chat': guest.isChatEnd}]" 
-									v-for="(guest, index) in guestList" 
-									@click="selectGuest(guest, index, $event)" 
+							<div class="chat_list" style="height: 400px; overflow-y: scroll;">
+								<div class="chat_people"
+									:class="[{active_chat:guest.active}, {'guest-leave-chat': guest.isChatEnd}]"
+									v-for="(guest, index) in guestList"
+									@click="selectGuest(guest, index, $event)"
 									@contextmenu.prevent="showContextMenu( index, guest.id, $event)"
 									:id="'guest-' + index"
 								>
-									<div class="chat_img"> 
+									<div class="chat_img">
 										<img src="https://ptetutorials.com/images/user-profile.png" alt="sunil">
 									</div>
 									<div class="chat_ib" ref="chat_ib">
@@ -37,9 +37,9 @@
 						<div  class="msg_history" style="height: 400px; overflow-y: scroll;">
 							<div class="incoming_msg_img" v-if="isObjEmpty(selectedGuest) || selectedGuest.chat.length === 0"></div>
 							<div   v-for='(item) in selectedGuest.chat' >
-								
+
 								<div class="incoming_msg"  v-if="item.user ==='guest'" >
-									<div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> 
+									<div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil">
 									</div>
 									<div class="received_msg">
 										<div class="received_withd_msg">
@@ -104,7 +104,7 @@
 		},
 		computed: {
 			...mapState([
-					'selectedGuest', 'selectedGuestIndex', 
+					'selectedGuest', 'selectedGuestIndex',
 			])
 		},
 		methods: {
@@ -119,13 +119,13 @@
           			.listen('AdminSentMessage', (e) => {
 		              console.log()
 		          	});
-        
+
 			},
 			closeContextMenu() {
 					this.isContextMenu = false;
 
 			},
-			deleteChat(data){	
+			deleteChat(data){
 				Echo.private(`admin-sent-message-${this.guestId}`)
 					.whisper('ChatEndFromAdmin',{id: this.guestId});
 
@@ -135,12 +135,12 @@
                 		this.$store.commit('SET_SELECTED_GUEST', '');
 						this.$store.commit('SET_SELECTED_GUEST_INDEX', '');
 						this.guestList.splice(this.guestIndex, 1);
-                
+
             		}).catch( (error) => {
                 		console.log(error);
             		});
 
-				
+
 			},
 			deleteChatAll(){
 				for (var i = 0; i < this.guestList.length; i++) {
@@ -155,13 +155,13 @@
 						this.$store.commit('SET_SELECTED_GUEST_INDEX', '');
 
 						this.guestList = [];
-                
+
             		}).catch( (error) => {
                 		alert(error.response.data.msg)
             		});
 
 
-				
+
 			},
 			selectGuest(guest, index, e) {console.log('selectedGuest')
 				guest.isRead = true;
@@ -180,7 +180,7 @@
 						if(e.message.length > 0){
 							this.selectedGuest.isTyping = true;
 						} else
-						{	
+						{
 							this.selectedGuest.isTyping = false
 						}
 					});
@@ -192,7 +192,7 @@
 			},
 			send() {
 				if( this.message === '' ) return;
-				
+
 				axios.post('/adminSentMessage', {
 					guest_id: this.selectedGuest.id,
 					guest: this.selectedGuest.name,
@@ -203,9 +203,9 @@
 							user: 'admin',
 							content: this.message
 						});
-						
+
 						this.$store.commit('SET_SELECTED_GUEST', this.guestList[this.selectedGuestIndex]);
-						//remove typing notification on guest side 
+						//remove typing notification on guest side
 						this.type();
 
 				})
@@ -216,7 +216,7 @@
 				});
 
 				this.message = '';
-				
+
 			},
 			isObjEmpty(obj){
 				return this.$Helper.isObjEmpty(obj);
@@ -236,8 +236,8 @@
 
 				let checkGuest = containsGuest(this.guestList, result) ;
 
-				if( checkGuest.isOldGuest === true ) 
-				{	
+				if( checkGuest.isOldGuest === true )
+				{
 					let currentGuestIndex = checkGuest.index;
 					this.guestList[ currentGuestIndex ].chat.push({
 						user: 'guest',
@@ -259,9 +259,9 @@
 		                    //this.close();
 		                }
 		            });
-				} 
-				else 
-				{		
+				}
+				else
+				{
 					let newGuest = {
 						id: result.id,
 						name: result.guest,
@@ -271,7 +271,7 @@
 						}],
 						active: false,
 						isTyping: false,
-						
+
 					}
 
 					this.guestList.push(newGuest);
@@ -286,10 +286,10 @@
 		                    //this.close();
 		                }
 		            });
-					
+
 				}
 
-					
+
 
 
 			});
@@ -327,7 +327,7 @@
 
 			//Edge case
 			if( this.guestList.length > 0)
-			{		
+			{
 				//check if the guest is not in chat list or he has been out
 				let selectedGuest = this.$Helper.isObjEmpty(this.selectedGuest) || this.guestList.filter( o => o.id === this.selectedGuest.id ).length === 0 ?  this.guestList[0] : this.selectedGuest ;
 
@@ -335,7 +335,7 @@
 				{
 					this.$store.commit('SET_SELECTED_GUEST_INDEX', 0)
 				}
-			
+
 				let selectedGuestIndex = this.selectedGuestIndex || 0;
 				this.selectGuest(selectedGuest, selectedGuestIndex);
 
@@ -350,7 +350,7 @@
 			});
 
 		document.addEventListener('click', () => {
-			
+
 		})
 
 
@@ -382,7 +382,7 @@
 
 						});
 
-						
+
 
 					}
 				}
@@ -398,18 +398,18 @@
 		var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 		var charactersLength = characters.length;
 		for ( var i = 0; i < length; i++ ) {
-			result += characters.charAt(Math.floor(Math.random() * 
+			result += characters.charAt(Math.floor(Math.random() *
 				charactersLength));
 		}
 		return result;
 	}
 
-	function containsGuest(guestList, obj) 
-	{	
+	function containsGuest(guestList, obj)
+	{
 		//console.log('containsGuest')
-		
+
 		//console.log(guestList)
-		
+
 		//console.log(obj);
 		for( let i = 0; i < guestList.length; i ++ ) {console.log(guestList[i], obj.id)
 			if(guestList[i].id === obj.id) {
@@ -417,7 +417,7 @@
 					isOldGuest: true,
 					index: i
 				}
-				
+
 			}
 		}
 
@@ -425,7 +425,7 @@
 			isOldGuest: false,
 		}
 
-	} 
+	}
 </script>
 
 <style scoped>
@@ -665,6 +665,5 @@
 </style>
 
 <!--
-(1): phải Echo.private().listen() trước thì Echo.private.whisper() sau mới dc. Ko sẽ error: 
+(1): phải Echo.private().listen() trước thì Echo.private.whisper() sau mới dc. Ko sẽ error:
 "Client event triggered before channel 'subscription_succeeded'"
-

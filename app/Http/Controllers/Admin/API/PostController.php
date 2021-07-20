@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Post;
 use Illuminate\Http\Request;
 use App\Http\Resources\Post as PostResource;
+use Illuminate\Pagination\Paginator;
+use DB;
+use Illuminate\Database\Eloquent\Builder;
 
 class PostController extends Controller
 {
@@ -16,7 +19,8 @@ class PostController extends Controller
      */
     public function index()
     {
-         return PostResource::collection(Post::paginate());
+        return Post::PostsWithMostComments();
+        return PostResource::collection(Post::paginate(10,['*'], 'page', 2));
     }
 
     /**
@@ -63,4 +67,57 @@ class PostController extends Controller
     {
         //
     }
+
+    /**
+     * get posts with comments_count and comments_counts_from_members_with_age_from_20_to_30
+     * and total comments from them are > 30
+     * @return [type] [description]
+     */
+    public function PostsWhoesMembersCommentFrom20To30()
+    {
+        $from = now()->subYears(30)->format('Y-m-d');
+        $to = now()->subYears(20)->format('Y-m-d');
+        // return $sub =  Post::withCount(['comments',
+        //     'comments as comments_from_members_20_30' => function(Builder $query)
+        //         use($from, $to ) {
+        //         $query->join('members', 'comments.member_id', '=', 'members.id')
+        //             ->whereBetween('dob', [
+        //                 $from,
+        //                 $to
+        //             ]);
+        //     }])->havingRaw('comments_from_members_20_30 > 30')
+        //     ->get();
+
+            //(1)
+       // return
+       //      DB::table( DB::raw("({$sub->toSql()}) as sub") )
+       //      ->mergeBindings($sub->getQuery())
+       //     ->where('comments_from_members_20_30', '>', 30)->get();
+
+        return DB::table('posts')
+                  ->join('comments', function ($join) {
+                      $join->on('posts.id', '=', 'comments.commentable_id')
+                            ->where('comments.commentable_type', '=', 'App\Post');
+                       })
+                  ->join('members', function ($join) use( $from, $to ) {
+                      $join->on('comments.member_id', '=', 'members.id');
+                  })
+                  ->selectRaw("posts.id, COUNT(*) as comments_count, SUM(CASE WHEN dob between CAST(? AS DATE) and CAST(? AS DATE) THEN 1 ELSE 0 END) AS comments_from_members_20_30", [$from, $to])
+                  ->groupBy('posts.id', 'posts.title' )
+                  ->havingRaw('comments_from_members_20_30 > 30')
+                  ->orderBy('posts.id')
+                  ->get();
+
+       
+
+
+
+
+
+    }
 }
+
+/**
+ * Note
+ */
+//(1)this is for subquery. Ref: https://stackoverflow.com/questions/24823915/how-to-select-from-subquery-using-laravel-query-builder

@@ -17,7 +17,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-
+Route::get('/posts/PostsWhoesMembersCommentFrom20To30', [App\Http\Controllers\Admin\API\PostController::class, 'PostsWhoesMembersCommentFrom20To30']);
 Route::apiResources([
     'users' => Admin\API\UserController::class,
     'posts' => Admin\API\PostController::class,

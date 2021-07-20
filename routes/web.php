@@ -1,13 +1,8 @@
 <?php
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Facade;
 
-// $mydate = getdate(date("U"));
-// $now = DateTime::createFromFormat('U.u', microtime(true));
-// $now = $now->format("m-d-Y H:i:s.u");
-
-// $transaction_id = 'COD_' . $mydate['year'] .  ( $mydate['mon'] < 10 ? '0'.$mydate['mon'] : $mydate['mon'] ) . $mydate['mday'] . ( $mydate['hours'] < 10 ? '0'.$mydate['hours'] : $mydate['hours'] ) . ( $mydate['minutes'] < 10 ? '0'.$mydate['minutes'] : $mydate['minutes'] ) . ( $mydate['seconds'] < 10 ? '0'.$mydate['seconds'] : $mydate['seconds'] ) . '.' . Str::substr($now, 20, 7);
-// dd($transaction_id) ;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,8 +20,7 @@ Route::get('test', function () {
     $guest->chat->save(); 
     dd(App\Chat::first()->is_read);
 });
-// Route::post('authentication', 'ChatController@joinChat');
-// Route::post('checkAuthentication', 'ChatController@guestSentMessage');
+
 Route::post('authentication', function () {
     Auth::logout();
     $user =  App\Guest::find(27) ;
@@ -46,7 +40,7 @@ Route::post('checkAuthentication', function () {
         'auth' => Auth::guard('guest')->check()
     ]);
     
-});//->middleware('guest');
+});
 
 
 Auth::routes();
