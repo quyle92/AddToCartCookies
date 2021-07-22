@@ -9,6 +9,7 @@ use App\Http\Resources\Post as PostResource;
 use Illuminate\Pagination\Paginator;
 use DB;
 use Illuminate\Database\Eloquent\Builder;
+use App\Services\PaginationHelper;
 
 class PostController extends Controller
 {
@@ -19,7 +20,11 @@ class PostController extends Controller
      */
     public function index()
     {
-        return Post::PostsWithMostComments();
+        $posts = Post::PostsWithMostComments();
+        $showPerPage = 2;
+        return response()->json([
+          'data' => PaginationHelper::paginate($posts, $showPerPage) //(2)
+        ]);
         return PostResource::collection(Post::paginate(10,['*'], 'page', 2));
     }
 
@@ -108,7 +113,7 @@ class PostController extends Controller
                   ->orderBy('posts.id')
                   ->get();
 
-       
+
 
 
 
@@ -121,3 +126,8 @@ class PostController extends Controller
  * Note
  */
 //(1)this is for subquery. Ref: https://stackoverflow.com/questions/24823915/how-to-select-from-subquery-using-laravel-query-builder
+//(2) paginate is for eloquent models and DB queries, and not collections ( Illuminate\Support\Collection or  Illuminate\Database\Eloquent\Collection) so we need to manually build custom paginator for it.
+// Differcen b/t Eloquent Models and Eloquent Collection
+// -Eloquent Models: User::where('votes', '>', 100) =>dùng dc paginate()
+// -Eloquent Collection: User::where('votes', '>', 100)->get(); User::all() =>ko dùng dc paginate()
+// Ref: https://stackoverflow.com/questions/30420505/how-can-i-paginate-a-merged-collection-in-laravel-5

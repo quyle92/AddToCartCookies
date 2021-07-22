@@ -1,5 +1,5 @@
-<?php 
-namespace App\Service;
+<?php
+namespace App\Services;
 
 use App\DeliveryMethod;
 use App\Events\OrderCreated;
@@ -11,25 +11,25 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 
-class OrderProcess 
+class OrderProcess
 {
 	public function order_process( $payment_method )
-    { 
+    {
         try
-        { 
+        {
             $payment_method_id =  PaymentMethod::where('payment_type', $payment_method )->pluck('id') ;
             $payment_method_id = reset( $payment_method_id );
 
             if( $payment_method === 'cod')
-            {  
+            {
                $transaction_id = Str::generateCODTransactionID();
             }
-            
+
             if( $payment_method === 'paypal' )
             {
                 $transaction_id = 'PPL_' . Session::get('transaction_id');
             }
-          
+
             $grand_total = Session::get('sub_total') + Session::get('shipping_fee');
             Session::flash('grand_total', $grand_total );
 
@@ -49,14 +49,14 @@ class OrderProcess
             $products = Session::get('products');
             $data = [];
             foreach($products as $item)
-            {   
+            {
                 $ordered_item = Product::where('fullNumber', $item['fullNumber'])->select('price','quantity');
                 $data[] = [
                     'product_fullNumber'=> $item['fullNumber'],
                     'unit_price' => $item['price'],
                     'order_quantity' => $item['quantity'],
                     'order_amount' => $item['price'] * $item['quantity'],
-                ]; 
+                ];
 
                 DB::table('products')
                 ->where('fullNumber', $item['fullNumber'])
@@ -66,17 +66,17 @@ class OrderProcess
             $order->order_details()->createMany($data);
 
             event( new OrderCreated($order) );
-           
+
             return $transaction_id;
 
-            
+
         }
         catch (Exception $e) {
             report($e);
 
             return false;
         }
-        
+
     }
 }
 ?>

@@ -46,7 +46,8 @@ class Post extends Model
      * Scope a query to only include popular users.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param \Illuminate\Database\Eloquent\Builder
+     * @return
      */
     public function scopePostsWithMostComments($query )
     {

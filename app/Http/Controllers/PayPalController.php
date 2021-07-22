@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Session;
  * @package App\Http\Controllers
  */
 class PayPalController extends Controller
-{   
+{
     /**
      * @param Request $request
      */
@@ -29,12 +29,12 @@ class PayPalController extends Controller
         return view('form', compact('order'));
     }
 
-    
+
 
     /**
      * @param $order_id
      * @param Request $request
-     */ 
+     */
     public function checkout( Request $request)
     {
         $paypal = new PayPal;
@@ -70,7 +70,7 @@ class PayPalController extends Controller
      */
     public function completed( Request $request)
     {
-        
+
         $paypal = new PayPal;
         $response = $paypal->complete([
             'amount' =>  Session::get('sub_total') + Session::get('shipping_fee'),
@@ -78,7 +78,7 @@ class PayPalController extends Controller
 
         ]);
 
-        if ($response->isSuccessful()) 
+        if ($response->isSuccessful())
         {
              $transaction_id = (new OrderProcess)->order_process('paypal');
 
@@ -93,7 +93,7 @@ class PayPalController extends Controller
                 'message' => $response->getMessage(),
              ]);
         }
-        
+
     }
 
     /**
