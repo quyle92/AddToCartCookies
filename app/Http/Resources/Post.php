@@ -30,3 +30,5 @@ class Post extends JsonResource
         ];
     }
 }
+
+//Good ex of API resource: https://blog.pusher.com/build-rest-api-laravel-api-resources/

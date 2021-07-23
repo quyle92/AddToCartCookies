@@ -13,9 +13,14 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+Route::post('login', 'AuthController@login');
+Route::group([ 'middleware' => 'custom.jwt' ], function () {
+    Route::post('logout', 'AuthController@logout');
+    Route::post('refresh', 'AuthController@refresh');
+    Route::post('me', 'AuthController@me');
+    Route::post('payload', 'AuthController@payload');
 });
+
 
 Route::get('/posts/PostsWhoesMembersCommentFrom20To30', [App\Http\Controllers\Admin\API\PostController::class, 'PostsWhoesMembersCommentFrom20To30']);
 Route::apiResources([
@@ -23,9 +28,8 @@ Route::apiResources([
     'posts' => Admin\API\PostController::class,
 ]);
 
-Route::get('/getGuestList', 'ChatController@getGuestList' ); 
-Route::delete('/deleteChat', 'ChatController@deleteChat' ); 
-Route::patch('/markAsRead/{guest}', 'ChatController@markAsRead' ); 
-Route::patch('/chatEnd/{guest}', 'ChatController@chatEnd' ); 
-Route::delete('/deleteChatAll', 'ChatController@deleteChatAll' ); 
-
+Route::get('/getGuestList', 'ChatController@getGuestList' );
+Route::delete('/deleteChat', 'ChatController@deleteChat' );
+Route::patch('/markAsRead/{guest}', 'ChatController@markAsRead' );
+Route::patch('/chatEnd/{guest}', 'ChatController@chatEnd' );
+Route::delete('/deleteChatAll', 'ChatController@deleteChatAll' );

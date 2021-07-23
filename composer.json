@@ -17,7 +17,8 @@
         "league/omnipay": "^3.2",
         "moontoast/math": "^1.2",
         "omnipay/paypal": "^3.0",
-        "pusher/pusher-php-server": "~4.0"
+        "pusher/pusher-php-server": "~4.0",
+        "tymon/jwt-auth": "^1.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "3.2.5",

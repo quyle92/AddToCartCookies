@@ -126,8 +126,9 @@ class PostController extends Controller
  * Note
  */
 //(1)this is for subquery. Ref: https://stackoverflow.com/questions/24823915/how-to-select-from-subquery-using-laravel-query-builder
-//(2) paginate is for eloquent models and DB queries, and not collections ( Illuminate\Support\Collection or  Illuminate\Database\Eloquent\Collection) so we need to manually build custom paginator for it.
+//(2)paginate() is \Builder method so it is for eloquent models and DB queries use only, and not collections ( which means Illuminate\Support\Collection or  Illuminate\Database\Eloquent\Collection) so we need to manually build custom paginator for it.
 // Differcen b/t Eloquent Models and Eloquent Collection
 // -Eloquent Models: User::where('votes', '>', 100) =>dùng dc paginate()
 // -Eloquent Collection: User::where('votes', '>', 100)->get(); User::all() =>ko dùng dc paginate()
+// (look at pagination and Eloquent ORM section of Laravel doc for details)
 // Ref: https://stackoverflow.com/questions/30420505/how-can-i-paginate-a-merged-collection-in-laravel-5

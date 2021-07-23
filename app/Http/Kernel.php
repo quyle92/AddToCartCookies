@@ -60,6 +60,7 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'custom.jwt' => \App\Http\Middleware\VerifyJWTToken::class,//(1)
     ];
 
     /**
@@ -78,3 +79,8 @@ class Kernel extends HttpKernel
         \Illuminate\Auth\Middleware\Authorize::class,
     ];
 }
+
+/*
+Note
+ */
+//(1) nếu để tên custom middleware key là "jwt.auth" thì custom middleware sẽ ko chạy. Nó sẽ chạy thẳng vào middleware mặc định của tymond JWT
