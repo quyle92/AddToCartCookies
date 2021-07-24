@@ -21,7 +21,7 @@ class VerifyJWTToken
         try {
             $user = JWTAuth::toUser(JWTAuth::getToken());
         }catch (JWTException  $e) {
-            
+
             if($e instanceof \Tymon\JWTAuth\Exceptions\TokenExpiredException) {
                 return response()->json(['error' => 'token_expired'], 400);
             }else if ($e instanceof \Tymon\JWTAuth\Exceptions\TokenInvalidException) {
@@ -35,3 +35,14 @@ class VerifyJWTToken
         return $next($request);
     }
 }
+
+/*
+Note
+ */
+//if you want to refresh token upon its expiration, do this:
+//$new_token = JWTAuth::refresh($token);
+// JWTAuth::setToken($new_token);// must setToken() here, else when calling JWTAuth::getToken() it will get the old one.
+// $response = $next($request);
+// $response->header('Authorization','Bearer '.$new_token);
+//
+//Ref: https://stackoverflow.com/questions/44766047/jwtgettoken-doesnt-get-the-proper-token

@@ -17,7 +17,7 @@ class CreateProductsTable extends Migration
             $table->bigIncrements('id');
             $table->integer('number');
             $table->string('fullNumber');
-            
+
             $table->unsignedBigInteger('series_id');//color_id size_id style_id
             $table->foreign('series_id')->references('id')->on('series')->onDelete('cascade');
 
@@ -26,7 +26,7 @@ class CreateProductsTable extends Migration
 
             $table->unsignedBigInteger('size_id');//color_id size_id style_id
             $table->foreign('size_id')->references('id')->on('sizes')->onDelete('cascade');
-            
+
             $table->unsignedBigInteger('color_id');//color_id size_id style_id
             $table->foreign('color_id')->references('id')->on('colors')->onDelete('cascade');
 
@@ -34,7 +34,7 @@ class CreateProductsTable extends Migration
             $table->decimal('price')->default(0.00);
 
             $table->integer('quantity')->default(0);
-            
+
             $table->timestamps();
         });
 
@@ -48,7 +48,14 @@ class CreateProductsTable extends Migration
      * @return void
      */
     public function down()
-    {   
+    {
         Schema::dropIfExists('products');
     }
 }
+
+/*
+Note for migration
+ */
+//-migration file of parent table must be generrated first .
+//-datatype of primimary key in parent table must match that of FK in child table
+//-table name at function down() must match that of up() function, Foreign key constrain error will be thrown out when rollback or reset migration.
