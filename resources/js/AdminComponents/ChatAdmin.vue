@@ -137,7 +137,7 @@
 						this.guestList.splice(this.guestIndex, 1);
 
             		}).catch( (error) => {
-                		console.log(error);
+                		alert(error.response.data.msg)
             		});
 
 

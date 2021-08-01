@@ -14,31 +14,31 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Input;
 
 class ProductController extends Controller
-{   
+{
     private $cookie_name = 'shopping_cart';
 
     public function getAllProducts()
-    {   
+    {
         $products = Style::with([
-            'colorsForOneStyleOnly' => function ($query) {     
-                $query->select('colors.id', 'color')->where('colors.id', 1); 
+            'colorsForOneStyleOnly' => function ($query) {
+                $query->select('colors.id', 'color')->where('colors.id', 1);
         },
-            'sizesForOneStyleOnly' => function ($query) {     
-                $query->select('sizes.id', 'size')->where('sizes.id', 1); 
+            'sizesForOneStyleOnly' => function ($query) {
+                $query->select('sizes.id', 'size')->where('sizes.id', 1);
         }
         ])->get();
-     
+
         return view('home')->with( compact('products') );
     }
 
     public function getSelectedStyle($id)
-    {   
+    {
         $product = Style::with([
-            'colorsForOneStyleOnly' => function ($query) {     
-                $query->select('colors.id', 'color')->where('colors.id', 1); 
+            'colorsForOneStyleOnly' => function ($query) {
+                $query->select('colors.id', 'color')->where('colors.id', 1);
         },
-            'sizesForOneStyleOnly' => function ($query) {     
-                $query->select('sizes.id', 'size')->where('sizes.id', 1); 
+            'sizesForOneStyleOnly' => function ($query) {
+                $query->select('sizes.id', 'size')->where('sizes.id', 1);
         }
         ])->where('id', $id)->first();
 
@@ -51,10 +51,10 @@ class ProductController extends Controller
         $colors = Color::select('color')->get();
         $style_id = $product->colorsForOneStyleOnly[0]->pivot->style_id;
 
-        $totalQuantity = intval( 
+        $totalQuantity = intval(
             DB::table('products')
                     ->join('styles', 'styles.id', '=', 'products.style_id')->where('style_id', $style_id )
-                    ->sum('quantity') 
+                    ->sum('quantity')
         );
         $style_id = $id;
         return view('product', compact('style_id'));
@@ -62,7 +62,7 @@ class ProductController extends Controller
     }
 
     public function getSelectedStyleSet( Request $request )
-    {   
+    {
         $style_id = $request->styleID;
         $size = $request->size;
         $color = $request->color;
@@ -93,24 +93,24 @@ class ProductController extends Controller
 
         //dd($priceQuantity);
         return $priceQuantity;
-        
+
     }
 
     public function addToCart(Request $request)
-    {   
+    {
         $item_data = json_encode( $request->all() );//dd( $item_data );
-        
+
         //$cookie_value = [];
-        
+
         if( ! isset ( $_COOKIE[$this->cookie_name] ) )
-        {   
+        {
             //$cookie_value[] = json_decode( $item_data );
             setcookie($this->cookie_name."[" . $request->fullNumber . "]", $item_data , time() + (86400 * 30), "/");
         }
         else
         {   //dd(json_decode( $_COOKIE[$this->cookie_name] ) );
             foreach ($_COOKIE[$this->cookie_name] as $name => $value) {
-                
+
                 if( $name == $request->fullNumber)
                 {
                     setcookie($this->cookie_name."[" . $name . "]", $item_data , time() + (86400 * 30), "/");
@@ -123,18 +123,18 @@ class ProductController extends Controller
                 }
 
             }
-        }   
+        }
         dd( ( $_COOKIE[$this->cookie_name] ) );
-        
+
     }
 
     public function showCart()
-    {   
+    {
         return view('cart');
     }
 
     public function getVariationSet( Request $request )
-    {   
+    {
         $style_id = $request->styleID;
 
         $variationSet = DB::table('products')
@@ -149,7 +149,7 @@ class ProductController extends Controller
     }
 
     public function getMaxQuantityForEachItem( Request $request )
-    {   
+    {
         //if( ! $request->has('params') ) return;
 
         $fullNumberArr = explode(  ',' ,$request->query('params'));
@@ -163,17 +163,17 @@ class ProductController extends Controller
         ], 200);
     }
 
-    public function checkout(Faker $faker ) 
-    {   
+    public function checkout(Faker $faker )
+    {
         $payment_methods = PaymentMethod::get('payment_type');
-        
+
         return view( 'checkout', compact('faker', 'payment_methods') );
     }
 
-    public function checkProducts(Request $request) 
+    public function checkProducts(Request $request)
     {
-        if( ! $request->products ) return; 
-        
+        if( ! $request->products ) return;
+
         Session::flash('sub_total', $request->subTotal );
         Session::flash('products', $request->products );
         Session::keep(['shipping_fee']);
@@ -184,24 +184,24 @@ class ProductController extends Controller
         {
             $ordered_item = Product::where('fullNumber', $item['fullNumber'])->first();
             $item['price'] = $ordered_item->price;
-            
+
             if( empty( $ordered_item ) )
-            {   
+            {
 
                 return response()->json([
                     'message' => [
                         'product_not_available' => `{$item['fullNumber']} is not available in our DB`
                     ],
-                   
+
                 ]);
             }
             if( $item['quantity'] > $ordered_item->quantity )
             {
-                $out_of_stock[] =  [ 
+                $out_of_stock[] =  [
                     'fullNumber' => $item['fullNumber'],
                     'quantityLeft' => $ordered_item['quantity']
                 ];
-                
+
             }
 
         }
@@ -212,7 +212,7 @@ class ProductController extends Controller
                 'message' => [
                     'out_of_stock' =>  $out_of_stock
                 ],
-                   
+
             ]);
 
         }
@@ -222,7 +222,7 @@ class ProductController extends Controller
         ]);
     }
 
-    public function saveShippingFee(Request $request) 
+    public function saveShippingFee(Request $request)
     {
         $shipping_fee = (float)  Input::get('shippingFee') ;
         Session::flash('shipping_fee', $shipping_fee );
@@ -234,9 +234,12 @@ class ProductController extends Controller
 /*
 Note
  */
-        // Product::with(['prices' => function ($query) {     
-    //      $query->select('id', 'product_id', 'price', 'size')->where('size', 'M'); 
+        // Product::with(['prices' => function ($query) {
+    //      $query->select('id', 'product_id', 'price', 'size')->where('size', 'M');
     //  }])->select('id', 'productName', 'picture')->get();//(1)
 //(1) eager load: you must specify owner key + foreign key when eager loading specific columns of relation tables (but this requirement is not neccessary in case of pivot table)
 //Ref: https://stackoverflow.com/a/53515281/11297747
 //https://stackoverflow.com/a/47238258/11297747
+//https://stackoverflow.com/a/16994569/11297747
+//https://laracasts.com/discuss/channels/eloquent/eloquent-eager-loading-specific-columns
+//(JarekTkaczyk  + stuartcusack answer)
