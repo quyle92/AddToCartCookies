@@ -21,8 +21,8 @@ Broadcast::channel('App.User.{id}', function ($user, $id) {
 
 Route::post('/broadcasting/auth/admin', function (Illuminate\Http\Request $req) {
 
-    $user = User::findOrFail(27);
-    
+    // $user = Auth::user();
+    $user = User::findOrFail(1);
     Auth::login( $user );
 
     return Broadcast::auth($req);

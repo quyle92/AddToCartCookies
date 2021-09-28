@@ -173,6 +173,19 @@
                 </p>
                 </router-link>
             </li>
+            <li class="nav-item">
+               <a class="nav-link" onclick="event.preventDefault();
+                  document.getElementById('logout-form').submit();" role="button">
+                <i class="fas fa-sign-out-alt"></i>
+                <p>
+                  Logout
+                </p>
+                <form id="logout-form" action="/api/logout" method="POST" style="display: none;">
+                    @csrf
+                    <input type="hidden" name="token" value="" />
+                </form>
+                </a>
+            </li>
           </ul>
         <!-- /.sidebar-menu -->
       </div>

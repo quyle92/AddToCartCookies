@@ -22,7 +22,10 @@
 						<label for="guest_name">Name</label>
 						<input type="text" class="form-control" id="guest_name"  placeholder="Enter your name" v-model="guestName" @keyup.enter="submit"/>
 					</div>
-					<button type="submit" class="btn btn-primary submit" @click.prevent="submit">Submit</button>
+					<b-button variant="primary" :disabled="isSubmit" @click.prevent="submit">
+				    <b-spinner small v-if="isSubmit"></b-spinner>
+				    Submit
+				  </b-button>
 				</div>
 			</div>
 			<div class="card-collapse collapse show" id="collapseOne" v-bind:class="[isPreChat ? hideIt : showIt]" v-if="showChatToggle">
@@ -79,8 +82,8 @@
 				
 				<small v-if="isTyping"><i class="fas fa-pen-nib fa-fw fa-spin"></i>admin is typing...</small>
 				<div class="card-footer">
-					<div class="input-group" v-if="!disabled">
-						<input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." @keyup.enter="send" v-model="message" @input="type" v-focus :disabled="isError"/>
+					<div class="input-group" >
+						<input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." @keyup.enter="send" v-model="message" @input="type" v-focus :disabled="isError || isChatEnd" />
 						<span class="input-group-btn">
 							<button class="btn btn-warning btn-sm" id="btn-chat" @click.prevent="send">
 							Send</button>
@@ -98,6 +101,10 @@
 <script>
 import { mapState } from 'vuex'
 import { mapGetters } from 'vuex'
+import { BButton, BSpinner   } from 'bootstrap-vue'
+Vue.component('b-button', BButton)
+Vue.component('b-spinner', BSpinner)
+
 
 export default {
 	props:{
@@ -105,7 +112,7 @@ export default {
 	},
 	data: function() {
 		return {
-			
+			isSubmit: false,
 			showIt: 'showIt',
 			hideIt: 'hideIt',
 			message:'',
@@ -115,7 +122,7 @@ export default {
 			disabled: false,
 			guestName: '',
 			isError: false,
-			AlreadyEnd: false
+			// alreadyEnd: false
 		}
 	},
 	computed: mapState(
@@ -123,11 +130,12 @@ export default {
 	),
 	methods: {
 		submit(){
-
+			this.isSubmit = true;
 			axios.post('/joinChat', {
 			    guest: this.guestName,
 				})
 				.then( (response) => {
+					this.isSubmit = false;
 					this.$store.commit('SET_GUEST_ID', response.data.guest.id);
 					this.$store.commit('TOGGLE_IS_CHAT_END', false);
 					this.$store.commit('TOGGLE_IS_PRECHAT', false);
@@ -138,8 +146,8 @@ export default {
 				});
 
   		},
+
   	registerGuest() {
-		this.disabled = false;
   		if(this.guest.length === 0) {
   			this.$store.commit('SET_GUEST', this.guestName);
   		}
@@ -185,7 +193,7 @@ export default {
   	},
   	send() {
   		
-  		if( this.message.length === 0 ) return;
+  		if( this.message.length === 0 || this.isChatEnd === true ) return;
 
   		let payload = {
   			user: 'guest',
@@ -218,10 +226,10 @@ export default {
 	},
 	closeChatEnd() {
 		
-		if(this.AlreadyEnd === true) {
-			this.deleteGuestIdAtServer();
+		// if(this.alreadyEnd === true) {
 			this.endChatAtClient();
-		}
+			this.deleteGuestIdAtServer();
+		// }
 
 		this.showChatToggle = true;
 		this.$store.commit('ADD_MESSAGES', '');
@@ -301,9 +309,9 @@ watch: {
 					this.disabled = true;
 					this.endChatAtClient();
 					this.deleteGuestIdAtServer();
-					this.AlreadyEnd === true;
+					// this.alreadyEnd === true;
 				}	
-			}, 13000);
+			}, 130000000);
 		}
 	},
 	guestId(val) {
@@ -329,89 +337,5 @@ function vueChatScroll() {
 
 	-->
 <style scoped>
-.chat-widget {
-	position: fixed;
-	bottom: 1px;
-	left: 1px;
-	z-index: 9999;
-}
-.chat
-{
-	list-style: none;
-	margin: 0;
-	padding: 0;
-}
-
-.chat li
-{
-	margin-bottom: 10px;
-	padding-bottom: 5px;
-	border-bottom: 1px dotted #B3A9A9;
-}
-
-.chat li .left .chat-body
-{
-	margin-left: 60px;
-}
-
-.chat li .right .chat-body
-{
-	margin-right: 60px;
-}
-
-
-.chat li .chat-body p
-{
-	margin: 0;
-	color: #777777;
-}
-
-.card .slidedown .glyphicon, .chat .glyphicon
-{
-	margin-right: 5px;
-}
-
-.card-body
-{
-	overflow-y: scroll;
-	height: 250px;
-}
-
-::-webkit-scrollbar-track
-{
-	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-	background-color: #F5F5F5;
-}
-
-::-webkit-scrollbar
-{
-	width: 12px;
-	background-color: #F5F5F5;
-}
-
-::-webkit-scrollbar-thumb
-{
-	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
-	background-color: #555;
-}
-
-.btn.submit:hover, .card-header:hover{
-	background: #CDCDCD;
-}
-
-.card-header{
-	cursor: pointer;
-}
-
-.showIt {
-	display: block;
-}
-
-.hideIt {
-	display: none;
-}
-
-#collapseOne {
-	background-color: #fff;
-}
+@import "../../sass/chat-guest.css";
 </style>

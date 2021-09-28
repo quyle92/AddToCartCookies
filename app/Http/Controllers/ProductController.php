@@ -237,9 +237,10 @@ Note
         // Product::with(['prices' => function ($query) {
     //      $query->select('id', 'product_id', 'price', 'size')->where('size', 'M');
     //  }])->select('id', 'productName', 'picture')->get();//(1)
-//(1) eager load: you must specify owner key + foreign key when eager loading specific columns of relation tables (but this requirement is not neccessary in case of pivot table)
+//(1) eager load: you must specify owner key + foreign key when eager loading specific columns of relation tables (but this requirement is not neccessary in case of pivot table).
 //Ref: https://stackoverflow.com/a/53515281/11297747
 //https://stackoverflow.com/a/47238258/11297747
 //https://stackoverflow.com/a/16994569/11297747
 //https://laracasts.com/discuss/channels/eloquent/eloquent-eager-loading-specific-columns
 //(JarekTkaczyk  + stuartcusack answer)
+// If you want to load  specific cols of parent relation table and takes only some cols of current table, remember to include the FK of current table in get() and primary key of relation table in with(), e.i User::with(['department:id,department_name', 'rejection:id,reason'])->orderBy('series_number')->get(['id','series_number', 'name', 'employee_id', 'email', 'created_at', 'last_login', 'department_id', 'rejection_id']); Otherwise, the relation will return null in the result.

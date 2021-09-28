@@ -2071,6 +2071,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 //
 //
 //
+//
+//
  // import Helper from '../helper';
 // let $Helper = new Helper;
 // console.log(Helper)
@@ -2092,10 +2094,19 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         'font-weight': 'bold!important',
         'font-size': '16px!important'
       },
-      deletedChatId: ''
+      deletedChatId: '',
+      searchString: ''
     };
   },
-  computed: _objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['selectedGuest', 'selectedGuestIndex'])),
+  computed: _objectSpread(_objectSpread({}, Object(vuex__WEBPACK_IMPORTED_MODULE_0__["mapState"])(['selectedGuest', 'selectedGuestIndex'])), {}, {
+    filterGuestList: function filterGuestList() {
+      var _this = this;
+
+      return this.guestList.filter(function (guest) {
+        return guest.name.toLowerCase().match(_this.searchString);
+      });
+    }
+  }),
   methods: {
     showContextMenu: function showContextMenu(index, guestId, e) {
       // console.log(guestId);debugger
@@ -2104,32 +2115,33 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       this.guestIndex = index;
       this.guestId = guestId;
       Echo["private"]("admin-sent-message-".concat(this.guestId)).listen('AdminSentMessage', function (e) {
-        console.log();
+        console.log('AdminSentMessage');
       });
     },
     closeContextMenu: function closeContextMenu() {
       this.isContextMenu = false;
     },
     deleteChat: function deleteChat(data) {
-      var _this = this;
+      var _this2 = this;
 
       Echo["private"]("admin-sent-message-".concat(this.guestId)).whisper('ChatEndFromAdmin', {
         id: this.guestId
       });
-      axios["delete"]('/api/deleteChat', data).then(function (response) {
-        console.log(response.data);
-
-        _this.$store.commit('SET_SELECTED_GUEST', '');
-
-        _this.$store.commit('SET_SELECTED_GUEST_INDEX', '');
-
-        _this.guestList.splice(_this.guestIndex, 1);
+      var guestIndex = this.guestIndex,
+          guestSelected = this.guestList[guestIndex];
+      this.guestList.splice(guestIndex, 1);
+      axios["delete"]('/api/deleteChat', {
+        data: data
+      }).then(function (response) {//this.$store.commit('SET_SELECTED_GUEST', '');
+        // this.$store.commit('SET_SELECTED_GUEST_INDEX', '');
       })["catch"](function (error) {
-        console.log(error);
+        alert(error.response.data.message);
+
+        _this2.guestList.splice(guestIndex, 0, guestSelected);
       });
     },
     deleteChatAll: function deleteChatAll() {
-      var _this2 = this;
+      var _this3 = this;
 
       for (var i = 0; i < this.guestList.length; i++) {
         var id = this.guestList[i].id;
@@ -2138,20 +2150,20 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         });
       }
 
+      var guestList = this.guestList;
+      this.guestList = [];
       axios["delete"]('/api/deleteChatAll').then(function (response) {
-        _this2.$store.commit('SET_SELECTED_GUEST', '');
+        _this3.$store.commit('SET_SELECTED_GUEST', '');
 
-        _this2.$store.commit('SET_SELECTED_GUEST_INDEX', '');
-
-        _this2.guestList = [];
+        _this3.$store.commit('SET_SELECTED_GUEST_INDEX', '');
       })["catch"](function (error) {
-        alert(error.response.data.msg);
+        alert(error.response.data.message);
+        _this3.guestList = guestList;
       });
     },
     selectGuest: function selectGuest(guest, index, e) {
-      var _this3 = this;
+      var _this4 = this;
 
-      console.log('selectedGuest');
       guest.isRead = true;
       this.$store.commit('SET_SELECTED_GUEST', guest);
       this.$store.commit('SET_SELECTED_GUEST_INDEX', index);
@@ -2160,40 +2172,36 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       });
       this.guestList[index].active = true;
       Echo["private"]("admin-sent-message-".concat(this.selectedGuest.id)).listenForWhisper('typing', function (e) {
-        console.log('typing', e.message);
-
         if (e.message.length > 0) {
-          _this3.selectedGuest.isTyping = true;
+          _this4.selectedGuest.isTyping = true;
         } else {
-          _this3.selectedGuest.isTyping = false;
+          _this4.selectedGuest.isTyping = false;
         }
       });
       axios.patch("/api/markAsRead/".concat(this.selectedGuest.id));
     },
     send: function send() {
-      var _this4 = this;
+      var _this5 = this;
 
       if (this.message === '') return;
+      var message = this.message;
+      this.message = '';
+      this.guestList[this.selectedGuestIndex].chat.push({
+        user: 'admin',
+        content: message
+      });
+      this.$store.commit('SET_SELECTED_GUEST', this.guestList[this.selectedGuestIndex]); //remove typing notification on guest side
+
+      this.type();
       axios.post('/adminSentMessage', {
         guest_id: this.selectedGuest.id,
         guest: this.selectedGuest.name,
-        message: this.message
-      }).then(function (response) {
-        _this4.guestList[_this4.selectedGuestIndex].chat.push({
-          user: 'admin',
-          content: _this4.message
-        });
-
-        _this4.$store.commit('SET_SELECTED_GUEST', _this4.guestList[_this4.selectedGuestIndex]); //remove typing notification on guest side 
-
-
-        _this4.type();
-      })["catch"](function (error) {
+        message: message
+      }).then(function (response) {})["catch"](function (error) {
         console.log(error);
-        _this4.isError = true;
+        _this5.isError = true;
         alert('Errors. Please fix it!');
       });
-      this.message = '';
     },
     isObjEmpty: function isObjEmpty(obj) {
       return this.$Helper.isObjEmpty(obj);
@@ -2206,22 +2214,22 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     }
   },
   mounted: function mounted() {
-    var _this5 = this;
+    var _this6 = this;
 
     Echo["private"]("guest-sent-message").listen('GuestSentMessage', function (result) {
-      var checkGuest = containsGuest(_this5.guestList, result);
+      var checkGuest = containsGuest(_this6.guestList, result);
 
       if (checkGuest.isOldGuest === true) {
         var currentGuestIndex = checkGuest.index;
 
-        _this5.guestList[currentGuestIndex].chat.push({
+        _this6.guestList[currentGuestIndex].chat.push({
           user: 'guest',
           content: result.message
         });
 
-        _this5.guestList[currentGuestIndex].isTyping = false; //Edge case
+        _this6.guestList[currentGuestIndex].isTyping = false; //Edge case
 
-        if (_this5.guestList[currentGuestIndex].id === _this5.selectedGuest.id) _this5.$store.commit('SET_SELECTED_GUEST', _this5.guestList[currentGuestIndex]);
+        if (_this6.guestList[currentGuestIndex].id === _this6.selectedGuest.id) _this6.$store.commit('SET_SELECTED_GUEST', _this6.guestList[currentGuestIndex]);
         Push.create(result.guest, {
           body: result.message,
           icon: '/images/laravel.png',
@@ -2229,7 +2237,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
           onClick: function onClick() {
             window.focus();
 
-            _this5.selectGuest(_this5.guestList[currentGuestIndex], currentGuestIndex); //this.close();
+            _this6.selectGuest(_this6.guestList[currentGuestIndex], currentGuestIndex); //this.close();
 
           }
         });
@@ -2245,7 +2253,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
           isTyping: false
         };
 
-        _this5.guestList.push(newGuest);
+        _this6.guestList.push(newGuest);
 
         Push.create(result.guest, {
           body: result.message,
@@ -2254,29 +2262,29 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
           onClick: function onClick() {
             window.focus();
 
-            _this5.selectGuest(_this5.guestList[_this5.guestList.length - 1], _this5.guestList.length - 1); //this.close();
+            _this6.selectGuest(_this6.guestList[_this6.guestList.length - 1], _this6.guestList.length - 1); //this.close();
 
           }
         });
       }
-    });
-    var adminId = $('meta[name="admin-id').attr('content');
-    Echo["private"]('App.User.' + adminId).notification(function (notification) {
-      console.log('notification: ', notification);
-    });
+    }); // let adminId = $('meta[name="admin-id').attr('content');
+    // Echo.private('App.User.' +  adminId).notification((notification) => {
+    //       	// console.log('notification: ', notification);
+    //   	});
+
     vm.$on('closeContextMenu', function () {
-      _this5.isContextMenu = false;
+      _this6.isContextMenu = false;
     });
   },
   created: function created() {
-    var _this6 = this;
+    var _this7 = this;
 
     axios.get('/api/getGuestList').then(function (response) {
-      console.log(response.data);
+      // console.log(response.data)
       response.data.result.forEach(function (e) {
         var _e$chat$messages;
 
-        if (e.chat !== null) _this6.guestList.push({
+        if (e.chat !== null) _this7.guestList.push({
           id: e.id,
           name: e.name,
           chat: (_e$chat$messages = e.chat.messages) !== null && _e$chat$messages !== void 0 ? _e$chat$messages : [],
@@ -2287,32 +2295,31 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         });
       }); //Edge case
 
-      if (_this6.guestList.length > 0) {
+      if (_this7.guestList.length > 0) {
         //check if the guest is not in chat list or he has been out
-        var selectedGuest = _this6.$Helper.isObjEmpty(_this6.selectedGuest) || _this6.guestList.filter(function (o) {
-          return o.id === _this6.selectedGuest.id;
-        }).length === 0 ? _this6.guestList[0] : _this6.selectedGuest;
+        var selectedGuest = _this7.$Helper.isObjEmpty(_this7.selectedGuest) || _this7.guestList.filter(function (o) {
+          return o.id === _this7.selectedGuest.id;
+        }).length === 0 ? _this7.guestList[0] : _this7.selectedGuest;
 
-        if (selectedGuest.id === _this6.guestList[0].id) {
-          _this6.$store.commit('SET_SELECTED_GUEST_INDEX', 0);
+        if (selectedGuest.id === _this7.guestList[0].id) {
+          _this7.$store.commit('SET_SELECTED_GUEST_INDEX', 0);
         }
 
-        var selectedGuestIndex = _this6.selectedGuestIndex || 0;
+        var selectedGuestIndex = _this7.selectedGuestIndex || 0;
 
-        _this6.selectGuest(selectedGuest, selectedGuestIndex);
+        _this7.selectGuest(selectedGuest, selectedGuestIndex);
       } else {
-        _this6.$store.commit('SET_SELECTED_GUEST', '');
+        _this7.$store.commit('SET_SELECTED_GUEST', '');
       }
     })["catch"](function (error) {
       console.log(error);
     });
-    document.addEventListener('click', function () {});
   },
   watch: {
     guestList: {
       deep: true,
       handler: function handler(newVal, oldVal) {
-        var _this7 = this;
+        var _this8 = this;
 
         Vue.nextTick(function () {
           var div = document.getElementsByClassName('msg_history')[0]; //debugger
@@ -2322,13 +2329,11 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
         for (var i = 0; i < this.guestList.length; i++) {
           Echo["private"]("admin-sent-message-".concat(this.guestList[i].id)).listenForWhisper('ChatEnd', function (response) {
-            console.log('ChatEnd', response);
-            var checkGuest = containsGuest(_this7.guestList, response);
-            var currentGuestIndex = checkGuest.index;
-            console.log(checkGuest); //bôi đen ô chat deleted
+            var checkGuest = containsGuest(_this8.guestList, response);
+            var currentGuestIndex = checkGuest.index; //bôi đen ô chat deleted
 
-            if (_this7.guestList[currentGuestIndex] !== undefined) {
-              Vue.set(_this7.guestList[currentGuestIndex], 'isChatEnd', true);
+            if (_this8.guestList[currentGuestIndex] !== undefined) {
+              Vue.set(_this8.guestList[currentGuestIndex], 'isChatEnd', true);
             }
 
             Echo.leave("admin-sent-message-".concat(response.id));
@@ -2356,8 +2361,6 @@ function containsGuest(guestList, obj) {
   //console.log(guestList)
   //console.log(obj);
   for (var i = 0; i < guestList.length; i++) {
-    console.log(guestList[i], obj.id);
-
     if (guestList[i].id === obj.id) {
       return {
         isOldGuest: true,
@@ -7105,19 +7108,38 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=css&":
-/*!********************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/css-loader??ref--7-1!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--7-2!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=css& ***!
-  \********************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ "./node_modules/css-loader/index.js!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/sass-loader/dist/cjs.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=scss&":
+/*!************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--8-2!./node_modules/sass-loader/dist/cjs.js??ref--8-3!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=scss& ***!
+  \************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loader/lib/css-base.js */ "./node_modules/css-loader/lib/css-base.js")(false);
 // imports
+exports.i(__webpack_require__(/*! -!../../../node_modules/css-loader!../../sass/chat-admin.css */ "./node_modules/css-loader/index.js!./resources/sass/chat-admin.css"), "");
+
+// module
+exports.push([module.i, "", ""]);
+
+// exports
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/index.js!./resources/sass/chat-admin.css":
+/*!*****************************************************************!*\
+  !*** ./node_modules/css-loader!./resources/sass/chat-admin.css ***!
+  \*****************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(/*! ../../node_modules/css-loader/lib/css-base.js */ "./node_modules/css-loader/lib/css-base.js")(false);
+// imports
 
 
 // module
-exports.push([module.i, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\n\r\n/*---------chat window---------------*/\n.inbox_people[data-v-e7418c82] {\r\n\tbackground: #fff;\r\n\t/*float: left;*/\r\n\toverflow: hidden;\r\n\twidth: 30%;\r\n\tborder-right: 1px solid #ddd;\r\n\tdisplay: table-cell;\n}\n.inbox_msg[data-v-e7418c82] {\r\n\tborder: 1px solid #ddd;\r\n\tclear: both;\r\n\toverflow: hidden;\r\n\tdisplay: table-row;\n}\n.top_spac[data-v-e7418c82] {\r\n\tmargin: 20px 0 0;\n}\n.recent_heading[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 40%;\n}\n.srch_bar[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\ttext-align: right;\r\n\twidth: 60%;\r\n\tpadding:\n}\n.headind_srch[data-v-e7418c82] {\r\n\tpadding: 10px 29px 10px 20px;\r\n\toverflow: hidden;\r\n\tborder-bottom: 1px solid #c4c4c4;\n}\n.recent_heading h4[data-v-e7418c82] {\r\n\tcolor: #0465ac;\r\n\tfont-size: 16px;\r\n\tmargin: auto;\r\n\tline-height: 29px;\n}\n.srch_bar input[data-v-e7418c82] {\r\n\toutline: none;\r\n\tborder: 1px solid #cdcdcd;\r\n\tborder-width: 0 0 1px 0;\r\n\twidth: 80%;\r\n\tpadding: 2px 0 4px 6px;\r\n\tbackground: none;\n}\n.srch_bar .input-group-addon button[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tpadding: 0;\r\n\tcolor: #707070;\r\n\tfont-size: 18px;\n}\n.srch_bar .input-group-addon[data-v-e7418c82] {\r\n\tmargin: 0 0 0 -27px;\n}\n.chat_ib h5[data-v-e7418c82] {\r\n\tfont-size: 15px;\r\n\tcolor: #464646;\r\n\tmargin: 0 0 8px 0;\n}\n.chat_ib h5 span[data-v-e7418c82] {\r\n\tfont-size: 13px;\r\n\tfloat: right;\n}\n.chat_ib p[data-v-e7418c82] {\r\n\tfont-size: 12px;\r\n\tcolor: #989898;\r\n\tmargin: auto;\r\n\tdisplay: inline-block;\r\n\twhite-space: nowrap;\r\n\toverflow: hidden;\r\n\ttext-overflow: ellipsis;\n}\n.chat_img[data-v-e7418c82] {\r\n\tfloat: left;\r\n\twidth: 11%;\n}\n.chat_img img[data-v-e7418c82] {\r\n\twidth: 100%\n}\n.chat_ib[data-v-e7418c82] {\r\n\tfloat: left;\r\n\tpadding: 0 0 0 15px;\r\n\twidth: 88%;\n}\n.chat_people[data-v-e7418c82] {\r\n\tborder-bottom: 1px solid #ddd;\r\n\tmargin: 0;\r\n\tpadding: 18px 16px 10px;\r\n\toverflow: hidden;\r\n\tclear: both;\n}\n.chat_list[data-v-e7418c82] {\r\n\t/*border-bottom: 1px solid #ddd;*/\r\n\t/*margin: 0;\r\n\tpadding: 18px 16px 10px;*/\r\n\tcursor: pointer;\n}\n.inbox_chat[data-v-e7418c82] {\r\n\t/*height: 550px;\r\n\toverflow-y: scroll;*/\n}\n.active_chat[data-v-e7418c82] {\r\n\tbackground: #e8f6ff;\n}\n.incoming_msg_img[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\twidth: 6%;\n}\n.incoming_msg_img img[data-v-e7418c82] {\r\n\twidth: 100%;\n}\n.received_msg[data-v-e7418c82] {\r\n\tdisplay: inline-block;\r\n\tpadding: 0 0 0 10px;\r\n\tvertical-align: top;\r\n\twidth: 92%;\n}\n.received_withd_msg p[data-v-e7418c82] {\r\n\tbackground: #ebebeb none repeat scroll 0 0;\r\n\tborder-radius: 0 15px 15px 15px;\r\n\tcolor: #646464;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.time_date[data-v-e7418c82] {\r\n\tcolor: #747474;\r\n\tdisplay: block;\r\n\tfont-size: 12px;\r\n\tmargin: 8px 0 0;\n}\n.received_withd_msg[data-v-e7418c82] {\r\n\twidth: 57%;\n}\n.mesgs[data-v-e7418c82]{\r\n\t/*float: left;*/\r\n\tpadding: 30px 15px 0 25px;\r\n\twidth:70%;\r\n\tdisplay: table-cell;\r\n\t/*max-height: 600px;\r\n\toverflow-y: scroll;*/\n}\n.sent_msg p[data-v-e7418c82] {\r\n\tbackground:#0465ac;\r\n\tborder-radius: 12px 15px 15px 0;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tcolor: #fff;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\n}\n.outgoing_msg[data-v-e7418c82] {\r\n\toverflow: hidden;\r\n\tmargin: 26px 0 26px;\n}\n.sent_msg[data-v-e7418c82] {\r\n\tfloat: right;\r\n\twidth: 46%;\n}\n.input_msg_write input[data-v-e7418c82] {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tcolor: #4c4c4c;\r\n\tfont-size: 15px;\r\n\tmin-height: 48px;\r\n\twidth: 100%;\r\n\toutline:none;\n}\n.type_msg[data-v-e7418c82] {\r\n\tborder-top: 1px solid #c4c4c4;\r\n\tposition: relative;\n}\n.msg_send_btn[data-v-e7418c82] {\r\n\tbackground: #05728f none repeat scroll 0 0;\r\n\tborder:none;\r\n\tborder-radius: 50%;\r\n\tcolor: #fff;\r\n\tcursor: pointer;\r\n\tfont-size: 15px;\r\n\theight: 33px;\r\n\tposition: absolute;\r\n\tright: 0;\r\n\ttop: 11px;\r\n\twidth: 33px;\n}\n.messaging[data-v-e7418c82] {\r\n\tpadding: 0 0 50px 0;\r\n\tdisplay: table;\n}\n.guest-leave-chat[data-v-e7418c82]{\r\n\tbackground-color: cyan;\n}\r\n\r\n\r\n", ""]);
+exports.push([module.i, "\r\n/*---------chat window---------------*/\r\n.inbox_people {\r\n\tbackground: #fff;\r\n\t/*float: left;*/\r\n\toverflow: hidden;\r\n\twidth: 30%;\r\n\tborder-right: 1px solid #ddd;\r\n\tdisplay: table-cell;\r\n}\r\n\r\n.inbox_msg {\r\n\tborder: 1px solid #ddd;\r\n\tclear: both;\r\n\toverflow: hidden;\r\n\tdisplay: table-row;\r\n}\r\n\r\n.top_spac {\r\n\tmargin: 20px 0 0;\r\n}\r\n\r\n.recent_heading {\r\n\tfloat: left;\r\n\twidth: 40%;\r\n}\r\n\r\n.srch_bar {\r\n\tdisplay: inline-block;\r\n\ttext-align: right;\r\n\twidth: 60%;\r\n\tpadding:\r\n}\r\n\r\n.headind_srch {\r\n\tpadding: 10px 29px 10px 20px;\r\n\toverflow: hidden;\r\n\tborder-bottom: 1px solid #c4c4c4;\r\n}\r\n\r\n.recent_heading h4 {\r\n\tcolor: #0465ac;\r\n\tfont-size: 16px;\r\n\tmargin: auto;\r\n\tline-height: 29px;\r\n}\r\n\r\n.srch_bar input {\r\n\toutline: none;\r\n\tborder: 1px solid #cdcdcd;\r\n\tborder-width: 0 0 1px 0;\r\n\twidth: 80%;\r\n\tpadding: 2px 0 4px 6px;\r\n\tbackground: none;\r\n}\r\n\r\n.srch_bar .input-group-addon button {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tpadding: 0;\r\n\tcolor: #707070;\r\n\tfont-size: 18px;\r\n}\r\n\r\n.srch_bar .input-group-addon {\r\n\tmargin: 0 0 0 -27px;\r\n}\r\n\r\n.chat_ib h5 {\r\n\tfont-size: 15px;\r\n\tcolor: #464646;\r\n\tmargin: 0 0 8px 0;\r\n}\r\n\r\n.chat_ib h5 span {\r\n\tfont-size: 13px;\r\n\tfloat: right;\r\n}\r\n\r\n.chat_ib p {\r\n\tfont-size: 12px;\r\n\tcolor: #989898;\r\n\tmargin: auto;\r\n\tdisplay: inline-block;\r\n\twhite-space: nowrap;\r\n\toverflow: hidden;\r\n\ttext-overflow: ellipsis;\r\n}\r\n\r\n.chat_img {\r\n\tfloat: left;\r\n\twidth: 11%;\r\n}\r\n\r\n.chat_img img {\r\n\twidth: 100%\r\n}\r\n\r\n.chat_ib {\r\n\tfloat: left;\r\n\tpadding: 0 0 0 15px;\r\n\twidth: 88%;\r\n}\r\n\r\n.chat_people {\r\n\tborder-bottom: 1px solid #ddd;\r\n\tmargin: 0;\r\n\tpadding: 18px 16px 10px;\r\n\toverflow: hidden;\r\n\tclear: both;\r\n}\r\n\r\n.chat_list {\r\n\t/*border-bottom: 1px solid #ddd;*/\r\n\t/*margin: 0;\r\n\tpadding: 18px 16px 10px;*/\r\n\tcursor: pointer;\r\n}\r\n\r\n.inbox_chat {\r\n\t/*height: 550px;\r\n\toverflow-y: scroll;*/\r\n}\r\n\r\n.active_chat {\r\n\tbackground: #e8f6ff;\r\n}\r\n\r\n.incoming_msg_img {\r\n\tdisplay: inline-block;\r\n\twidth: 6%;\r\n}\r\n\r\n.incoming_msg_img img {\r\n\twidth: 100%;\r\n}\r\n\r\n.received_msg {\r\n\tdisplay: inline-block;\r\n\tpadding: 0 0 0 10px;\r\n\tvertical-align: top;\r\n\twidth: 92%;\r\n}\r\n\r\n.received_withd_msg p {\r\n\tbackground: #ebebeb none repeat scroll 0 0;\r\n\tborder-radius: 0 15px 15px 15px;\r\n\tcolor: #646464;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\r\n}\r\n\r\n.time_date {\r\n\tcolor: #747474;\r\n\tdisplay: block;\r\n\tfont-size: 12px;\r\n\tmargin: 8px 0 0;\r\n}\r\n\r\n.received_withd_msg {\r\n\twidth: 57%;\r\n}\r\n\r\n.mesgs{\r\n\t/*float: left;*/\r\n\tpadding: 30px 15px 0 25px;\r\n\twidth:70%;\r\n\tdisplay: table-cell;\r\n\t/*max-height: 600px;\r\n\toverflow-y: scroll;*/\r\n}\r\n\r\n.sent_msg p {\r\n\tbackground:#0465ac;\r\n\tborder-radius: 12px 15px 15px 0;\r\n\tfont-size: 14px;\r\n\tmargin: 0;\r\n\tcolor: #fff;\r\n\tpadding: 5px 10px 5px 12px;\r\n\twidth: 100%;\r\n}\r\n\r\n.outgoing_msg {\r\n\toverflow: hidden;\r\n\tmargin: 26px 0 26px;\r\n}\r\n\r\n.sent_msg {\r\n\tfloat: right;\r\n\twidth: 46%;\r\n}\r\n\r\n.input_msg_write input {\r\n\tbackground: rgba(0, 0, 0, 0) none repeat scroll 0 0;\r\n\tborder: medium none;\r\n\tcolor: #4c4c4c;\r\n\tfont-size: 15px;\r\n\tmin-height: 48px;\r\n\twidth: 100%;\r\n\toutline:none;\r\n}\r\n\r\n.type_msg {\r\n\tborder-top: 1px solid #c4c4c4;\r\n\tposition: relative;\r\n}\r\n\r\n.msg_send_btn {\r\n\tbackground: #05728f none repeat scroll 0 0;\r\n\tborder:none;\r\n\tborder-radius: 50%;\r\n\tcolor: #fff;\r\n\tcursor: pointer;\r\n\tfont-size: 15px;\r\n\theight: 33px;\r\n\tposition: absolute;\r\n\tright: 0;\r\n\ttop: 11px;\r\n\twidth: 33px;\r\n}\r\n\r\n.messaging {\r\n\tpadding: 0 0 50px 0;\r\n\tdisplay: table;\r\n}\r\n\r\n.guest-leave-chat{\r\n\tbackground-color: cyan;\r\n}\r\n", ""]);
 
 // exports
 
@@ -47100,15 +47122,15 @@ return null!==this.settings.maxItems&&this.items.length>=this.settings.maxItems}
 
 /***/ }),
 
-/***/ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=css&":
-/*!************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/style-loader!./node_modules/css-loader??ref--7-1!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--7-2!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=css& ***!
-  \************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/sass-loader/dist/cjs.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=scss&":
+/*!****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/style-loader!./node_modules/css-loader!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src??ref--8-2!./node_modules/sass-loader/dist/cjs.js??ref--8-3!./node_modules/vue-loader/lib??vue-loader-options!./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=scss& ***!
+  \****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 
-var content = __webpack_require__(/*! !../../../node_modules/css-loader??ref--7-1!../../../node_modules/vue-loader/lib/loaders/stylePostLoader.js!../../../node_modules/postcss-loader/src??ref--7-2!../../../node_modules/vue-loader/lib??vue-loader-options!./ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=css& */ "./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=css&");
+var content = __webpack_require__(/*! !../../../node_modules/css-loader!../../../node_modules/vue-loader/lib/loaders/stylePostLoader.js!../../../node_modules/postcss-loader/src??ref--8-2!../../../node_modules/sass-loader/dist/cjs.js??ref--8-3!../../../node_modules/vue-loader/lib??vue-loader-options!./ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=scss& */ "./node_modules/css-loader/index.js!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/sass-loader/dist/cjs.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=scss&");
 
 if(typeof content === 'string') content = [[module.i, content, '']];
 
@@ -48748,7 +48770,31 @@ var render = function() {
                   )
                 ]),
                 _vm._v(" "),
-                _vm._m(0)
+                _c("div", { staticClass: "srch_bar" }, [
+                  _c("div", { staticClass: "stylish-input-group" }, [
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.searchString,
+                          expression: "searchString"
+                        }
+                      ],
+                      staticClass: "search-bar",
+                      attrs: { type: "text", placeholder: "Search" },
+                      domProps: { value: _vm.searchString },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.searchString = $event.target.value
+                        }
+                      }
+                    })
+                  ])
+                ])
               ]),
               _vm._v(" "),
               _c("div", { staticClass: "inbox_chat" }, [
@@ -48758,7 +48804,7 @@ var render = function() {
                     staticClass: "chat_list",
                     staticStyle: { height: "400px", "overflow-y": "scroll" }
                   },
-                  _vm._l(_vm.guestList, function(guest, index) {
+                  _vm._l(_vm.filterGuestList, function(guest, index) {
                     return _c(
                       "div",
                       {
@@ -48779,7 +48825,7 @@ var render = function() {
                         }
                       },
                       [
-                        _vm._m(1, true),
+                        _vm._m(0, true),
                         _vm._v(" "),
                         _c(
                           "div",
@@ -48845,7 +48891,7 @@ var render = function() {
                     return _c("div", [
                       item.user === "guest"
                         ? _c("div", { staticClass: "incoming_msg" }, [
-                            _vm._m(2, true),
+                            _vm._m(1, true),
                             _vm._v(" "),
                             _c("div", { staticClass: "received_msg" }, [
                               _c("div", { staticClass: "received_withd_msg" }, [
@@ -48982,19 +49028,6 @@ var render = function() {
   )
 }
 var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("div", { staticClass: "srch_bar" }, [
-      _c("div", { staticClass: "stylish-input-group" }, [
-        _c("input", {
-          staticClass: "search-bar",
-          attrs: { type: "text", placeholder: "Search" }
-        })
-      ])
-    ])
-  },
   function() {
     var _vm = this
     var _h = _vm.$createElement
@@ -66193,7 +66226,7 @@ module.exports = function(module) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _ChatAdmin_vue_vue_type_template_id_e7418c82_scoped_true___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ChatAdmin.vue?vue&type=template&id=e7418c82&scoped=true& */ "./resources/js/AdminComponents/ChatAdmin.vue?vue&type=template&id=e7418c82&scoped=true&");
 /* harmony import */ var _ChatAdmin_vue_vue_type_script_lang_js___WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ChatAdmin.vue?vue&type=script&lang=js& */ "./resources/js/AdminComponents/ChatAdmin.vue?vue&type=script&lang=js&");
-/* empty/unused harmony star reexport *//* harmony import */ var _ChatAdmin_vue_vue_type_style_index_0_id_e7418c82_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=css& */ "./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=css&");
+/* empty/unused harmony star reexport *//* harmony import */ var _ChatAdmin_vue_vue_type_style_index_0_id_e7418c82_scoped_true_lang_scss___WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=scss& */ "./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=scss&");
 /* harmony import */ var _node_modules_vue_loader_lib_runtime_componentNormalizer_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../node_modules/vue-loader/lib/runtime/componentNormalizer.js */ "./node_modules/vue-loader/lib/runtime/componentNormalizer.js");
 
 
@@ -66235,18 +66268,18 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=css&":
-/*!*************************************************************************************************************!*\
-  !*** ./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=css& ***!
-  \*************************************************************************************************************/
+/***/ "./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=scss&":
+/*!**************************************************************************************************************!*\
+  !*** ./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=scss& ***!
+  \**************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_7_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_2_node_modules_vue_loader_lib_index_js_vue_loader_options_ChatAdmin_vue_vue_type_style_index_0_id_e7418c82_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/style-loader!../../../node_modules/css-loader??ref--7-1!../../../node_modules/vue-loader/lib/loaders/stylePostLoader.js!../../../node_modules/postcss-loader/src??ref--7-2!../../../node_modules/vue-loader/lib??vue-loader-options!./ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=css& */ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js?!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=css&");
-/* harmony import */ var _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_7_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_2_node_modules_vue_loader_lib_index_js_vue_loader_options_ChatAdmin_vue_vue_type_style_index_0_id_e7418c82_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_7_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_2_node_modules_vue_loader_lib_index_js_vue_loader_options_ChatAdmin_vue_vue_type_style_index_0_id_e7418c82_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__);
-/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_7_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_2_node_modules_vue_loader_lib_index_js_vue_loader_options_ChatAdmin_vue_vue_type_style_index_0_id_e7418c82_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_style_loader_index_js_node_modules_css_loader_index_js_ref_7_1_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_7_2_node_modules_vue_loader_lib_index_js_vue_loader_options_ChatAdmin_vue_vue_type_style_index_0_id_e7418c82_scoped_true_lang_css___WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
+/* harmony import */ var _node_modules_style_loader_index_js_node_modules_css_loader_index_js_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_8_2_node_modules_sass_loader_dist_cjs_js_ref_8_3_node_modules_vue_loader_lib_index_js_vue_loader_options_ChatAdmin_vue_vue_type_style_index_0_id_e7418c82_scoped_true_lang_scss___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/style-loader!../../../node_modules/css-loader!../../../node_modules/vue-loader/lib/loaders/stylePostLoader.js!../../../node_modules/postcss-loader/src??ref--8-2!../../../node_modules/sass-loader/dist/cjs.js??ref--8-3!../../../node_modules/vue-loader/lib??vue-loader-options!./ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=scss& */ "./node_modules/style-loader/index.js!./node_modules/css-loader/index.js!./node_modules/vue-loader/lib/loaders/stylePostLoader.js!./node_modules/postcss-loader/src/index.js?!./node_modules/sass-loader/dist/cjs.js?!./node_modules/vue-loader/lib/index.js?!./resources/js/AdminComponents/ChatAdmin.vue?vue&type=style&index=0&id=e7418c82&scoped=true&lang=scss&");
+/* harmony import */ var _node_modules_style_loader_index_js_node_modules_css_loader_index_js_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_8_2_node_modules_sass_loader_dist_cjs_js_ref_8_3_node_modules_vue_loader_lib_index_js_vue_loader_options_ChatAdmin_vue_vue_type_style_index_0_id_e7418c82_scoped_true_lang_scss___WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_index_js_node_modules_css_loader_index_js_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_8_2_node_modules_sass_loader_dist_cjs_js_ref_8_3_node_modules_vue_loader_lib_index_js_vue_loader_options_ChatAdmin_vue_vue_type_style_index_0_id_e7418c82_scoped_true_lang_scss___WEBPACK_IMPORTED_MODULE_0__);
+/* harmony reexport (unknown) */ for(var __WEBPACK_IMPORT_KEY__ in _node_modules_style_loader_index_js_node_modules_css_loader_index_js_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_8_2_node_modules_sass_loader_dist_cjs_js_ref_8_3_node_modules_vue_loader_lib_index_js_vue_loader_options_ChatAdmin_vue_vue_type_style_index_0_id_e7418c82_scoped_true_lang_scss___WEBPACK_IMPORTED_MODULE_0__) if(["default"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) (function(key) { __webpack_require__.d(__webpack_exports__, key, function() { return _node_modules_style_loader_index_js_node_modules_css_loader_index_js_node_modules_vue_loader_lib_loaders_stylePostLoader_js_node_modules_postcss_loader_src_index_js_ref_8_2_node_modules_sass_loader_dist_cjs_js_ref_8_3_node_modules_vue_loader_lib_index_js_vue_loader_options_ChatAdmin_vue_vue_type_style_index_0_id_e7418c82_scoped_true_lang_scss___WEBPACK_IMPORTED_MODULE_0__[key]; }) }(__WEBPACK_IMPORT_KEY__));
 
 
 /***/ }),

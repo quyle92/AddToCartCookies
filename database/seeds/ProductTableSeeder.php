@@ -15,7 +15,7 @@ class ProductTableSeeder extends Seeder
      */
     public function run(Faker $faker)
     {   
-       Product::truncate();
+       // Product::truncate();
 
 
         $styles = App\Style::all();

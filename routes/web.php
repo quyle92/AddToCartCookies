@@ -15,10 +15,14 @@ use Illuminate\Support\Facades\Facade;
 |
 */
 Route::get('test', function () {
-    $guest = App\Guest::first();
-    $guest->chat->is_read = 1;
-    $guest->chat->save(); 
-    dd(App\Chat::first()->is_read);
+    // $guest = App\Guest::first();
+    // $guest->chat->is_read = 1;
+    // $guest->chat->save(); 
+    // dd(App\Chat::first()->is_read);
+    
+    return response()->view('test');
+    return view('test');
+
 });
 
 Route::post('authentication', function () {
@@ -34,8 +38,7 @@ Route::post('authentication', function () {
     ]);
 })->name('authentication');
 
-Route::post('checkAuthentication', function () {
-    //dd( Auth::user() );
+Route::get('checkAuthentication', function () {
     return response()->json([
         'auth' => Auth::guard('guest')->check()
     ]);

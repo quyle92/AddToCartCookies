@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Session;
 use DB;
 use App\Notifications\BroadcastNofitication;
 
-class ChatController extends Controller
+class ChatController extends BaseApiController
 {
     public function joinChat(Request $request)
     {
@@ -182,6 +182,7 @@ class ChatController extends Controller
     {
         try
         {
+            // dd(  $request->guest_id);
             $guest = Guest::findOrFail( $request->guest_id );
             $guest->delete();
 
@@ -192,9 +193,8 @@ class ChatController extends Controller
         }
         catch(\Exception $err)
         {
-            return response()->json([
-                'msg' => $err->getMessage()
-            ]);
+            $status_code = $err->getCode() ?: 500;
+            return $this->responseMessage($err->getMessage(), $status_code);
         }
     }
 
@@ -202,7 +202,7 @@ class ChatController extends Controller
     {
         try
         {
-            DB::table('guests')->delete1();
+            DB::table('guests')->delete();
 
             return response()->json([
                 'result' => 'success',
@@ -210,9 +210,8 @@ class ChatController extends Controller
         }
         catch(\Exception $err)
         {
-            return response()->json([
-                'msg' => $err->getMessage(),
-            ], 500);
+            $status_code = $err->getCode() ?: 500;
+            return $this->responseMessage($err->getMessage(), $status_code);
         }
     }
 
